@@ -48,6 +48,16 @@ void isr_handler(struct registers *regs)
     printf("Error  : %x\n", regs->err_code);
     printf("EIP    : %x\n", regs->eip);
 
+    if (regs->int_no == 14)
+    {
+        uint32_t cr2;
+
+        __asm__ volatile ("mov %%cr2, %0"
+        : "=r"(cr2));
+
+        printf("CR2    : %x\n", cr2);
+    }
+
     while (1)
         __asm__ volatile ("hlt");
 }

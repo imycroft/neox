@@ -7,7 +7,8 @@
 #include "console.h"
 #include "pmm.h"
 #include "paging.h"
-
+#include "vmm.h"
+#include "heap.h"
 void kernel_init(uint32_t magic,
                  struct multiboot_info *mb_info)
 {
@@ -28,15 +29,19 @@ void kernel_init(uint32_t magic,
 
     paging_init();
 
-    uintptr_t phys;
+    heap_init();
 
-    paging_map(0x400000,
-               0x200000,
-               PAGE_PRESENT | PAGE_WRITABLE);
+    // Tests go here
+    void *a;
+    void *b;
 
-phys = paging_translate(0x400123);
+    a = kmalloc(32);
+    b = kmalloc(32);
 
-    printf("Translated: %x\n", (uint32_t)phys);
+    printf("A = %x\n", (uint32_t)a);
+    printf("B = %x\n", (uint32_t)b);
+
+    // End of tests
 }
 
 void kernel_loop(void)
