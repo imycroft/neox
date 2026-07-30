@@ -1,0 +1,2 @@
+%define GDT_CODE_SELECTOR 0x08
+%define GDT_DATA_SELECTOR 0x10
