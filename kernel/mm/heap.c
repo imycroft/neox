@@ -13,7 +13,11 @@ struct heap_block
     struct heap_block *next;
 };
 
+// Private Functions
+
 static struct heap_block *heap_head;
+static uintptr_t heap_end;
+static uint32_t heap_expansions;
 
 static struct heap_block *heap_find_free(uint32_t size)
 {
@@ -32,30 +36,69 @@ static struct heap_block *heap_find_free(uint32_t size)
     return NULL;
 }
 
-
-
-void heap_init(void)
+static struct heap_block *heap_last_block(void)
 {
-    if (vmm_alloc_pages(HEAP_START, HEAP_PAGES) == NULL)
-    {
-        printf("Heap: allocation failed\n");
-        return;
-    }
+    struct heap_block *block;
 
-    heap_head = (struct heap_block *)HEAP_START;
+    block = heap_head;
 
-    heap_head->size =
-    HEAP_PAGES * PAGE_SIZE -
-    sizeof(struct heap_block);
+    while (block->next != NULL)
+        block = block->next;
 
-    heap_head->free = true;
-    heap_head->next = NULL;
-
-    printf("Heap initialized\n");
-    printf("Heap start : %x\n", HEAP_START);
-    printf("Heap size  : %u bytes\n",
-           HEAP_PAGES * PAGE_SIZE);
+    return block;
 }
+
+static void heap_merge(void)
+{
+    struct heap_block *block;
+
+    block = heap_head;
+
+    while (block != NULL && block->next != NULL)
+    {
+        if (block->free && block->next->free)
+        {
+            block->size +=
+            sizeof(struct heap_block) +
+            block->next->size;
+
+            block->next = block->next->next;
+        }
+        else
+        {
+            block = block->next;
+        }
+    }
+}
+
+static bool heap_expand(void)
+{
+    struct heap_block *block;
+
+    if (vmm_alloc_pages(heap_end, 1) == NULL)
+        return false;
+
+    block = heap_last_block();
+
+    block->next = (struct heap_block *)heap_end;
+
+    block = block->next;
+
+    block->size =
+    PAGE_SIZE - sizeof(struct heap_block);
+
+    block->free = true;
+    block->next = NULL;
+
+    heap_end += PAGE_SIZE;
+    //
+    heap_expansions++;
+    //
+    heap_merge();
+
+    return true;
+}
+
 
 static void heap_split_block(struct heap_block *block,
                              uint32_t size)
@@ -75,6 +118,37 @@ static void heap_split_block(struct heap_block *block,
     block->next = new_block;
 }
 
+
+
+// API Functions
+
+void heap_init(void)
+{
+    if (vmm_alloc_pages(HEAP_START, HEAP_PAGES) == NULL)
+    {
+        printf("Heap: allocation failed\n");
+        return;
+    }
+    // for Debugging
+    heap_expansions = 0;
+    //
+    heap_head = (struct heap_block *)HEAP_START;
+    heap_end = HEAP_START + HEAP_PAGES * PAGE_SIZE;
+
+    heap_head->size =
+    HEAP_PAGES * PAGE_SIZE -
+    sizeof(struct heap_block);
+
+    heap_head->free = true;
+    heap_head->next = NULL;
+
+    printf("Heap initialized\n");
+    printf("Heap start : %x\n", HEAP_START);
+    printf("Heap size  : %u bytes\n",
+           HEAP_PAGES * PAGE_SIZE);
+}
+
+
 void *kmalloc(uint32_t size)
 {
     struct heap_block *block;
@@ -84,10 +158,15 @@ void *kmalloc(uint32_t size)
 
     block = heap_find_free(size);
 
-    if (block == NULL)
+    while (block == NULL)
     {
-        printf("kmalloc: out of memory\n");
-        return NULL;
+        if (!heap_expand())
+        {
+            printf("kmalloc: out of memory\n");
+            return NULL;
+        }
+
+        block = heap_find_free(size);
     }
 
     if (block->size >=
@@ -101,4 +180,50 @@ void *kmalloc(uint32_t size)
     return (void *)(block + 1);
 }
 
+void kfree(void *ptr)
+{
+    struct heap_block *block;
+
+    if (ptr == NULL)
+        return;
+
+    block = ((struct heap_block *)ptr) - 1;
+
+    block->free = true;
+
+    heap_merge();
+}
+
+
+
+// Debugging functions
+
+void heap_dump(void)
+{
+    struct heap_block *block;
+    uint32_t index;
+
+    block = heap_head;
+    index = 0;
+
+    printf("\n=== HEAP DUMP ===\n");
+
+    while (block != NULL)
+    {
+        printf("Block %u\n", index);
+        printf("  Header : %x\n", (uint32_t)block);
+        printf("  Data   : %x\n", (uint32_t)(block + 1));
+        printf("  Size   : %u\n", block->size);
+        printf("  Free   : %s\n",
+               block->free ? "Yes" : "No");
+        printf("  Next   : %x\n",
+               (uint32_t)block->next);
+
+        block = block->next;
+        index++;
+    }
+    printf("Heap expansions: %u\n", heap_expansions);
+    printf("Blocks : %u\n", index);
+    printf("=================\n");
+}
 

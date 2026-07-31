@@ -32,14 +32,26 @@ void kernel_init(uint32_t magic,
     heap_init();
 
     // Tests go here
-    void *a;
-    void *b;
 
-    a = kmalloc(32);
-    b = kmalloc(32);
+    void *ptr[200];
+    uint32_t i;
 
-    printf("A = %x\n", (uint32_t)a);
-    printf("B = %x\n", (uint32_t)b);
+    for (i = 0; i < 200; i++)
+    {
+        ptr[i] = kmalloc(32);
+
+        if (ptr[i] == NULL)
+            break;
+    }
+
+    printf("Allocated %u blocks\n", i);
+
+    heap_dump();
+
+    // (void)a;
+    // (void)b;
+    // (void)c;
+    (void)ptr;
 
     // End of tests
 }
