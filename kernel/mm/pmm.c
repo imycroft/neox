@@ -4,7 +4,6 @@
 #include "printf.h"
 #include "kernel.h"
 
-#define PAGE_SIZE 4096
 
 /* Physical memory statistics */
 static uint32_t total_memory;

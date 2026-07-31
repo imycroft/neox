@@ -1,10 +1,7 @@
 #pragma once
 
+#include "memory.h"
 #include "types.h"
-
-/* Page size */
-
-#define PAGE_SIZE 4096
 
 /* Entries per table */
 

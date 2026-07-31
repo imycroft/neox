@@ -1,5 +1,6 @@
 #pragma once
 
+#include "memory.h"
 #include "types.h"
 
 void pmm_init(void);
