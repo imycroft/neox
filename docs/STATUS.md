@@ -4,11 +4,11 @@
 
 ## Current Milestone
 
-Memory subsystem validation.
+Memory subsystem completed.
 
-The Physical Memory Manager (PMM), Paging, Virtual Address Manager (VAM), and Virtual Memory Manager (VMM) have completed implementation, testing, stress testing where applicable, and refactoring.
+The Physical Memory Manager (PMM), Paging, Virtual Address Manager (VAM), Virtual Memory Manager (VMM), and Heap have completed implementation, testing, stress testing, and refactoring.
 
-The next milestone is validating the Kernel Heap.
+The next milestone is implementing context switching.
 
 ---
 
@@ -32,7 +32,7 @@ The next milestone is validating the Kernel Heap.
 | Paging | ✅ Frozen | Mapping, translation, unmapping, remapping, and stress testing complete. |
 | Virtual Address Manager (VAM) | ✅ Frozen | Virtual address allocation and release validated with unit and stress tests. |
 | Virtual Memory Manager (VMM) | ✅ Frozen | Virtual-to-physical mapping validated. |
-| Heap | 🚧 Pending Validation | Implemented but not yet validated. |
+| Heap | ✅ Frozen | Kernel heap allocator validated. |
 | Process Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
 | Thread Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
 | Scheduler | 🚧 Implemented | Context switching not yet implemented. |
@@ -48,6 +48,7 @@ The next milestone is validating the Kernel Heap.
 - Paging
 - Virtual Address Manager (VAM)
 - Virtual Memory Manager (VMM)
+- Heap
 
 ---
 
@@ -72,15 +73,12 @@ The next milestone is validating the Kernel Heap.
 
 ## Next Milestone
 
-## Next Milestone
+Implement context switching.
 
-Validate and freeze the Kernel Heap.
+After context switching:
 
-After the Heap:
-
-1. Implement context switching.
-2. Introduce per-process address spaces.
-3. Implement user mode.
+1. Introduce per-process address spaces.
+2. Implement user mode.
 
 ---
 

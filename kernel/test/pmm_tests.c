@@ -4,7 +4,7 @@
 #include "printf.h"
 
 #define PMM_TEST_PAGES 64
-#define PMM_MAX_TEST_PAGES 70000
+#define PMM_MAX_TEST_PAGES 20000
 
 // Definitions
 

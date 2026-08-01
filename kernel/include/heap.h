@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#define HEAP_ALIGNMENT 8
+
 void heap_init(void);
 
 void heap_dump(void);

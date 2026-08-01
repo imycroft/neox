@@ -51,6 +51,7 @@ All notable changes to Neox will be documented in this file.
 - Paging unit test suite.
 - VAM unit test suite.
 - VMM unit test suite.
+- Heap unit test suite.
 
 ### Changed
 

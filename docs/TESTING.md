@@ -134,6 +134,37 @@ Result:
 
 ---
 
+---
+
+## Heap
+
+### Unit Tests
+
+- Allocate one byte
+- Alignment
+- Allocate two blocks
+- Allocate many blocks
+- Free reuse
+- Reverse free
+- Block merge
+- Heap expansion
+- Zero-byte allocation
+- Large allocation
+- Large allocation reuse
+- Allocation/free cycle
+
+### Stress Tests
+
+- Allocate until Out Of Memory
+
+Result:
+
+```
+13 tests
+13 passed
+0 failed
+```
+
 # Development Rule
 
 Subsystem lifecycle:

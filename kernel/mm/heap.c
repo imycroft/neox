@@ -11,9 +11,15 @@ struct heap_block
     uint32_t size;
     bool free;
     struct heap_block *next;
-};
+}__attribute__((aligned(8)));
 
 // Private Functions
+
+static uint32_t heap_align(uint32_t size)
+{
+    return (size + HEAP_ALIGNMENT - 1)
+    & ~(HEAP_ALIGNMENT - 1);
+}
 
 static struct heap_block *heap_head;
 static uintptr_t heap_end;
@@ -41,6 +47,9 @@ static struct heap_block *heap_last_block(void)
     struct heap_block *block;
 
     block = heap_head;
+
+    if (block == NULL)
+        return NULL;
 
     while (block->next != NULL)
         block = block->next;
@@ -80,6 +89,12 @@ static bool heap_expand(void)
 
     block = heap_last_block();
 
+    if (block == NULL)
+    {
+        vmm_free_page(heap_end);
+        return false;
+    }
+
     block->next = (struct heap_block *)heap_end;
 
     block = block->next;
@@ -104,6 +119,12 @@ static void heap_split_block(struct heap_block *block,
                              uint32_t size)
 {
     struct heap_block *new_block;
+
+    if (block->size <=
+        size + sizeof(struct heap_block))
+    {
+        return;
+    }
 
     new_block = (struct heap_block *)
     ((uint8_t *)(block + 1) + size);
@@ -155,6 +176,8 @@ void *kmalloc(uint32_t size)
 
     if (size == 0)
         return NULL;
+
+    size = heap_align(size);
 
     block = heap_find_free(size);
 

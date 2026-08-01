@@ -3,17 +3,15 @@
 
 void kernel_tests(void)
 {
-    // test_memory(); DONE
+     // test_memory();
 
-    // test_paging(); DONE
+     // test_paging();
 
-    // test_vam();    DONE
+     // test_vam();
 
-    test_vmm();
+     // test_vmm();
 
-    // test_heap();
+     test_heap();
 
-
-
-    //test_summary();
+    test_summary();
 }
