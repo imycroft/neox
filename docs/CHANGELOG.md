@@ -50,11 +50,13 @@ All notable changes to Neox will be documented in this file.
 - PMM unit test suite.
 - Paging unit test suite.
 - VAM unit test suite.
+- VMM unit test suite.
 
 ### Changed
 
 - Refactored paging table allocation into `paging_alloc_table()`.
 - Propagated `PAGE_USER` permissions to page-directory entries.
+- Refactored VMM page mapping and rollback into reusable private helpers.
 
 ### Fixed
 

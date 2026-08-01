@@ -98,11 +98,39 @@ Result:
 11 passed
 0 failed
 ```
-
-
 Note:
 
 The repeated single-page allocation stress test is not executed during normal kernel tests because the current first-fit allocator has linear scan behavior.
+
+---
+
+## VMM
+
+### Unit Tests
+
+- Allocate one page
+- Page is mapped
+- Allocate two pages
+- Allocate many pages
+- Unique physical pages
+- Free reuse
+- Reverse free
+- Reallocate same virtual page
+- Allocate pages anywhere
+- Reject allocation over existing mapping
+- Free unmapped page
+- Reject zero-page allocation
+- Reject zero-page automatic allocation
+- Large allocation
+- Large allocation free/reuse
+
+Result:
+
+```
+15 tests
+15 passed
+0 failed
+```
 
 ---
 

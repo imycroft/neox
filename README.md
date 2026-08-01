@@ -45,6 +45,7 @@ Current test suites:
 - Physical Memory Manager (PMM)
 - Paging
 - Virtual Address Manager (VAM).
+- Virtual Memory Manager (VMM)
 
 Additional subsystem tests will be added as each subsystem reaches the validation phase.
 

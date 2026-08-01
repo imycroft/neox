@@ -7,10 +7,13 @@ void kernel_tests(void)
 
     // test_paging(); DONE
 
-     test_vam();
+    // test_vam();    DONE
+
+    test_vmm();
+
     // test_heap();
 
-    // test_vmm();
+
 
     //test_summary();
 }

@@ -6,9 +6,9 @@
 
 Memory subsystem validation.
 
-The Physical Memory Manager (PMM), Paging subsystem, and Virtual Address Manager (VAM) have completed implementation, testing, stress testing, and refactoring.
+The Physical Memory Manager (PMM), Paging, Virtual Address Manager (VAM), and Virtual Memory Manager (VMM) have completed implementation, testing, stress testing where applicable, and refactoring.
 
-The next milestone is validating the Virtual Memory Manager (VMM).
+The next milestone is validating the Kernel Heap.
 
 ---
 
@@ -31,7 +31,7 @@ The next milestone is validating the Virtual Memory Manager (VMM).
 | Physical Memory Manager (PMM) | ✅ Frozen | Bitmap allocator with complete unit and stress test suite. |
 | Paging | ✅ Frozen | Mapping, translation, unmapping, remapping, and stress testing complete. |
 | Virtual Address Manager (VAM) | ✅ Frozen | Virtual address allocation and release validated with unit and stress tests. |
-| Virtual Memory Manager (VMM) | 🚧 Pending Validation | Implemented but not yet validated. |
+| Virtual Memory Manager (VMM) | ✅ Frozen | Virtual-to-physical mapping validated. |
 | Heap | 🚧 Pending Validation | Implemented but not yet validated. |
 | Process Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
 | Thread Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
@@ -47,6 +47,7 @@ The next milestone is validating the Virtual Memory Manager (VMM).
 - Physical Memory Manager (PMM)
 - Paging
 - Virtual Address Manager (VAM)
+- Virtual Memory Manager (VMM)
 
 ---
 
@@ -73,14 +74,13 @@ The next milestone is validating the Virtual Memory Manager (VMM).
 
 ## Next Milestone
 
-Validate and freeze the Virtual Memory Manager (VMM).
+Validate and freeze the Kernel Heap.
 
-After VMM:
+After the Heap:
 
-1. Validate and freeze the Heap allocator.
-2. Implement context switching.
-3. Introduce per-process address spaces.
-4. Implement user mode.
+1. Implement context switching.
+2. Introduce per-process address spaces.
+3. Implement user mode.
 
 ---
 
