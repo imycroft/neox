@@ -3,7 +3,10 @@
 #include "paging.h"
 #include "printf.h"
 
+#define PAGE_FRAME_MASK 0xFFFFF000
+
 static struct page_directory *kernel_directory;
+
 // static struct page_table *kernel_table;
 
 static struct page_table *paging_get_table(uint32_t directory_index)
@@ -15,7 +18,7 @@ static struct page_table *paging_get_table(uint32_t directory_index)
     if (!(entry & PAGE_PRESENT))
         return NULL;
 
-    return (struct page_table *)(entry & 0xFFFFF000);
+    return (struct page_table *)(entry & PAGE_FRAME_MASK);
 }
 
 static bool paging_create_directory(void)
@@ -36,6 +39,19 @@ static bool paging_create_directory(void)
     return true;
 }
 
+static struct page_table *paging_alloc_table(void)
+{
+    struct page_table *table;
+
+    table = pmm_alloc_page();
+
+    if (table == NULL)
+        return NULL;
+
+    memset(table, 0, sizeof(*table));
+
+    return table;
+}
 
 static void paging_identity_map(void)
 {
@@ -85,7 +101,7 @@ void paging_map(uintptr_t virt,
 
     if (table == NULL)
     {
-        table = pmm_alloc_page();
+        table = paging_alloc_table();
 
         if (table == NULL)
         {
@@ -93,20 +109,16 @@ void paging_map(uintptr_t virt,
             return;
         }
 
-        memset(table, 0, sizeof(*table));
-
         kernel_directory->entries[directory_index] =
         (uint32_t)table |
         PAGE_PRESENT |
-        PAGE_WRITABLE;
+        (flags & (PAGE_WRITABLE | PAGE_USER));
     }
 
-
-
     table->entries[table_index] =
-    (phys & 0xFFFFF000) | flags;
+    (phys & PAGE_FRAME_MASK) | flags;
 
-
+    paging_invalidate(virt);
 }
 
 void paging_unmap(uintptr_t virt)
@@ -121,12 +133,11 @@ void paging_unmap(uintptr_t virt)
     table = paging_get_table(directory_index);
 
     if (table == NULL)
-    {
-        printf("paging_unmap: missing table\n");
         return;
-    }
 
     table->entries[table_index] = 0;
+
+    paging_invalidate(virt);
 }
 
 uintptr_t paging_translate(uintptr_t virt)
@@ -152,6 +163,6 @@ uintptr_t paging_translate(uintptr_t virt)
     if (!(entry & PAGE_PRESENT))
         return 0;
 
-    return (entry & 0xFFFFF000) + offset;
+    return (entry & PAGE_FRAME_MASK) + offset;
 }
 

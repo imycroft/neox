@@ -1,6 +1,6 @@
 # Neox
 
-Neox is a hobby operating system written from scratch in C and x86 Assembly.
+Neox is a 32-bit x86 hobby operating system written from scratch in C and x86 Assembly.
 
 The project focuses on learning operating system internals while following modern software engineering practices:
 
@@ -12,72 +12,53 @@ The project focuses on learning operating system internals while following moder
 
 ---
 
-## Current Features
+---
 
-### Boot
+## Goals
 
-- Multiboot2
-- GRUB bootloader
-- ELF kernel
-- Linker script
+- Learn operating system internals by building a kernel from scratch.
+- Emphasize correctness over feature count.
+- Develop each subsystem through design, implementation, testing, refactoring, and freeze.
+- Keep the codebase simple, readable, and maintainable.
 
-### Architecture
+## Implemented Subsystems
 
-- Protected Mode
-- GDT
-- IDT
-- ISR
-- IRQ
-- PIC
-- PIT
-- Exception handling
-
-### Drivers
-
-- VGA
-- Keyboard
-- QWERTY
-- AZERTY
-
-### Memory Management
-
+- Boot
+- CPU initialization (GDT, IDT, ISR, IRQ, PIC, PIT)
+- VGA text console
+- Keyboard driver (QWERTY and AZERTY)
 - Physical Memory Manager (PMM)
 - Paging
-- Virtual Memory Manager (VMM)
 - Virtual Address Manager (VAM)
+- Virtual Memory Manager (VMM)
 - Kernel Heap
-
-### Tasking
-
-- Process infrastructure
-- Thread infrastructure
-- Scheduler infrastructure
+- Process, Thread, and Scheduler infrastructure
 
 ---
 
 ## Testing
 
-Current kernel contains a built-in testing framework.
+Neox contains a built-in kernel testing framework.
 
-Current subsystem coverage:
+Current test suites:
 
-- Physical Memory Manager
+- Physical Memory Manager (PMM)
+- Paging
 
-Current status:
-
-- 12 tests
-- 0 failures
+Additional subsystem tests will be added as each subsystem reaches the validation phase.
 
 ---
 
 ## Documentation
 
+Project documentation is located in the `docs/` directory.
+
+- STATUS.md
 - ARCHITECTURE.md
 - ROADMAP.md
 - TESTING.md
 - CHANGELOG.md
 - CONTRIBUTING.md
-
 ---
 
 ## Build
@@ -92,18 +73,25 @@ Run:
 make run
 ```
 
-Debug:
-
-```bash
-make debug
-```
-
 ---
 
 ## Project Status
 
-Early development.
+Neox is under active development.
 
-Current focus:
+For the current development status, completed milestones, and roadmap, see `docs/STATUS.md`.
 
-Memory management before multitasking.
+---
+
+## Repository Layout
+
+```
+kernel/    Kernel source code
+docs/      Documentation
+iso/       ISO image
+```
+---
+
+## License
+
+This project is licensed under the MIT License.

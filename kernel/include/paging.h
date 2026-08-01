@@ -21,6 +21,8 @@
 
 void paging_load_directory(uint32_t directory);
 void paging_enable(void);
+void paging_invalidate(uintptr_t address);
+
 /* Page entry */
 
 typedef uint32_t page_entry_t;
