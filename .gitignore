@@ -6,3 +6,4 @@ build/
 *.elf
 *.map
 *.txt
+*.log

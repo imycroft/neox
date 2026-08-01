@@ -11,6 +11,6 @@ void *vmm_alloc_pages(uintptr_t virt, uint32_t count);
 void vmm_free_pages(uintptr_t virt, uint32_t count);
 
 /* Allocate anywhere in the kernel virtual address space. */
-
+void *vmm_alloc_pages_any(uint32_t count);
 
 #endif

@@ -1,5 +1,5 @@
 #include "kernel.h"
-#include "test.h"
+#include "tests.h"
 
 
 int kernel_main(uint32_t magic,

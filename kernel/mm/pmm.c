@@ -189,7 +189,6 @@ void *pmm_alloc_page(void)
         }
     }
 
-    printf("PMM: out of memory\n");
     return NULL;
 }
 

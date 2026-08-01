@@ -1,0 +1,11 @@
+#ifndef TESTS_H
+#define TESTS_H
+
+void kernel_tests(void);
+
+void test_memory(void);
+void test_heap(void);
+void test_vam(void);
+void test_vmm(void);
+
+#endif

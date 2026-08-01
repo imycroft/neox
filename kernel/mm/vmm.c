@@ -1,19 +1,12 @@
 #include "vmm.h"
 #include "paging.h"
 #include "pmm.h"
+#include "vam.h"
 #include "printf.h"
 
-void *vmm_alloc_page(uintptr_t virt)
-{
-    return vmm_alloc_pages(virt, 1);
-}
-
-void vmm_free_page(uintptr_t virt)
-{
-    vmm_free_pages(virt, 1);
-}
-
-void *vmm_alloc_pages(uintptr_t virt, uint32_t count)
+// Private functions
+static bool vmm_map_pages(uintptr_t virt,
+                          uint32_t count)
 {
     uint32_t i;
 
@@ -25,8 +18,16 @@ void *vmm_alloc_pages(uintptr_t virt, uint32_t count)
 
         if (phys == NULL)
         {
-            printf("VMM: allocation failed\n");
-            return NULL;
+            printf("VMM: physical allocation failed\n");
+
+            /*
+             * TODO:
+             * Roll back:
+             *   - unmap mapped pages
+             *   - free physical pages
+             */
+
+            return false;
         }
 
         paging_map(
@@ -35,6 +36,27 @@ void *vmm_alloc_pages(uintptr_t virt, uint32_t count)
                    PAGE_PRESENT | PAGE_WRITABLE
         );
     }
+
+    return true;
+}
+
+// API Functions
+
+void *vmm_alloc_page(uintptr_t virt)
+{
+    return vmm_alloc_pages(virt, 1);
+}
+
+void vmm_free_page(uintptr_t virt)
+{
+    vmm_free_pages(virt, 1);
+}
+
+void *vmm_alloc_pages(uintptr_t virt,
+                      uint32_t count)
+{
+    if (!vmm_map_pages(virt, count))
+        return NULL;
 
     return (void *)virt;
 }
@@ -60,3 +82,23 @@ void vmm_free_pages(uintptr_t virt, uint32_t count)
     }
 }
 
+void *vmm_alloc_pages_any(uint32_t count)
+{
+    uintptr_t virt;
+
+    virt = (uintptr_t)vam_alloc_pages(count);
+
+    if (virt == 0)
+    {
+        printf("VMM: virtual allocation failed\n");
+        return NULL;
+    }
+
+    if (!vmm_map_pages(virt, count))
+    {
+        vam_free_pages(virt, count);
+        return NULL;
+    }
+
+    return (void *)virt;
+}
