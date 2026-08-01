@@ -43,6 +43,69 @@ Result:
 
 ---
 
+## Paging
+
+### Unit Tests
+
+- Map one page
+- Translate virtual address with offset
+- Remap page
+- Map many pages
+- Directory boundary handling
+- Translate unmapped address
+- Unmap unmapped address
+- Unmap one page without affecting others
+
+### Stress Tests
+
+- Allocate multiple page tables
+- Map thousands of pages
+
+Result:
+
+```
+10 tests
+10 passed
+0 failed
+```
+
+---
+
+## VAM
+
+### Unit Tests
+
+- Allocate one page
+- Page alignment
+- Allocate two pages
+- Allocate many pages
+- Unique addresses
+- Free reuse
+- Reverse free
+- Lowest page reuse
+- Kernel space reservation
+
+### Stress Tests
+
+- Large virtual range allocation
+- Large allocation free and reuse
+- Repeated single-page allocation (manual stress test)
+
+Result:
+
+```
+11 tests
+11 passed
+0 failed
+```
+
+
+Note:
+
+The repeated single-page allocation stress test is not executed during normal kernel tests because the current first-fit allocator has linear scan behavior.
+
+---
+
 # Development Rule
 
 Subsystem lifecycle:
