@@ -6,9 +6,9 @@
 
 Memory subsystem validation.
 
-The Physical Memory Manager (PMM) and Paging subsystem have completed implementation, testing, stress testing, and refactoring.
+The Physical Memory Manager (PMM), Paging subsystem, and Virtual Address Manager (VAM) have completed implementation, testing, stress testing, and refactoring.
 
-The next milestone is validating the Virtual Address Manager (VAM).
+The next milestone is validating the Virtual Memory Manager (VMM).
 
 ---
 
@@ -30,7 +30,7 @@ The next milestone is validating the Virtual Address Manager (VAM).
 | AZERTY Keymap | ✅ Frozen | Complete. |
 | Physical Memory Manager (PMM) | ✅ Frozen | Bitmap allocator with complete unit and stress test suite. |
 | Paging | ✅ Frozen | Mapping, translation, unmapping, remapping, and stress testing complete. |
-| Virtual Address Manager (VAM) | 🚧 Pending Validation | Implemented but not yet validated. |
+| Virtual Address Manager (VAM) | ✅ Frozen | Virtual address allocation and release validated with unit and stress tests. |
 | Virtual Memory Manager (VMM) | 🚧 Pending Validation | Implemented but not yet validated. |
 | Heap | 🚧 Pending Validation | Implemented but not yet validated. |
 | Process Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
@@ -46,6 +46,7 @@ The next milestone is validating the Virtual Address Manager (VAM).
 - Interrupt Handling
 - Physical Memory Manager (PMM)
 - Paging
+- Virtual Address Manager (VAM)
 
 ---
 
@@ -70,15 +71,16 @@ The next milestone is validating the Virtual Address Manager (VAM).
 
 ## Next Milestone
 
-Validate and freeze the Virtual Address Manager (VAM).
+## Next Milestone
 
-After VAM:
+Validate and freeze the Virtual Memory Manager (VMM).
 
-1. Validate and freeze the Virtual Memory Manager (VMM).
-2. Validate and freeze the Heap allocator.
-3. Implement context switching.
-4. Introduce per-process address spaces.
-5. Implement user mode.
+After VMM:
+
+1. Validate and freeze the Heap allocator.
+2. Implement context switching.
+3. Introduce per-process address spaces.
+4. Implement user mode.
 
 ---
 

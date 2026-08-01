@@ -49,6 +49,7 @@ All notable changes to Neox will be documented in this file.
 - Generic kernel testing framework.
 - PMM unit test suite.
 - Paging unit test suite.
+- VAM unit test suite.
 
 ### Changed
 

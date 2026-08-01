@@ -44,6 +44,7 @@ Current test suites:
 
 - Physical Memory Manager (PMM)
 - Paging
+- Virtual Address Manager (VAM).
 
 Additional subsystem tests will be added as each subsystem reaches the validation phase.
 
@@ -59,6 +60,7 @@ Project documentation is located in the `docs/` directory.
 - TESTING.md
 - CHANGELOG.md
 - CONTRIBUTING.md
+
 ---
 
 ## Build

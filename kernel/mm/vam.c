@@ -47,6 +47,18 @@ static bool bitmap_test(uint32_t index)
          bitmap_set(start + i);
      }
  }
+
+ static void bitmap_range_clear(uint32_t start,
+                                uint32_t count)
+ {
+     uint32_t i;
+
+     for (i = 0; i < count; i++)
+     {
+         bitmap_clear(start + i);
+     }
+ }
+
 // API Functions
 
 void vam_init(void)
@@ -67,6 +79,9 @@ void *vam_alloc_pages(uint32_t count)
 {
     uint32_t page;
 
+    if (count == 0)
+        return NULL;
+
     for (page = VAM_START / PAGE_SIZE;
          page <= TOTAL_VIRTUAL_PAGES - count;
     page++)
@@ -86,14 +101,13 @@ void vam_free_pages(uintptr_t addr,
                     uint32_t count)
 {
     uint32_t page;
-    uint32_t i;
+
+    if (count == 0)
+        return;
 
     page = addr / PAGE_SIZE;
 
-    for (i = 0; i < count; i++)
-    {
-        bitmap_clear(page + i);
-    }
+    bitmap_range_clear(page, count);
 }
 
 // Debug functions
