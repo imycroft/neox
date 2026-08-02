@@ -63,3 +63,19 @@ All notable changes to Neox will be documented in this file.
 
 - `paging_unmap()` is now idempotent when no page table exists.
 - Added TLB invalidation after page mapping and unmapping.
+
+## v0.5.0
+
+### Added
+
+- Process abstraction.
+- Thread abstraction.
+- Scheduler ready queue.
+- x86 context switching.
+- Cooperative kernel thread bootstrap.
+
+### Tested
+
+- Verified kernel → thread → kernel → thread context restoration.
+- Validated preservation of execution state across context switches.
+- Validated thread bootstrap and kernel thread execution.

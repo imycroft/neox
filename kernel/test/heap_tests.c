@@ -331,7 +331,11 @@ static void test_heap_large_free_reuse(void)
  */
 static void test_heap_stress(void)
 {
-    void *blocks[HEAP_STRESS_BLOCKS];
+    /*
+     * Large pointer array used by the stress test.
+     * Static storage avoids overflowing the kernel stack.
+     */
+    static void *blocks[HEAP_STRESS_BLOCKS];
     uint32_t count;
 
     count = 0;
@@ -348,10 +352,10 @@ static void test_heap_stress(void)
 
     TEST_ASSERT_TRUE(count > 0);
 
+
     while (count > 0)
     {
         count--;
-
         kfree(blocks[count]);
     }
 

@@ -47,15 +47,22 @@ struct thread *scheduler_next(void)
     if (current == NULL)
     {
         current = ready_list;
+        current->state = THREAD_RUNNING;
         return current;
     }
+
+    current->state = THREAD_READY;
 
     if (current->next != NULL)
     {
         current = current->next;
-        return current;
+    }
+    else
+    {
+        current = ready_list;
     }
 
-    current = ready_list;
+    current->state = THREAD_RUNNING;
+
     return current;
 }

@@ -32,7 +32,10 @@ The project focuses on learning operating system internals while following moder
 - Virtual Address Manager (VAM)
 - Virtual Memory Manager (VMM)
 - Kernel Heap
-- Process, Thread, and Scheduler infrastructure
+- Process management
+- Thread management
+- Cooperative context switching
+- Scheduler infrastructure
 
 ---
 

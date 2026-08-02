@@ -6,6 +6,14 @@
 
 #define THREAD_STACK_SIZE PAGE_SIZE
 
+enum thread_state
+{
+    THREAD_READY,
+    THREAD_RUNNING,
+    THREAD_BLOCKED,
+    THREAD_TERMINATED
+};
+
 struct process;
 
 struct thread
@@ -13,10 +21,16 @@ struct thread
     uint32_t tid;
 
     /* Top of the kernel stack */
-    uintptr_t esp;
+    uintptr_t kernel_sp;
 
     /* Base of the allocated kernel stack */
     void *kernel_stack;
+
+    /* Thread entry point */
+    void (*entry)(void);
+
+    /* Current execution state */
+    enum thread_state state;
 
     /* Owning process */
     struct process *process;
@@ -25,6 +39,9 @@ struct thread
     struct thread *next;
 };
 
-struct thread *thread_create(struct process *process);
+struct thread *thread_create(
+    struct process *process,
+    void (*entry)(void)
+);
 
 #endif

@@ -15,24 +15,25 @@
 
 ## Phase 2
 
-- [ ] Paging
-- [ ] VAM
-- [ ] VMM
-- [ ] Heap
+- [x] Paging
+- [x] VAM
+- [x] VMM
+- [x] Heap
 
 ---
 
 ## Phase 3
 
-- [ ] Context switching
-- [ ] Scheduler
-- [ ] Processes
-- [ ] Threads
+- [x] Context switching
+- [x] Scheduler infrastructure
+- [x] Processes
+- [x] Threads
 
 ---
 
 ## Phase 4
 
+- [ ] Preemptive scheduling
 - [ ] Ring 3
 - [ ] System calls
 - [ ] ELF loader

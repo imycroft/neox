@@ -4,11 +4,11 @@
 
 ## Current Milestone
 
-Memory subsystem completed.
+Memory management and cooperative kernel tasking completed.
 
-The Physical Memory Manager (PMM), Paging, Virtual Address Manager (VAM), Virtual Memory Manager (VMM), and Heap have completed implementation, testing, stress testing, and refactoring.
+The Physical Memory Manager (PMM), Paging, Virtual Address Manager (VAM), Virtual Memory Manager (VMM), Heap, Process infrastructure, Thread infrastructure, Scheduler infrastructure, and cooperative context switching have completed implementation, testing, and refactoring.
 
-The next milestone is implementing context switching.
+The next milestone is timer-driven preemptive scheduling.
 
 ---
 
@@ -33,9 +33,10 @@ The next milestone is implementing context switching.
 | Virtual Address Manager (VAM) | ✅ Frozen | Virtual address allocation and release validated with unit and stress tests. |
 | Virtual Memory Manager (VMM) | ✅ Frozen | Virtual-to-physical mapping validated. |
 | Heap | ✅ Frozen | Kernel heap allocator validated. |
-| Process Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
-| Thread Infrastructure | 🚧 Implemented | Context switching not yet implemented. |
-| Scheduler | 🚧 Implemented | Context switching not yet implemented. |
+| Process Infrastructure | ✅ Frozen | Process creation implemented and validated. |
+| Thread Infrastructure | ✅ Frozen | Kernel thread creation and bootstrap validated. |
+| Context Switching | ✅ Frozen | Cooperative kernel↔thread context switching validated. |
+| Scheduler | 🚧 Implemented | Ready queue implemented; preemptive scheduling pending. |
 
 ---
 
@@ -49,6 +50,9 @@ The next milestone is implementing context switching.
 - Virtual Address Manager (VAM)
 - Virtual Memory Manager (VMM)
 - Heap
+- Cooperative Context Switching
+- Process Infrastructure
+- Thread Infrastructure
 
 ---
 
@@ -73,9 +77,9 @@ The next milestone is implementing context switching.
 
 ## Next Milestone
 
-Implement context switching.
+Implement timer-driven preemptive scheduling.
 
-After context switching:
+After preemptive scheduling:
 
 1. Introduce per-process address spaces.
 2. Implement user mode.
