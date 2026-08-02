@@ -1,14 +1,14 @@
 # Neox Status
 
-**Last updated:** 2026-08-01
+**Last updated:** 2026-08-02
 
 ## Current Milestone
 
-Memory management and cooperative kernel tasking completed.
+Timer-driven preemptive scheduling implemented and unit-tested.
 
-The Physical Memory Manager (PMM), Paging, Virtual Address Manager (VAM), Virtual Memory Manager (VMM), Heap, Process infrastructure, Thread infrastructure, Scheduler infrastructure, and cooperative context switching have completed implementation, testing, and refactoring.
+The PIT timer now drives thread preemption: `scheduler_tick()` runs on every IRQ0, decrements the current thread's quantum, and switches to the next ready thread once it expires. The boot stack is registered with the scheduler as the idle thread via `scheduler_start()`, replacing the old manually-driven cooperative test scaffold in `kernel_init()`. Verified by booting under QEMU with two independent kernel threads and observing sustained, correctly-interleaved round-robin execution with no manual `context_switch()` calls anywhere in `kernel_init()`.
 
-The next milestone is timer-driven preemptive scheduling.
+The next milestone is stress-testing the scheduler under sustained load, followed by Ring 3 (user mode).
 
 ---
 
@@ -20,7 +20,7 @@ The next milestone is timer-driven preemptive scheduling.
 | GDT | ✅ Frozen | Global Descriptor Table initialized. |
 | IDT | ✅ Frozen | Interrupt Descriptor Table initialized. |
 | ISR | ✅ Frozen | CPU exception handlers implemented. |
-| IRQ | ✅ Frozen | Hardware interrupt handling implemented. |
+| IRQ | ✅ Frozen | Hardware interrupt handling implemented; IRQ0 now also drives `scheduler_tick()`, ordered after PIC EOI. |
 | PIC | ✅ Frozen | Legacy PIC initialized and remapped. |
 | PIT | ✅ Frozen | System timer operational. |
 | Exception Handling | ✅ Frozen | CPU exceptions handled correctly. |
@@ -33,10 +33,10 @@ The next milestone is timer-driven preemptive scheduling.
 | Virtual Address Manager (VAM) | ✅ Frozen | Virtual address allocation and release validated with unit and stress tests. |
 | Virtual Memory Manager (VMM) | ✅ Frozen | Virtual-to-physical mapping validated. |
 | Heap | ✅ Frozen | Kernel heap allocator validated. |
-| Process Infrastructure | ✅ Frozen | Process creation implemented and validated. |
-| Thread Infrastructure | ✅ Frozen | Kernel thread creation and bootstrap validated. |
-| Context Switching | ✅ Frozen | Cooperative kernel↔thread context switching validated. |
-| Scheduler | 🚧 Implemented | Ready queue implemented; preemptive scheduling pending. |
+| Process Infrastructure | ✅ Frozen | Process creation implemented and validated; unit test suite added (`process_tests.c`). |
+| Thread Infrastructure | ✅ Frozen | Kernel thread creation and bootstrap validated; unit test suite added (`thread_tests.c`). Bug fix: `thread_bootstrap()` now re-enables interrupts on a thread's first run, required now that threads can be first scheduled from inside the timer ISR. |
+| Context Switching | ✅ Frozen | Cooperative and preemptive kernel↔thread context switching validated. |
+| Scheduler | 🚧 Implemented | Timer-driven preemptive round-robin scheduling implemented; unit test suite added (`scheduler_tests.c`, 6 cases). Stress testing (many threads, sustained tick/yield load, quantum tuning) still pending before freeze. |
 
 ---
 
@@ -73,16 +73,25 @@ The next milestone is timer-driven preemptive scheduling.
 - The bitmap allocator performs a linear scan to locate the next free page.
 - A future optimization may introduce a `next_free_hint` to reduce allocation time without changing allocator behavior.
 
+### Scheduler
+
+- `scheduler_next()` round-robins over every thread in the ready list regardless of `state`; it does not yet skip `THREAD_BLOCKED` or `THREAD_TERMINATED` threads.
+- `thread_exit()` marks a thread `THREAD_TERMINATED` but its process/stack/tid are never reclaimed; the thread remains in the ready list and is scheduled forever, simply halting each time it runs.
+- The quantum (`SCHEDULER_QUANTUM_TICKS`, currently 5 ticks / 50ms at 100Hz) is a single global value; there is no per-thread priority or dynamic quantum yet.
+- These are acceptable for the current milestone but should be revisited once blocking primitives (locks, sleep, IPC) are introduced.
+
 ---
 
 ## Next Milestone
 
-Implement timer-driven preemptive scheduling.
+Stress-test the scheduler (many threads, sustained preemption, `scheduler_yield()` under load) and freeze it.
 
-After preemptive scheduling:
+After the scheduler is frozen:
 
-1. Introduce per-process address spaces.
-2. Implement user mode.
+1. Ring 3 (user mode).
+2. System calls.
+3. ELF loader.
+4. Introduce per-process address spaces.
 
 ---
 

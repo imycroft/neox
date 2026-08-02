@@ -33,7 +33,7 @@
 
 ## Phase 4
 
-- [ ] Preemptive scheduling
+- [x] Preemptive scheduling
 - [ ] Ring 3
 - [ ] System calls
 - [ ] ELF loader

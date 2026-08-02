@@ -13,5 +13,11 @@ void kernel_tests(void)
 
      //test_heap();
 
+     // test_process();
+
+     // test_thread();
+
+     // test_scheduler();
+
      //test_summary();
 }

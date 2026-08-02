@@ -17,6 +17,10 @@ typedef int32_t  intptr_t;
 typedef uint32_t size_t;
 typedef int32_t  ssize_t;
 
+typedef _Bool bool;
+#define true  1
+#define false 0
+
 #define NULL ((void *)0)
 
 

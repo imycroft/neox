@@ -6,10 +6,21 @@
 #include "heap.h"
 #include "string.h"
 
-#include "printf.h"
 // Private functions
 static void thread_exit(void)
 {
+    struct thread *thread;
+
+    thread = scheduler_current();
+
+    if (thread != NULL)
+        thread->state = THREAD_TERMINATED;
+
+    /*
+     * Reclaiming the thread's process/stack/tid is future work.
+     * The thread remains in the ready list and continues to be
+     * scheduled, but simply halts until preempted again.
+     */
     for (;;)
     {
         __asm__ volatile ("hlt");
@@ -18,17 +29,21 @@ static void thread_exit(void)
 
 /*
  * Initial entry point for every kernel thread.
+ *
+ * A thread's first run is reached via context_switch()'s
+ * `ret`, not `iret`. When the switch was triggered from
+ * inside the timer interrupt handler, interrupts are still
+ * disabled at this point (the ISR's `cli` was never undone
+ * by a matching `iret`), so it must be re-enabled explicitly
+ * here for preemption of this thread to begin.
  */
 static void thread_bootstrap(void)
 {
-
     struct thread *thread;
 
-    printf("Entered thread_bootstrap\n");
+    __asm__ volatile ("sti");
 
     thread = scheduler_current();
-
-    printf("thread = %x\n", (uint32_t)thread);
 
     thread->entry();
 

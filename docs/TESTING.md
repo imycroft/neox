@@ -134,8 +134,6 @@ Result:
 
 ---
 
----
-
 ## Heap
 
 ### Unit Tests
@@ -164,6 +162,74 @@ Result:
 13 passed
 0 failed
 ```
+
+---
+
+## Process
+
+### Unit Tests
+
+- Create process
+- Unique PIDs
+- No threads owned initially
+
+Result:
+
+```
+3 tests
+3 passed
+0 failed
+```
+
+Note: no stress tests yet (e.g. sustained mass process creation). Process teardown/reclamation does not exist yet, so this subsystem is validated but not stress tested.
+
+---
+
+## Thread
+
+### Unit Tests
+
+- Create thread
+- Initial state is THREAD_READY
+- Kernel stack allocated and initial context within bounds
+- Entry point stored
+- Owning process association stored
+- Unique TIDs
+
+Result:
+
+```
+6 tests
+6 passed
+0 failed
+```
+
+Note: no stress tests yet. Thread teardown/reclamation does not exist yet (`thread_exit()` halts the thread in place rather than freeing it), so this subsystem is validated but not stress tested.
+
+---
+
+## Scheduler
+
+### Unit Tests
+
+- Empty ready list
+- `scheduler_add(NULL)` is ignored
+- Single-thread add and selection
+- Round-robin selection order, including wraparound
+- State transitions (THREAD_RUNNING / THREAD_READY) across selection
+- Single-thread ready list repeats correctly
+
+Result:
+
+```
+6 tests
+6 passed
+0 failed
+```
+
+Note: these are ready-queue unit tests only, run with interrupts disabled against stub threads (no real stack). They do not exercise an actual context switch. Preemptive round-robin scheduling itself (`scheduler_tick()` context switching between real, independently executing kernel threads) was validated by booting the kernel under QEMU and observing sustained, correctly interleaved execution of two kernel threads over hundreds of preemption cycles with no crashes — see the "Timer-driven preemptive scheduling" entry in the changelog. Stress tests (many threads, high-frequency `scheduler_yield()`, long-running sustained load) are still pending before this subsystem can be frozen.
+
+---
 
 # Development Rule
 
