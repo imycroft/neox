@@ -5,6 +5,15 @@
 
 static uint32_t next_pid = 1;
 
+static struct list process_list =
+{
+    .head =
+    {
+        .prev = &process_list.head,
+        .next = &process_list.head
+    }
+};
+
 struct process *process_create(void)
 {
     struct process *process;
@@ -21,6 +30,9 @@ struct process *process_create(void)
     list_init(&process->threads);
 
     process->pid = next_pid++;
+
+    list_push_back(&process_list,
+                   &process->process_node);
 
     return process;
 }
