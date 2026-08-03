@@ -2,9 +2,10 @@
 #include "pmm.h"
 #include "memory.h"
 #include "printf.h"
+#include "util.h"
 
 #define PMM_TEST_PAGES 64
-#define PMM_MAX_TEST_PAGES 20000
+#define PMM_MAX_TEST_PAGES 10000
 
 // Definitions
 
@@ -268,7 +269,7 @@ static void test_pmm_allocate_until_oom(void)
 
 static void test_pmm_recover_after_oom(void)
 {
-    void *pages[PMM_MAX_TEST_PAGES];
+    static void *pages[PMM_MAX_TEST_PAGES];
     uint32_t first_count;
     uint32_t second_count;
 

@@ -2,6 +2,7 @@
 #include "vam.h"
 #include "memory.h"
 #include "printf.h"
+#include "util.h"
 
 #define VAM_TEST_PAGES 32768
 

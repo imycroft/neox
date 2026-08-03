@@ -3,21 +3,26 @@
 
 void kernel_tests(void)
 {
-     // test_memory();
+       // test_memory();
 
-     // test_paging();
+       // TODO :
+       // The test crashes when activated with the other tests, I will investigate why later;
 
-     // test_vam();
+       // test_paging();
 
-     // test_vmm();
+//       test_vam();
+//
+//       test_vmm();
+//
+//       test_heap();
+//
+//       test_process();
+//
+//       test_thread();
+//
+//       test_scheduler();
 
-     // test_heap();
+      test_list();
 
-     // test_process();
-
-     // test_thread();
-
-     // test_scheduler();
-
-     // test_summary();
+      test_summary();
 }

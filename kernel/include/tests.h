@@ -13,4 +13,6 @@ void test_process(void);
 void test_thread(void);
 void test_scheduler(void);
 
+void test_list(void);
+
 #endif

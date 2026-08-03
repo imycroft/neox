@@ -3,6 +3,7 @@
 #include "paging.h"
 #include "memory.h"
 #include "printf.h"
+#include "util.h"
 
 #define HEAP_TEST_LARGE_SIZE (32 * 1024)
 #define HEAP_STRESS_BLOCKS 4096

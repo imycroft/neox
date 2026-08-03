@@ -4,6 +4,7 @@
 #include "vmm.h"
 #include "memory.h"
 #include "printf.h"
+#include "util.h"
 
 #define VMM_TEST_PAGES 1024
 /* Test functions */

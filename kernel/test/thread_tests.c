@@ -2,6 +2,7 @@
 #include "thread.h"
 #include "process.h"
 #include "printf.h"
+#include "util.h"
 
 #define THREAD_TEST_COUNT 32
 

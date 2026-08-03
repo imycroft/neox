@@ -54,7 +54,4 @@ TEST_ASSERT((expr))
 #define TEST_ASSERT_FALSE(expr)       \
 TEST_ASSERT(!(expr))
 
-#define ARRAY_SIZE(arr) \
-(sizeof(arr) / sizeof((arr)[0]))
-
 #endif

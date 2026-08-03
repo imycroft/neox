@@ -1,6 +1,7 @@
 #include "test.h"
 #include "paging.h"
 #include "memory.h"
+#include "util.h"
 
 #define PAGING_STRESS_PAGES 32768
 
@@ -352,6 +353,7 @@ static void test_paging_map_thousands_of_pages(void)
         );
     }
 
+
     for (i = 0; i < PAGING_STRESS_PAGES; i++)
     {
         TEST_ASSERT_EQ(
@@ -362,6 +364,8 @@ static void test_paging_map_thousands_of_pages(void)
 
     test_pass();
 }
+
+
 /* ======== END OF TEST FUNCTIONS */
 
 

@@ -1,6 +1,7 @@
 #include "test.h"
 #include "process.h"
 #include "printf.h"
+#include "util.h"
 
 #define PROCESS_TEST_COUNT 32
 

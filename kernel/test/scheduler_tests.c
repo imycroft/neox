@@ -3,6 +3,7 @@
 #include "thread.h"
 #include "string.h"
 #include "printf.h"
+#include "util.h"
 
 /*
  * These tests exercise scheduler_add(), scheduler_next(), and
