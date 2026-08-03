@@ -11,7 +11,7 @@ void kernel_tests(void)
 
      // test_vmm();
 
-     //test_heap();
+     // test_heap();
 
      // test_process();
 
@@ -19,5 +19,5 @@ void kernel_tests(void)
 
      // test_scheduler();
 
-     //test_summary();
+     // test_summary();
 }
