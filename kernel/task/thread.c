@@ -1,5 +1,6 @@
 #include "thread.h"
 #include "scheduler.h"
+#include "process.h"
 
 #include "arch/x86/context.h"
 
@@ -108,6 +109,12 @@ struct thread *thread_create(
 
     thread->tid = next_tid++;
     thread->process = process;
+
+    if (process != NULL)
+    {
+        list_push_back(&process->threads,
+                       &thread->group_node);
+    }
 
     return thread;
 }

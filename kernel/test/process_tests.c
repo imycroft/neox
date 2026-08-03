@@ -1,5 +1,6 @@
 #include "test.h"
 #include "process.h"
+#include "list.h"
 #include "printf.h"
 #include "util.h"
 
@@ -82,7 +83,7 @@ static void test_process_no_threads_initially(void)
 
     TEST_ASSERT_NOT_NULL(process);
 
-    TEST_ASSERT_NULL(process->threads);
+    TEST_ASSERT_TRUE(list_empty(&process->threads));
 
     test_pass();
 }

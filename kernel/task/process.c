@@ -15,6 +15,8 @@ struct process *process_create(void)
 
     memset(process, 0, sizeof(*process));
 
+    list_init(&process->threads);
+
     process->pid = next_pid++;
 
     return process;

@@ -2,6 +2,7 @@
 #define PROCESS_H
 
 #include "types.h"
+#include "list.h"
 
 struct thread;
 
@@ -9,11 +10,8 @@ struct process
 {
     pid_t pid;
 
-    /* First thread owned by this process */
-    struct thread *threads;
-
-    /* Linked list of all processes */
-    struct process *next;
+    /* Threads owned by this process */
+    struct list threads;
 };
 
 struct process *process_create(void);

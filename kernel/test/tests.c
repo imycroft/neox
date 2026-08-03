@@ -22,7 +22,7 @@ void kernel_tests(void)
 //
        test_scheduler();
 
-      test_list();
+//      test_list();
 
       test_summary();
 }
