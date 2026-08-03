@@ -95,6 +95,24 @@ void list_insert_after(struct list_node *pos,
     pos->next = node;
 }
 
+void list_push_front(struct list *list,
+                     struct list_node *node)
+{
+    ASSERT(list != NULL);
+    ASSERT(node != NULL);
+
+    list_insert_after(&list->head, node);
+}
+
+void list_push_back(struct list *list,
+                    struct list_node *node)
+{
+    ASSERT(list != NULL);
+    ASSERT(node != NULL);
+
+    list_insert_before(&list->head, node);
+}
+
 void list_remove(struct list_node *node)
 {
     ASSERT(node != NULL);

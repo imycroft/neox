@@ -68,6 +68,10 @@ struct thread *thread_create(
 
     memset(thread, 0, sizeof(*thread));
 
+    list_node_init(&thread->group_node);
+    list_node_init(&thread->sched_node);
+    list_node_init(&thread->wait_node);
+
     thread->entry = entry;
 
     thread->kernel_stack = kmalloc(THREAD_STACK_SIZE);

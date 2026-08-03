@@ -7,7 +7,7 @@ struct thread;
 
 struct process
 {
-    uint32_t pid;
+    pid_t pid;
 
     /* First thread owned by this process */
     struct thread *threads;

@@ -4,6 +4,8 @@
 #include "memory.h"
 #include "types.h"
 
+#include "list.h"
+
 #define THREAD_STACK_SIZE PAGE_SIZE
 
 enum thread_state
@@ -18,7 +20,7 @@ struct process;
 
 struct thread
 {
-    uint32_t tid;
+    tid_t tid;
 
     /* Top of the kernel stack */
     uintptr_t kernel_sp;
@@ -35,8 +37,9 @@ struct thread
     /* Owning process */
     struct process *process;
 
-    /* Linked list */
-    struct thread *next;
+    struct list_node group_node;
+    struct list_node sched_node;
+    struct list_node wait_node;
 };
 
 struct thread *thread_create(

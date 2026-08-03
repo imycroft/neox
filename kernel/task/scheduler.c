@@ -1,11 +1,13 @@
 #include "scheduler.h"
-
+#include "list.h"
 #include "thread.h"
 #include "string.h"
 
+#include "util.h"
+
 #include "arch/x86/context.h"
 
-static struct thread *ready_list;
+static struct list ready_list;
 static struct thread *current;
 
 /*
@@ -23,32 +25,20 @@ static struct thread idle_thread;
 
 void scheduler_init(void)
 {
-    ready_list = NULL;
+    list_init(&ready_list);
+
     current = NULL;
+
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
 }
 
 void scheduler_add(struct thread *thread)
 {
-    struct thread *last;
-
     if (thread == NULL)
         return;
 
-    thread->next = NULL;
-
-    if (ready_list == NULL)
-    {
-        ready_list = thread;
-        return;
-    }
-
-    last = ready_list;
-
-    while (last->next != NULL)
-        last = last->next;
-
-    last->next = thread;
+    list_push_back(&ready_list,
+                   &thread->sched_node);
 }
 
 struct thread *scheduler_current(void)
@@ -58,26 +48,36 @@ struct thread *scheduler_current(void)
 
 struct thread *scheduler_next(void)
 {
-    if (ready_list == NULL)
+    struct list_node *node;
+
+    if (list_empty(&ready_list))
         return NULL;
 
     if (current == NULL)
     {
-        current = ready_list;
+        node = list_front(&ready_list);
+
+        current =
+        container_of(node,
+                     struct thread,
+                     sched_node);
+
         current->state = THREAD_RUNNING;
+
         return current;
     }
 
     current->state = THREAD_READY;
 
-    if (current->next != NULL)
-    {
-        current = current->next;
-    }
-    else
-    {
-        current = ready_list;
-    }
+    node = list_next(&current->sched_node);
+
+    if (node == &ready_list.head)
+        node = list_front(&ready_list);
+
+    current =
+    container_of(node,
+                 struct thread,
+                 sched_node);
 
     current->state = THREAD_RUNNING;
 
@@ -110,6 +110,8 @@ static void scheduler_switch(void)
 void scheduler_start(void)
 {
     memset(&idle_thread, 0, sizeof(idle_thread));
+
+    list_node_init(&idle_thread.sched_node);
 
     idle_thread.tid = 0;
     idle_thread.state = THREAD_RUNNING;
