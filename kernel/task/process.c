@@ -1,4 +1,5 @@
 #include "process.h"
+
 #include "heap.h"
 #include "string.h"
 
@@ -14,6 +15,8 @@ struct process *process_create(void)
         return NULL;
 
     memset(process, 0, sizeof(*process));
+
+    list_node_init(&process->process_node);
 
     list_init(&process->threads);
 
