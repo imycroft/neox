@@ -23,6 +23,14 @@ void process_add(struct process *process)
                    &process->process_node);
 }
 
+void process_remove(struct process *process)
+{
+    if (process == NULL)
+        return;
+
+    list_remove(&process->process_node);
+}
+
 struct process *process_create(void)
 {
     struct process *process;

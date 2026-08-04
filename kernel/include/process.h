@@ -19,6 +19,8 @@ struct process
 
 void process_add(struct process *process);
 
+void process_remove(struct process *process);
+
 struct process *process_create(void);
 
 #endif
