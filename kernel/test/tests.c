@@ -15,13 +15,13 @@ void kernel_tests(void)
 //       test_vmm();
 //
 //       test_heap();
-       test_string();
+//       test_string();
 //
        test_process();
 //
-//       test_thread();
+       test_thread();
 //
-//       test_scheduler();
+       test_scheduler();
 
 //      test_list();
 

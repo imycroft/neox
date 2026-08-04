@@ -1,3 +1,4 @@
+#include "scheduler.h"
 #include "test.h"
 #include "thread.h"
 #include "process.h"
@@ -199,6 +200,30 @@ static void test_thread_unique_tids(void)
     test_pass();
 }
 
+static void test_thread_unblock(void)
+{
+    struct process *process;
+    struct thread *thread;
+
+    scheduler_init();
+
+    process = process_create("test");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    thread = thread_create(process, dummy_entry);
+
+    TEST_ASSERT_NOT_NULL(thread);
+
+    thread->state = THREAD_BLOCKED;
+
+    thread_unblock(thread);
+
+    TEST_ASSERT_EQ(thread->state, THREAD_READY);
+
+    test_pass();
+}
+
 // API
 
 static test_entry_t tests[] =
@@ -209,6 +234,7 @@ static test_entry_t tests[] =
     { "thread_entry_point",         test_thread_entry_point         },
     { "thread_process_association", test_thread_process_association },
     { "thread_unique_tids",         test_thread_unique_tids         },
+    { "thread_unblock",             test_thread_unblock             },
 };
 
 void test_thread(void)

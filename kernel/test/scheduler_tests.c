@@ -190,6 +190,72 @@ static void test_scheduler_single_thread_repeats(void)
     test_pass();
 }
 
+/*
+ * Verify:
+ *
+ * - A current thread can be removed from the ready queue.
+ * - scheduler_next() continues from another available thread.
+ *
+ * This validates:
+ * - Scheduler behavior when the current thread is no longer
+ *   linked in the ready queue.
+ */
+static void test_scheduler_remove_ready_thread(void)
+{
+    struct thread a, b;
+    struct thread *next;
+
+    make_stub(&a, 108);
+    make_stub(&b, 109);
+
+    scheduler_init();
+
+    scheduler_add(&a);
+    scheduler_add(&b);
+
+    next = scheduler_next();
+
+    TEST_ASSERT_EQ(next, &a);
+
+    scheduler_remove(&b);
+
+    next = scheduler_next();
+
+    TEST_ASSERT_EQ(next, &a);
+
+    test_pass();
+}
+
+static void test_scheduler_block_current(void)
+{
+    struct thread a;
+    struct thread b;
+    struct thread *next;
+
+    make_stub(&a, 1);
+    make_stub(&b, 2);
+
+    scheduler_init();
+
+    scheduler_add(&a);
+    scheduler_add(&b);
+
+    next = scheduler_next();
+
+    TEST_ASSERT_EQ(next, &a);
+
+    a.state = THREAD_BLOCKED;
+
+    scheduler_remove(&a);
+
+    next = scheduler_next();
+
+    TEST_ASSERT_EQ(next, &b);
+    TEST_ASSERT_EQ(b.state, THREAD_RUNNING);
+
+    test_pass();
+}
+
 // API
 
 static test_entry_t tests[] =
@@ -200,6 +266,8 @@ static test_entry_t tests[] =
     { "scheduler_round_robin",           test_scheduler_round_robin           },
     { "scheduler_state_transitions",     test_scheduler_state_transitions     },
     { "scheduler_single_thread_repeats", test_scheduler_single_thread_repeats },
+    { "scheduler_remove_ready_thread",   test_scheduler_remove_ready_thread   },
+    { "scheduler_block_current",         test_scheduler_block_current         },
 };
 
 void test_scheduler(void)

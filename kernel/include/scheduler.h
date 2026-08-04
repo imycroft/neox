@@ -13,6 +13,8 @@ void scheduler_init(void);
 
 void scheduler_add(struct thread *thread);
 
+void scheduler_remove(struct thread *thread);
+
 struct thread *scheduler_current(void);
 
 struct thread *scheduler_next(void);

@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "assert.h"
 #include "list.h"
 #include "thread.h"
 #include "string.h"
@@ -41,6 +42,13 @@ void scheduler_add(struct thread *thread)
                    &thread->sched_node);
 }
 
+void scheduler_remove(struct thread *thread)
+{
+    ASSERT(thread != NULL);
+
+    list_remove(&thread->sched_node);
+}
+
 struct thread *scheduler_current(void)
 {
     return current;
@@ -67,12 +75,21 @@ struct thread *scheduler_next(void)
         return current;
     }
 
-    current->state = THREAD_READY;
+    if (current->state == THREAD_RUNNING)
+        current->state = THREAD_READY;
 
-    node = list_next(&current->sched_node);
-
-    if (node == &ready_list.head)
+    if (current->sched_node.next == NULL &&
+        current->sched_node.prev == NULL)
+    {
         node = list_front(&ready_list);
+    }
+    else
+    {
+        node = list_next(&current->sched_node);
+
+        if (node == &ready_list.head)
+            node = list_front(&ready_list);
+    }
 
     current =
     container_of(node,
@@ -140,5 +157,9 @@ void scheduler_yield(void)
     if (current == NULL)
         return;
 
+    __asm__ volatile ("cli");
+
     scheduler_switch();
+
+    __asm__ volatile ("sti");
 }

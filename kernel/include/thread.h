@@ -51,4 +51,6 @@ struct thread *thread_create(
 
 void thread_block(void);
 
+void thread_unblock(struct thread *thread);
+
 #endif

@@ -74,11 +74,24 @@ void thread_block(void)
 
     ASSERT(thread != NULL);
 
+    __asm__ volatile ("cli");
+
     thread->state = THREAD_BLOCKED;
 
     scheduler_remove(thread);
 
     scheduler_yield();
+}
+
+void thread_unblock(struct thread *thread)
+{
+    ASSERT(thread != NULL);
+
+    ASSERT(thread->state == THREAD_BLOCKED);
+
+    thread->state = THREAD_READY;
+
+    scheduler_add(thread);
 }
 
 struct thread *thread_create(
