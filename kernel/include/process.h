@@ -17,6 +17,7 @@ struct process
     struct list threads;
 };
 
+void process_add(struct process *process);
 
 struct process *process_create(void);
 

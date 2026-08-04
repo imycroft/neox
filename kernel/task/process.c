@@ -14,6 +14,15 @@ static struct list process_list =
     }
 };
 
+void process_add(struct process *process)
+{
+    if (process == NULL)
+        return;
+
+    list_push_back(&process_list,
+                   &process->process_node);
+}
+
 struct process *process_create(void)
 {
     struct process *process;
@@ -31,8 +40,7 @@ struct process *process_create(void)
 
     process->pid = next_pid++;
 
-    list_push_back(&process_list,
-                   &process->process_node);
+    process_add(process);
 
     return process;
 }
