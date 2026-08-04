@@ -2,7 +2,7 @@
 
 Neox is divided into independent subsystems.
 
-```
+```text
 Boot
  │
  ▼
@@ -13,6 +13,9 @@ Memory Management
  │
  ▼
 Tasking
+ │
+ ▼
+Synchronization
  │
  ▼
 Drivers
@@ -49,6 +52,7 @@ Current components:
 - IRQ
 - PIC
 - PIT
+- Context switching
 
 ---
 
@@ -56,7 +60,7 @@ Current components:
 
 Layers:
 
-```
+```text
 PMM
  │
  ▼
@@ -76,11 +80,11 @@ Heap
 
 Bitmap allocator.
 
-Responsible for physical pages.
+Responsible for physical page allocation.
 
 ## Paging
 
-Virtual to physical translation.
+Virtual-to-physical address translation.
 
 ## VAM
 
@@ -92,23 +96,80 @@ Maps virtual pages to physical pages.
 
 ## Heap
 
-Dynamic kernel allocations.
+Dynamic kernel memory allocation.
 
 ---
 
 # Tasking
 
-Current infrastructure:
+Current components:
 
-- Process
-- Thread
-- Scheduler
+```text
+Process
+ │
+ ▼
+Thread
+ │
+ ▼
+Scheduler
+```
 
-Future:
+### Process
 
-- Context switching
-- User mode
-- Process isolation
+Owns resources and groups one or more threads.
+
+### Thread
+
+Represents the schedulable execution unit.
+
+Each thread owns:
+
+- Kernel stack
+- Execution context
+- Scheduling state
+
+A thread belongs to exactly one process.
+
+### Scheduler
+
+Provides:
+
+- Round-robin scheduling
+- Timer-driven preemption
+- Cooperative yielding
+- Thread blocking
+- Thread unblocking
+
+---
+
+# Synchronization
+
+Current layers:
+
+```text
+Wait Queue
+      │
+      ▼
+Semaphores      (planned)
+      │
+      ▼
+Mutexes         (planned)
+      │
+      ▼
+Condition Variables (planned)
+```
+
+## Wait Queues
+
+Generic FIFO blocking primitive.
+
+Provides:
+
+- Thread enqueue
+- Wake one
+- Wake all
+
+Forms the foundation for all higher-level synchronization primitives.
 
 ---
 
@@ -129,6 +190,28 @@ Future:
 
 ---
 
+# Filesystems
+
+Planned layers:
+
+- VFS
+- Initramfs
+- Native filesystems
+
+---
+
+# Userland
+
+Planned components:
+
+- Ring 3
+- System calls
+- ELF loader
+- libc
+- Shell
+
+---
+
 # Philosophy
 
 Each subsystem should be:
@@ -137,3 +220,4 @@ Each subsystem should be:
 - Testable
 - Documented
 - Refactorable
+- Incrementally developed and frozen after validation

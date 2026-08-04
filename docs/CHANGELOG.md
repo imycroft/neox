@@ -45,6 +45,13 @@ All notable changes to Neox will be documented in this file.
 - Scheduler infrastructure.
 - Timer-driven preemptive round-robin scheduling (`scheduler_tick()`, `scheduler_yield()`, `scheduler_start()`).
 - Scheduler-owned idle thread, replacing the ad hoc `main_sp` boot-stack pointer.
+- Thread blocking (`thread_block()`).
+- Thread unblocking (`thread_unblock()`).
+- Generic wait queue infrastructure.
+- FIFO wait queues.
+- Wake-one (`wait_queue_wake()`).
+- Wake-all (`wait_queue_wake_all()`).
+- Thread waiting (`thread_wait()`).
 
 #### Testing
 
@@ -57,6 +64,7 @@ All notable changes to Neox will be documented in this file.
 - Process unit test suite.
 - Thread unit test suite.
 - Scheduler unit test suite.
+- Wait queue unit test suite.
 
 ### Changed
 
@@ -65,13 +73,18 @@ All notable changes to Neox will be documented in this file.
 - Refactored VMM page mapping and rollback into reusable private helpers.
 - `irq_handler()` now sends the PIC EOI before calling `scheduler_tick()` on IRQ0, since `scheduler_tick()` may context switch and suspend the current handler invocation indefinitely; sending EOI first keeps the timer firing for whichever thread runs next.
 - Removed the manual cooperative test scaffold from `kernel_init()` (`thread1`, `main_sp`); replaced with `scheduler_start()`.
+- Refactored scheduler state transitions to correctly handle blocked and terminated threads.
+- Scheduler now safely handles removal of the currently running thread during blocking.
+- Wait queue operations now maintain thread ownership through `thread->wait_queue`.
 
 ### Fixed
 
 - `paging_unmap()` is now idempotent when no page table exists.
 - Added TLB invalidation after page mapping and unmapping.
 - `thread_bootstrap()` now re-enables interrupts (`sti`) on a thread's first run. A thread's first run is reached via `context_switch()`'s `ret`, not `iret`; when the switch was triggered from inside the timer ISR, interrupts were left disabled for that thread indefinitely without this fix.
-- Fixed a pre-existing build failure: added a freestanding `bool`/`true`/`false` definition to `types.h` (the project builds with `-nostdinc`, so `<stdbool.h>` is unavailable).
+- Fixed scheduler state corruption when blocking the current thread.
+- Fixed scheduler handling of detached ready-list nodes during thread blocking.
+- Fixed wait queue ownership bookkeeping when threads leave a wait queue.
 
 ## v0.5.0
 

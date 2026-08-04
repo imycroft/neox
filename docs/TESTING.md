@@ -35,7 +35,7 @@ before being considered complete.
 
 Result:
 
-```
+```text
 12 tests
 12 passed
 0 failed
@@ -63,7 +63,7 @@ Result:
 
 Result:
 
-```
+```text
 10 tests
 10 passed
 0 failed
@@ -93,14 +93,15 @@ Result:
 
 Result:
 
-```
+```text
 11 tests
 11 passed
 0 failed
 ```
-Note:
 
-The repeated single-page allocation stress test is not executed during normal kernel tests because the current first-fit allocator has linear scan behavior.
+**Note**
+
+The repeated single-page allocation stress test is not executed during normal kernel tests because the current first-fit allocator performs a linear bitmap scan.
 
 ---
 
@@ -126,7 +127,7 @@ The repeated single-page allocation stress test is not executed during normal ke
 
 Result:
 
-```
+```text
 15 tests
 15 passed
 0 failed
@@ -157,7 +158,7 @@ Result:
 
 Result:
 
-```
+```text
 13 tests
 13 passed
 0 failed
@@ -171,17 +172,21 @@ Result:
 
 - Create process
 - Unique PIDs
+- Process lookup by PID
+- Process lookup by name
 - No threads owned initially
 
 Result:
 
-```
-3 tests
-3 passed
+```text
+5 tests
+5 passed
 0 failed
 ```
 
-Note: no stress tests yet (e.g. sustained mass process creation). Process teardown/reclamation does not exist yet, so this subsystem is validated but not stress tested.
+**Note**
+
+Process teardown and resource reclamation are not yet implemented. Stress testing (mass process creation/destruction) will be added once process termination exists.
 
 ---
 
@@ -190,21 +195,26 @@ Note: no stress tests yet (e.g. sustained mass process creation). Process teardo
 ### Unit Tests
 
 - Create thread
-- Initial state is THREAD_READY
+- Initial state is `THREAD_READY`
 - Kernel stack allocated and initial context within bounds
 - Entry point stored
 - Owning process association stored
 - Unique TIDs
+- Block thread
+- Unblock thread
+- Wait on queue
 
 Result:
 
-```
-6 tests
-6 passed
+```text
+9 tests
+9 passed
 0 failed
 ```
 
-Note: no stress tests yet. Thread teardown/reclamation does not exist yet (`thread_exit()` halts the thread in place rather than freeing it), so this subsystem is validated but not stress tested.
+**Note**
+
+Thread destruction and resource reclamation are not yet implemented. Stress testing will be introduced once the complete thread lifecycle (`thread_exit()` and process termination) is available.
 
 ---
 
@@ -215,19 +225,47 @@ Note: no stress tests yet. Thread teardown/reclamation does not exist yet (`thre
 - Empty ready list
 - `scheduler_add(NULL)` is ignored
 - Single-thread add and selection
-- Round-robin selection order, including wraparound
-- State transitions (THREAD_RUNNING / THREAD_READY) across selection
+- Round-robin selection order (including wraparound)
+- State transitions (`THREAD_RUNNING` ↔ `THREAD_READY`)
 - Single-thread ready list repeats correctly
+- Remove thread from ready queue
+- Remove current blocked thread
+- Current thread tracking
 
 Result:
 
-```
-6 tests
-6 passed
+```text
+9 tests
+9 passed
 0 failed
 ```
 
-Note: these are ready-queue unit tests only, run with interrupts disabled against stub threads (no real stack). They do not exercise an actual context switch. Preemptive round-robin scheduling itself (`scheduler_tick()` context switching between real, independently executing kernel threads) was validated by booting the kernel under QEMU and observing sustained, correctly interleaved execution of two kernel threads over hundreds of preemption cycles with no crashes — see the "Timer-driven preemptive scheduling" entry in the changelog. Stress tests (many threads, high-frequency `scheduler_yield()`, long-running sustained load) are still pending before this subsystem can be frozen.
+**Note**
+
+These tests validate scheduler logic independently of actual context switching. Timer-driven preemptive scheduling has also been validated under QEMU using multiple concurrently executing kernel threads. Large-scale scheduler stress testing (high thread counts, sustained preemption, prolonged execution, and quantum tuning) remains pending.
+
+---
+
+## Wait Queues
+
+### Unit Tests
+
+- FIFO add/remove
+- Wake first waiting thread
+- Wake one thread while preserving FIFO order
+- Wake all waiting threads
+
+Result:
+
+```text
+4 tests
+4 passed
+0 failed
+```
+
+**Note**
+
+The wait queue subsystem provides the generic blocking infrastructure used by future synchronization primitives. Stress tests will be introduced together with semaphores, mutexes, and condition variables.
 
 ---
 
@@ -235,31 +273,23 @@ Note: these are ready-queue unit tests only, run with interrupts disabled agains
 
 Subsystem lifecycle:
 
+```text
 Design
-
-↓
-
+   ↓
 Implementation
-
-↓
-
+   ↓
 Unit Tests
-
-↓
-
+   ↓
 Stress Tests
-
-↓
-
+   ↓
 Refactor
-
-↓
-
+   ↓
 Freeze
+```
 
 Once frozen, a subsystem should only change to:
 
-- fix bugs
-- improve performance
+- Fix bugs.
+- Improve performance.
 
 Behavior must remain unchanged.
