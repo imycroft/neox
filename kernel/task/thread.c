@@ -58,14 +58,10 @@ static uint32_t next_tid = 1;
 
 void thread_add(struct thread *thread)
 {
-    if (thread == NULL)
-        return;
+    ASSERT(thread != NULL);
 
-    if (thread->process != NULL)
-    {
-        list_push_back(&thread->process->threads,
-                       &thread->group_node);
-    }
+    list_push_back(&thread->process->threads,
+                   &thread->group_node);
 
     scheduler_add(thread);
 }

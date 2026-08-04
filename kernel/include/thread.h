@@ -42,6 +42,8 @@ struct thread
     struct list_node wait_node;
 };
 
+void thread_add(struct thread *thread);
+
 struct thread *thread_create(
     struct process *process,
     void (*entry)(void)
