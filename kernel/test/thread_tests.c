@@ -118,7 +118,7 @@ static void test_thread_process_association(void)
     struct process *process;
     struct thread *thread;
 
-    process = process_create();
+    process = process_create("test");
 
     TEST_ASSERT_NOT_NULL(process);
 

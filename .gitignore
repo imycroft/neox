@@ -9,3 +9,4 @@ build/
 *.log
 .kateproject
 *.json
+*.clangd

@@ -2,6 +2,7 @@
 
 #include "heap.h"
 #include "string.h"
+#include "util.h"
 
 static uint32_t next_pid = 1;
 
@@ -31,7 +32,27 @@ void process_remove(struct process *process)
     list_remove(&process->process_node);
 }
 
-struct process *process_create(void)
+struct process *process_find(pid_t pid)
+{
+    struct list_node *node;
+    struct process *process;
+
+    for (node = list_front(&process_list);
+         node != &process_list.head;
+    node = list_next(node))
+         {
+             process = container_of(node,
+                                    struct process,
+                                    process_node);
+
+             if (process->pid == pid)
+                 return process;
+         }
+
+         return NULL;
+}
+
+struct process *process_create(const char *name)
 {
     struct process *process;
 
@@ -47,6 +68,12 @@ struct process *process_create(void)
     list_init(&process->threads);
 
     process->pid = next_pid++;
+
+    strncpy(process->name,
+            name,
+            PROCESS_NAME_MAX - 1);
+
+    process->name[PROCESS_NAME_MAX - 1] = '\0';
 
     process_add(process);
 

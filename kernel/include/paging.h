@@ -1,6 +1,5 @@
 #pragma once
 
-#include "memory.h"
 #include "types.h"
 
 /* Entries per table */

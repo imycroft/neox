@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stdarg.h"
-#include "types.h"
 
 int printf(const char *fmt, ...);
 int vprintf(const char *fmt, va_list args);

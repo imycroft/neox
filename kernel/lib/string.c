@@ -58,6 +58,27 @@ char *strcpy(char *dest, const char *src)
     return ret;
 }
 
+char *strncpy(char *dest,
+              const char *src,
+              size_t n)
+{
+    char *ret = dest;
+
+    while (n && *src)
+    {
+        *dest++ = *src++;
+        n--;
+    }
+
+    while (n)
+    {
+        *dest++ = '\0';
+        n--;
+    }
+
+    return ret;
+}
+
 int strcmp(const char *a, const char *b)
 {
     while (*a && (*a == *b))

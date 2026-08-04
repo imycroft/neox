@@ -3,6 +3,7 @@
 #include "list.h"
 #include "printf.h"
 #include "util.h"
+#include "string.h"
 
 #define PROCESS_TEST_COUNT 32
 
@@ -27,11 +28,13 @@ static void test_process_create(void)
 {
     struct process *process;
 
-    process = process_create();
+    process = process_create("test");
 
     TEST_ASSERT_NOT_NULL(process);
 
     TEST_ASSERT_TRUE(process->pid > 0);
+
+    TEST_ASSERT_EQ(strcmp(process->name, "test"), 0);
 
     test_pass();
 }
@@ -52,7 +55,7 @@ static void test_process_unique_pids(void)
 
     for (i = 0; i < PROCESS_TEST_COUNT; i++)
     {
-        processes[i] = process_create();
+        processes[i] = process_create("test");
 
         TEST_ASSERT_NOT_NULL(processes[i]);
     }
@@ -79,7 +82,7 @@ static void test_process_no_threads_initially(void)
 {
     struct process *process;
 
-    process = process_create();
+    process = process_create("test");
 
     TEST_ASSERT_NOT_NULL(process);
 
@@ -102,7 +105,7 @@ static void test_process_find_existing(void)
     struct process *process;
     struct process *found;
 
-    process = process_create();
+    process = process_create("test");
 
     TEST_ASSERT_NOT_NULL(process);
 
