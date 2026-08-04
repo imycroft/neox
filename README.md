@@ -1,57 +1,89 @@
 # Neox
 
-Neox is a 32-bit x86 hobby operating system written from scratch in C and x86 Assembly.
+Neox is a 32-bit x86 hobby operating system written from scratch in C23 and x86 Assembly.
 
-The project focuses on learning operating system internals while following modern software engineering practices:
+The project focuses on learning operating system internals while following disciplined software engineering practices:
 
 - Clean architecture
 - Incremental development
 - Extensive testing
-- Well-documented code
-- Small, reviewable commits
-
----
+- Comprehensive documentation
+- Small, focused commits
 
 ---
 
 ## Goals
 
 - Learn operating system internals by building a kernel from scratch.
-- Emphasize correctness over feature count.
+- Prioritize correctness, simplicity, and maintainability.
 - Develop each subsystem through design, implementation, testing, refactoring, and freeze.
-- Keep the codebase simple, readable, and maintainable.
+- Build a modular kernel with independently testable subsystems.
+
+---
 
 ## Implemented Subsystems
 
-- Boot
-- CPU initialization (GDT, IDT, ISR, IRQ, PIC, PIT)
-- VGA text console
-- Keyboard driver (QWERTY and AZERTY)
+### Boot
+
+- GRUB
+- Multiboot2
+
+### Architecture
+
+- Global Descriptor Table (GDT)
+- Interrupt Descriptor Table (IDT)
+- Interrupt Service Routines (ISR)
+- Interrupt Requests (IRQ)
+- Programmable Interrupt Controller (PIC)
+- Programmable Interval Timer (PIT)
+- x86 context switching
+
+### Drivers
+
+- VGA text-mode console
+- PS/2 keyboard driver
+- QWERTY keymap
+- AZERTY keymap
+
+### Memory Management
+
 - Physical Memory Manager (PMM)
 - Paging
 - Virtual Address Manager (VAM)
 - Virtual Memory Manager (VMM)
-- Kernel Heap
-- Process management
-- Thread management
-- Cooperative context switching
-- Scheduler infrastructure
+- Kernel heap
+
+### Tasking
+
+- Process infrastructure
+- Thread infrastructure
+- Preemptive round-robin scheduler
+- Thread blocking and unblocking
+
+### Synchronization
+
+- Generic wait queues
+- Wake-one and wake-all operations
 
 ---
 
 ## Testing
 
-Neox contains a built-in kernel testing framework.
+Neox includes a built-in kernel testing framework.
 
-Current test suites:
+Current test coverage includes:
 
 - Physical Memory Manager (PMM)
 - Paging
 - Virtual Address Manager (VAM)
 - Virtual Memory Manager (VMM)
 - Kernel Heap
+- Process infrastructure
+- Thread infrastructure
+- Scheduler
+- Wait queues
 
-Additional subsystem tests will be added as each subsystem reaches the validation phase.
+Every subsystem is validated through unit tests before being considered complete. Stress tests are added where appropriate before a subsystem is frozen.
 
 ---
 
@@ -59,12 +91,12 @@ Additional subsystem tests will be added as each subsystem reaches the validatio
 
 Project documentation is located in the `docs/` directory.
 
-- STATUS.md
-- ARCHITECTURE.md
-- ROADMAP.md
-- TESTING.md
-- CHANGELOG.md
-- CONTRIBUTING.md
+- `STATUS.md`
+- `ARCHITECTURE.md`
+- `ROADMAP.md`
+- `TESTING.md`
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
 
 ---
 
@@ -74,7 +106,7 @@ Project documentation is located in the `docs/` directory.
 make
 ```
 
-Run:
+Run under QEMU:
 
 ```bash
 make run
@@ -86,17 +118,26 @@ make run
 
 Neox is under active development.
 
-For the current development status, completed milestones, and roadmap, see `docs/STATUS.md`.
+Current focus:
+
+- Kernel synchronization primitives
+- Scheduler validation
+- Thread and process lifecycle management
+
+See `docs/STATUS.md` for the latest development status, completed milestones, and upcoming work.
 
 ---
 
 ## Repository Layout
 
+```text
+boot/       Bootloader
+docs/       Project documentation
+include/    Public kernel headers
+kernel/     Kernel source code
+iso/        Bootable ISO image
 ```
-kernel/    Kernel source code
-docs/      Documentation
-iso/       ISO image
-```
+
 ---
 
 ## License
