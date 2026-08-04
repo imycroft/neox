@@ -7,6 +7,7 @@
 
 #include "heap.h"
 #include "string.h"
+#include "wait.h"
 
 // Private functions
 static void thread_exit(void)
@@ -94,6 +95,21 @@ void thread_unblock(struct thread *thread)
     scheduler_add(thread);
 }
 
+void thread_wait(struct wait_queue *queue)
+{
+    struct thread *thread;
+
+    ASSERT(queue != NULL);
+
+    thread = scheduler_current();
+
+    ASSERT(thread != NULL);
+
+    wait_queue_add(queue, thread);
+
+    thread_block();
+}
+
 struct thread *thread_create(
     struct process *process,
     void (*entry)(void)
@@ -153,5 +169,6 @@ struct thread *thread_create(
 
     return thread;
 }
+
 
 

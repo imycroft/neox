@@ -15,5 +15,6 @@ void test_thread(void);
 void test_scheduler(void);
 
 void test_list(void);
+void test_wait(void);
 
 #endif

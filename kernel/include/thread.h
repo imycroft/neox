@@ -17,6 +17,7 @@ enum thread_state
 };
 
 struct process;
+struct wait_queue;
 
 struct thread
 {
@@ -40,6 +41,8 @@ struct thread
     struct list_node group_node;
     struct list_node sched_node;
     struct list_node wait_node;
+
+    struct wait_queue *wait_queue;
 };
 
 void thread_add(struct thread *thread);
@@ -52,5 +55,7 @@ struct thread *thread_create(
 void thread_block(void);
 
 void thread_unblock(struct thread *thread);
+
+void thread_wait(struct wait_queue *queue);
 
 #endif
