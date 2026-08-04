@@ -18,5 +18,6 @@ void test_list(void);
 void test_wait(void);
 
 void test_semaphore(void);
+void test_mutex(void);
 
 #endif

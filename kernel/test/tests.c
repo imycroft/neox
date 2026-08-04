@@ -27,6 +27,7 @@ void kernel_tests(void)
 //       test_wait();
 
       test_semaphore();
+      test_mutex();
 
       test_summary();
 }
