@@ -24,7 +24,9 @@ void kernel_tests(void)
 //       test_scheduler();
 
 //      test_list();
-       test_wait();
+//       test_wait();
+
+      test_semaphore();
 
       test_summary();
 }

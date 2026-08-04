@@ -17,4 +17,6 @@ void test_scheduler(void);
 void test_list(void);
 void test_wait(void);
 
+void test_semaphore(void);
+
 #endif
