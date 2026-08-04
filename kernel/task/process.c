@@ -52,6 +52,31 @@ struct process *process_find(pid_t pid)
          return NULL;
 }
 
+struct process *process_find_by_name(
+    const char *name
+)
+{
+    struct list_node *node;
+    struct process *process;
+
+    if (name == NULL)
+        return NULL;
+
+    for (node = list_front(&process_list);
+         node != &process_list.head;
+    node = list_next(node))
+         {
+             process = container_of(node,
+                                    struct process,
+                                    process_node);
+
+             if (strcmp(process->name, name) == 0)
+                 return process;
+         }
+
+         return NULL;
+}
+
 struct process *process_create(const char *name)
 {
     struct process *process;

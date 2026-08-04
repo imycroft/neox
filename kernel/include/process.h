@@ -27,6 +27,8 @@ void process_remove(struct process *process);
 
 struct process *process_find(pid_t pid);
 
+struct process *process_find_by_name(const char *name);
+
 struct process *process_create(const char *name);
 
 #endif

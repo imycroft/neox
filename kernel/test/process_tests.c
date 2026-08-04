@@ -132,6 +132,48 @@ static void test_process_find_missing(void)
     test_pass();
 }
 
+/*
+ * Verify:
+ *
+ * - process_find_by_name() returns the correct process
+ *   when searching for an existing name.
+ *
+ * This validates:
+ * - Process lookup by name.
+ */
+static void test_process_find_by_name_existing(void)
+{
+    struct process *process;
+    struct process *found;
+
+    process = process_create("init");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    found = process_find_by_name("init");
+
+    TEST_ASSERT_EQ(found, process);
+
+    test_pass();
+}
+
+/*
+ * Verify:
+ *
+ * - process_find_by_name() returns NULL when the
+ *   process name does not exist.
+ *
+ * This validates:
+ * - Failed process name lookup.
+ */
+static void test_process_find_by_name_missing(void)
+{
+    TEST_ASSERT_NULL(
+        process_find_by_name("does_not_exist")
+    );
+
+    test_pass();
+}
 
 // API
 
@@ -142,6 +184,8 @@ static test_entry_t tests[] =
     { "process_no_threads_initially", test_process_no_threads_initially },
     { "process_find_existing",        test_process_find_existing        },
     { "process_find_missing",         test_process_find_missing         },
+    { "process_find_by_name_existing", test_process_find_by_name_existing },
+    { "process_find_by_name_missing",  test_process_find_by_name_missing  },
 };
 
 void test_process(void)
