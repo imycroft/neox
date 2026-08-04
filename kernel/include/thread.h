@@ -49,4 +49,6 @@ struct thread *thread_create(
     void (*entry)(void)
 );
 
+void thread_block(void);
+
 #endif

@@ -66,6 +66,21 @@ void thread_add(struct thread *thread)
     scheduler_add(thread);
 }
 
+void thread_block(void)
+{
+    struct thread *thread;
+
+    thread = scheduler_current();
+
+    ASSERT(thread != NULL);
+
+    thread->state = THREAD_BLOCKED;
+
+    scheduler_remove(thread);
+
+    scheduler_yield();
+}
+
 struct thread *thread_create(
     struct process *process,
     void (*entry)(void)
