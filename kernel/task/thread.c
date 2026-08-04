@@ -1,4 +1,5 @@
 #include "thread.h"
+#include "assert.h"
 #include "scheduler.h"
 #include "process.h"
 
@@ -55,12 +56,28 @@ static uint32_t next_tid = 1;
 
 // API Functions
 
+void thread_add(struct thread *thread)
+{
+    if (thread == NULL)
+        return;
+
+    if (thread->process != NULL)
+    {
+        list_push_back(&thread->process->threads,
+                       &thread->group_node);
+    }
+
+    scheduler_add(thread);
+}
+
 struct thread *thread_create(
     struct process *process,
     void (*entry)(void)
 )
 {
     struct thread *thread;
+
+    ASSERT(process != NULL);
 
     thread = kmalloc(sizeof(*thread));
 
@@ -109,12 +126,6 @@ struct thread *thread_create(
 
     thread->tid = next_tid++;
     thread->process = process;
-
-    if (process != NULL)
-    {
-        list_push_back(&process->threads,
-                       &thread->group_node);
-    }
 
     return thread;
 }

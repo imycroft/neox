@@ -26,7 +26,14 @@ static void test_thread_create(void)
 {
     struct thread *thread;
 
-    thread = thread_create(NULL, dummy_entry);
+    struct process *process;
+
+    process = process_create("test");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    thread = thread_create(process,
+                           dummy_entry);
 
     TEST_ASSERT_NOT_NULL(thread);
 
@@ -45,7 +52,14 @@ static void test_thread_initial_state(void)
 {
     struct thread *thread;
 
-    thread = thread_create(NULL, dummy_entry);
+    struct process *process;
+
+    process = process_create("test");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    thread = thread_create(process,
+                           dummy_entry);
 
     TEST_ASSERT_NOT_NULL(thread);
 
@@ -69,7 +83,14 @@ static void test_thread_stack_allocated(void)
     uintptr_t stack_start;
     uintptr_t stack_end;
 
-    thread = thread_create(NULL, dummy_entry);
+    struct process *process;
+
+    process = process_create("test");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    thread = thread_create(process,
+                           dummy_entry);
 
     TEST_ASSERT_NOT_NULL(thread);
 
@@ -96,7 +117,14 @@ static void test_thread_entry_point(void)
 {
     struct thread *thread;
 
-    thread = thread_create(NULL, dummy_entry);
+    struct process *process;
+
+    process = process_create("test");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    thread = thread_create(process,
+                           dummy_entry);
 
     TEST_ASSERT_NOT_NULL(thread);
 
@@ -144,11 +172,17 @@ static void test_thread_process_association(void)
 static void test_thread_unique_tids(void)
 {
     struct thread *threads[THREAD_TEST_COUNT];
+    struct process *process;
     uint32_t i;
 
     for (i = 0; i < THREAD_TEST_COUNT; i++)
     {
-        threads[i] = thread_create(NULL, dummy_entry);
+        process = process_create("test");
+
+        TEST_ASSERT_NOT_NULL(process);
+
+        threads[i] = thread_create(process,
+                                   dummy_entry);
 
         TEST_ASSERT_NOT_NULL(threads[i]);
 
