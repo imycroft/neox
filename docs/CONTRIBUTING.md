@@ -6,6 +6,24 @@ The project follows an incremental development model: each subsystem is designed
 
 ---
 
+# Current Contribution Policy
+
+Feature contributions are **temporarily closed**.
+
+Neox is still in the early stages of development, where the architecture of each subsystem is evolving rapidly. Because development follows a strict incremental workflow, multiple people cannot effectively implement the same subsystem in parallel without causing conflicting designs, duplicated work, or unnecessary architectural churn.
+
+At this stage, the only external contributions being accepted are:
+
+- Bug fixes
+- Documentation corrections
+- Typographical fixes
+
+Bug-fix pull requests should remain focused on a single issue and should include regression tests whenever practical.
+
+Once the kernel reaches a more mature and stable state, feature contributions will be opened. Development will then be organized around milestones and individual tasks so contributors can work on independent features in parallel.
+
+---
+
 # Development Workflow
 
 Every subsystem follows the same lifecycle:
