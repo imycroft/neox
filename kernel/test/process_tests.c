@@ -88,6 +88,48 @@ static void test_process_no_threads_initially(void)
     test_pass();
 }
 
+/*
+ * Verify:
+ *
+ * - process_find() returns the correct process when
+ *   searching for an existing PID.
+ *
+ * This validates:
+ * - PID lookup in the global process list.
+ */
+static void test_process_find_existing(void)
+{
+    struct process *process;
+    struct process *found;
+
+    process = process_create();
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    found = process_find(process->pid);
+
+    TEST_ASSERT_EQ(found, process);
+
+    test_pass();
+}
+
+/*
+ * Verify:
+ *
+ * - process_find() returns NULL when the PID
+ *   does not exist.
+ *
+ * This validates:
+ * - Failed PID lookup.
+ */
+static void test_process_find_missing(void)
+{
+    TEST_ASSERT_NULL(process_find((pid_t)-1));
+
+    test_pass();
+}
+
+
 // API
 
 static test_entry_t tests[] =
@@ -95,6 +137,8 @@ static test_entry_t tests[] =
     { "process_create",               test_process_create               },
     { "process_unique_pids",          test_process_unique_pids          },
     { "process_no_threads_initially", test_process_no_threads_initially },
+    { "process_find_existing",        test_process_find_existing        },
+    { "process_find_missing",         test_process_find_missing         },
 };
 
 void test_process(void)
