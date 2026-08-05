@@ -56,6 +56,7 @@ void thread_block(void);
 
 void thread_unblock(struct thread *thread);
 
-void thread_wait(struct wait_queue *queue);
+void thread_yield(void);
+
 
 #endif

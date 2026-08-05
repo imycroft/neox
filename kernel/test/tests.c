@@ -19,12 +19,12 @@ void kernel_tests(void)
 //
 //       test_process();
 //
-//       test_thread();
+       test_thread();
 //
-//       test_scheduler();
+       test_scheduler();
 
 //      test_list();
-//       test_wait();
+      test_wait();
 
       test_semaphore();
       test_mutex();

@@ -22,7 +22,7 @@ void semaphore_acquire(struct semaphore *sem)
         return;
     }
 
-    thread_wait(&sem->wait_queue);
+    wait_queue_sleep(&sem->wait_queue);
 }
 
 void semaphore_release(struct semaphore *sem)

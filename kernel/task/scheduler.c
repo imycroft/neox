@@ -1,4 +1,6 @@
 #include "scheduler.h"
+#include "scheduler_internal.h"
+#include "arch.h"
 #include "assert.h"
 #include "list.h"
 #include "thread.h"
@@ -109,6 +111,7 @@ struct thread *scheduler_next(void)
  */
 static void scheduler_switch(void)
 {
+    ASSERT(!interrupt_enabled());
     struct thread *old;
     struct thread *next;
 
@@ -154,12 +157,10 @@ void scheduler_tick(void)
 
 void scheduler_yield(void)
 {
+    ASSERT(!interrupt_enabled());
     if (current == NULL)
         return;
 
-    __asm__ volatile ("cli");
-
     scheduler_switch();
 
-    __asm__ volatile ("sti");
 }

@@ -41,10 +41,6 @@ void scheduler_start(void);
  */
 void scheduler_tick(void);
 
-/*
- * Voluntarily give up the remainder of the current
- * thread's quantum and switch to the next ready thread.
- */
-void scheduler_yield(void);
+
 
 #endif

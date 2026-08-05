@@ -3,9 +3,10 @@
 #include "assert.h"
 #include "thread.h"
 #include "util.h"
+#include "scheduler.h"
+#include "scheduler_internal.h"
 
-
-
+#include "arch.h"
 void wait_queue_init(struct wait_queue *queue)
 {
     ASSERT(queue != NULL);
@@ -82,3 +83,28 @@ void wait_queue_wake_all(struct wait_queue *queue)
     while ((thread = wait_queue_remove(queue)) != NULL)
         thread_unblock(thread);
 }
+
+void wait_queue_sleep(struct wait_queue *queue)
+{
+    struct thread *thread;
+    interrupt_state_t state;
+
+    ASSERT(queue != NULL);
+
+    thread = scheduler_current();
+
+    ASSERT(thread != NULL);
+
+    state = interrupt_save();
+
+    wait_queue_add(queue, thread);
+
+    thread->state = THREAD_BLOCKED;
+
+    scheduler_remove(thread);
+
+    scheduler_yield();
+
+    interrupt_restore(state);
+}
+

@@ -1,9 +1,11 @@
 #include "thread.h"
 #include "assert.h"
 #include "scheduler.h"
+#include "scheduler_internal.h"
 #include "process.h"
 
 #include "arch/x86/context.h"
+#include "arch.h"
 
 #include "heap.h"
 #include "string.h"
@@ -44,7 +46,7 @@ static void thread_bootstrap(void)
 {
     struct thread *thread;
 
-    __asm__ volatile ("sti");
+    interrupt_enable();
 
     thread = scheduler_current();
 
@@ -70,18 +72,21 @@ void thread_add(struct thread *thread)
 void thread_block(void)
 {
     struct thread *thread;
+    interrupt_state_t state;
 
     thread = scheduler_current();
 
     ASSERT(thread != NULL);
 
-    __asm__ volatile ("cli");
+    state = interrupt_save();
 
     thread->state = THREAD_BLOCKED;
 
     scheduler_remove(thread);
 
     scheduler_yield();
+
+    interrupt_restore(state);
 }
 
 void thread_unblock(struct thread *thread)
@@ -93,21 +98,6 @@ void thread_unblock(struct thread *thread)
     thread->state = THREAD_READY;
 
     scheduler_add(thread);
-}
-
-void thread_wait(struct wait_queue *queue)
-{
-    struct thread *thread;
-
-    ASSERT(queue != NULL);
-
-    thread = scheduler_current();
-
-    ASSERT(thread != NULL);
-
-    wait_queue_add(queue, thread);
-
-    thread_block();
 }
 
 struct thread *thread_create(
@@ -170,5 +160,16 @@ struct thread *thread_create(
     return thread;
 }
 
+void thread_yield(void)
+{
+    if (scheduler_current() == NULL)
+        return;
 
+    interrupt_state_t state;
 
+    state = interrupt_save();
+
+    scheduler_yield();
+
+    interrupt_restore(state);
+}

@@ -24,4 +24,6 @@ struct thread *wait_queue_remove(
 void wait_queue_wake(struct wait_queue *queue);
 void wait_queue_wake_all(struct wait_queue *queue);
 
+void wait_queue_sleep(struct wait_queue *queue);
+
 #endif

@@ -22,7 +22,7 @@ void mutex_lock(struct mutex *mutex)
         return;
     }
 
-    thread_wait(&mutex->wait_queue);
+    wait_queue_sleep(&mutex->wait_queue);
 }
 
 void mutex_unlock(struct mutex *mutex)
