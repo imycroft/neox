@@ -91,13 +91,18 @@ void thread_block(void)
 
 void thread_unblock(struct thread *thread)
 {
-    ASSERT(thread != NULL);
+    interrupt_state_t state;
 
+    ASSERT(thread != NULL);
     ASSERT(thread->state == THREAD_BLOCKED);
+
+    state = interrupt_save();
 
     thread->state = THREAD_READY;
 
     scheduler_add(thread);
+
+    interrupt_restore(state);
 }
 
 struct thread *thread_create(

@@ -37,6 +37,8 @@ void scheduler_init(void)
 
 void scheduler_add(struct thread *thread)
 {
+    ASSERT(!interrupt_enabled());
+
     if (thread == NULL)
         return;
 
@@ -47,6 +49,7 @@ void scheduler_add(struct thread *thread)
 void scheduler_remove(struct thread *thread)
 {
     ASSERT(thread != NULL);
+    ASSERT(!interrupt_enabled());
 
     list_remove(&thread->sched_node);
 }
@@ -129,6 +132,10 @@ static void scheduler_switch(void)
 
 void scheduler_start(void)
 {
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
     memset(&idle_thread, 0, sizeof(idle_thread));
 
     list_node_init(&idle_thread.sched_node);
@@ -141,6 +148,8 @@ void scheduler_start(void)
     current = &idle_thread;
 
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
+
+    interrupt_restore(state);
 }
 
 void scheduler_tick(void)

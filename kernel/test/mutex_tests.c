@@ -1,3 +1,4 @@
+#include "arch.h"
 #include "test.h"
 #include "tests.h"
 
@@ -37,9 +38,15 @@ static void test_mutex_lock(void)
     thread = thread_create(process, dummy_entry);
     TEST_ASSERT_NOT_NULL(thread);
 
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
     scheduler_add(thread);
 
     scheduler_next();
+
+    interrupt_restore(state);
 
     mutex_init(&mutex);
 
@@ -64,9 +71,15 @@ static void test_mutex_unlock(void)
     thread = thread_create(process, dummy_entry);
     TEST_ASSERT_NOT_NULL(thread);
 
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
     scheduler_add(thread);
 
     scheduler_next();
+
+    interrupt_restore(state);
 
     mutex_init(&mutex);
 
@@ -99,9 +112,15 @@ static void test_mutex_unlock_transfers_owner(void)
     waiter = thread_create(process, dummy_entry);
     TEST_ASSERT_NOT_NULL(waiter);
 
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
     scheduler_add(owner);
 
     scheduler_next();
+
+    interrupt_restore(state);
 
     mutex_init(&mutex);
 

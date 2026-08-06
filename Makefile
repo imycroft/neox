@@ -16,7 +16,7 @@ KERNEL_LD  := kernel/linker.ld
 IMAGE := $(BUILD)/neox.iso
 
 CC = gcc
-CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -ffreestanding -Wall -Wextra -Werror -Ikernel/include -c
+CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -nostartfiles -nodefaultlibs -ffreestanding -Wall -Wextra -Werror -Ikernel/include -c
 
 LDFLAGS = -T$(KERNEL_LD) -m elf_i386
 
