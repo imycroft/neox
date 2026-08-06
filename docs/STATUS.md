@@ -1,16 +1,18 @@
 # Neox Status
 
-**Last updated:** 2026-08-04
+**Last updated:** 2026-08-06
 
 ## Current Milestone
 
-**Blocking infrastructure implemented and unit-tested.**
+**Kernel synchronization primitives implemented and tested.**
 
 The scheduler now supports real thread blocking and unblocking. Threads may safely transition between `THREAD_RUNNING`, `THREAD_BLOCKED`, `THREAD_READY`, and `THREAD_TERMINATED` without corrupting scheduler state. Blocking removes the current thread from the scheduler's ready queue, while unblocking safely reintroduces it for future execution.
 
-A generic wait queue subsystem has been implemented as the foundation for future synchronization primitives. Wait queues provide FIFO ordering, wake-one, and wake-all semantics while tracking queue ownership for blocked threads. The implementation has been validated through comprehensive unit tests covering queue ordering, wake semantics, and scheduler integration.
+A generic wait queue subsystem has been implemented as the foundation for kernel synchronization primitives. Wait queues provide FIFO ordering, wake-one, and wake-all semantics while tracking queue ownership for blocked threads.
 
-The next milestone is implementing kernel synchronization primitives (starting with semaphores) on top of the wait queue infrastructure.
+Semaphores and mutexes have been implemented on top of the wait queue infrastructure and validated through integration tests covering initialization, acquisition, release, blocking, wakeup behavior, and mutex ownership transfer.
+
+The next milestone is implementing condition variables and completing the remaining thread lifecycle management features.
 
 ---
 
@@ -36,10 +38,12 @@ The next milestone is implementing kernel synchronization primitives (starting w
 | Virtual Memory Manager (VMM) | ✅ Frozen | Virtual-to-physical mapping validated. |
 | Heap | ✅ Frozen | Kernel heap allocator validated. |
 | Process Infrastructure | ✅ Frozen | Process creation, process lookup (PID and name), and unit tests completed. |
-| Thread Infrastructure | ✅ Frozen | Thread creation, bootstrap, blocking, unblocking, waiting, and unit tests completed. |
+| Thread Infrastructure | ✅ Frozen | Thread creation, bootstrap, blocking, unblocking, waiting, termination, and integration tests completed. |
 | Context Switching | ✅ Frozen | Cooperative and preemptive kernel↔thread context switching validated. |
-| Scheduler | ✅ Frozen | Round-robin preemptive scheduler completed with blocking support, scheduler integration, and comprehensive unit tests. |
-| Wait Queues | ✅ Frozen | FIFO wait queues with wake-one, wake-all, ownership tracking, and comprehensive unit tests completed. |
+| Scheduler | ✅ Frozen | Round-robin preemptive scheduler completed with blocking support, scheduler integration, quantum handling, stress testing, and comprehensive tests. |
+| Wait Queues | ✅ Frozen | FIFO wait queues with wake-one, wake-all, ownership tracking, and comprehensive tests completed. |
+| Semaphores | ✅ Frozen | Semaphore implementation completed using wait queues. Initialization, acquire, release, and wakeup behavior validated. |
+| Mutexes | ✅ Frozen | Mutex implementation completed using wait queues. Locking, unlocking, and ownership transfer validated. |
 
 ---
 
@@ -54,10 +58,13 @@ The next milestone is implementing kernel synchronization primitives (starting w
 - Virtual Memory Manager (VMM)
 - Heap
 - Cooperative Context Switching
+- Preemptive Context Switching
 - Process Infrastructure
 - Thread Infrastructure
 - Scheduler
 - Wait Queue Infrastructure
+- Semaphores
+- Mutexes
 
 ---
 
@@ -83,7 +90,6 @@ The next milestone is implementing kernel synchronization primitives (starting w
 - The scheduler currently implements a single round-robin scheduling policy.
 - All runnable threads share the same execution quantum (`SCHEDULER_QUANTUM_TICKS`).
 - Thread priorities and dynamic scheduling policies have not yet been introduced.
-- Scheduler stress testing under heavy thread counts remains to be completed before long-term performance tuning.
 
 ### Thread Lifecycle
 
@@ -93,26 +99,24 @@ The next milestone is implementing kernel synchronization primitives (starting w
 
 ### Synchronization
 
-- Wait queues are complete, but no synchronization primitives currently use them.
-- Semaphores, mutexes, condition variables, and sleep queues remain to be implemented.
+- Condition variables have not yet been implemented.
+- Advanced synchronization stress testing remains to be added.
 
 ---
 
 ## Next Milestone
 
-Implement kernel synchronization primitives using the wait queue subsystem.
+Implement condition variables and continue improving thread lifecycle management.
 
 Planned order:
 
-1. Semaphores
-2. Mutexes
-3. Condition Variables
-4. Scheduler stress testing
-5. Thread and process termination
-6. Ring 3 (user mode)
-7. System calls
-8. ELF loader
-9. Per-process address spaces
+1. Condition Variables
+2. Synchronization stress testing
+3. Thread and process termination
+4. Ring 3 (user mode)
+5. System calls
+6. ELF loader
+7. Per-process address spaces
 
 ---
 

@@ -31,18 +31,19 @@
 - [x] Threads
 - [x] Thread blocking
 - [x] Wait queues
+- [x] Scheduler stress testing
 
 ---
 
 ## Phase 4 — Synchronization
 
-- [ ] Semaphores
-- [ ] Mutexes
+- [x] Semaphores
+- [x] Mutexes
 - [ ] Condition variables
 - [ ] Sleep queues
-- [ ] Scheduler stress testing
 - [ ] Thread termination
 - [ ] Process termination
+- [ ] Synchronization stress testing
 
 ---
 

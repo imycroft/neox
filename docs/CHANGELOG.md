@@ -47,11 +47,22 @@ All notable changes to Neox will be documented in this file.
 - Scheduler-owned idle thread, replacing the ad hoc `main_sp` boot-stack pointer.
 - Thread blocking (`thread_block()`).
 - Thread unblocking (`thread_unblock()`).
+- Thread termination (`thread_exit()`).
+- Terminated thread tracking through the termination wait queue.
+- Thread waiting (`thread_wait()`).
 - Generic wait queue infrastructure.
 - FIFO wait queues.
 - Wake-one (`wait_queue_wake()`).
 - Wake-all (`wait_queue_wake_all()`).
-- Thread waiting (`thread_wait()`).
+
+#### Synchronization
+
+- Semaphore implementation using wait queues.
+- Semaphore acquire/release operations.
+- Semaphore wakeup behavior.
+- Mutex implementation using wait queues.
+- Mutex ownership tracking.
+- Mutex ownership transfer on unlock.
 
 #### Testing
 
@@ -63,8 +74,14 @@ All notable changes to Neox will be documented in this file.
 - Heap unit test suite.
 - Process unit test suite.
 - Thread unit test suite.
+- Thread integration test suite.
 - Scheduler unit test suite.
 - Wait queue unit test suite.
+- Semaphore test suite.
+- Mutex test suite.
+- Timer-driven preemption test suite.
+- Quantum accounting tests.
+- Multi-thread scheduler stress tests.
 
 ### Changed
 
@@ -75,7 +92,9 @@ All notable changes to Neox will be documented in this file.
 - Removed the manual cooperative test scaffold from `kernel_init()` (`thread1`, `main_sp`); replaced with `scheduler_start()`.
 - Refactored scheduler state transitions to correctly handle blocked and terminated threads.
 - Scheduler now safely handles removal of the currently running thread during blocking.
+- Scheduler quantum handling now supports timer-driven preemption and quantum reset after scheduling decisions.
 - Wait queue operations now maintain thread ownership through `thread->wait_queue`.
+- Synchronization primitives now use wait queues instead of direct scheduler manipulation.
 
 ### Fixed
 
@@ -85,6 +104,7 @@ All notable changes to Neox will be documented in this file.
 - Fixed scheduler state corruption when blocking the current thread.
 - Fixed scheduler handling of detached ready-list nodes during thread blocking.
 - Fixed wait queue ownership bookkeeping when threads leave a wait queue.
+- Fixed terminated thread handling by removing terminated threads from scheduling and tracking them separately.
 
 ## v0.5.0
 

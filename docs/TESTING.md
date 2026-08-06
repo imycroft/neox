@@ -186,7 +186,7 @@ Result:
 
 **Note**
 
-Process teardown and resource reclamation are not yet implemented. Stress testing (mass process creation/destruction) will be added once process termination exists.
+Process termination and resource reclamation are not yet implemented.
 
 ---
 
@@ -212,9 +212,26 @@ Result:
 0 failed
 ```
 
-**Note**
+---
 
-Thread destruction and resource reclamation are not yet implemented. Stress testing will be introduced once the complete thread lifecycle (`thread_exit()` and process termination) is available.
+## Thread Integration
+
+### Integration Tests
+
+- Add thread through public thread API
+- Execute newly created thread through real context switching
+- Automatic thread termination after entry return
+- Multiple threads yielding cooperatively
+- Blocking and resuming threads
+- Waiting for thread termination
+
+Result:
+
+```text
+7 tests
+7 passed
+0 failed
+```
 
 ---
 
@@ -240,9 +257,29 @@ Result:
 0 failed
 ```
 
-**Note**
+---
 
-These tests validate scheduler logic independently of actual context switching. Timer-driven preemptive scheduling has also been validated under QEMU using multiple concurrently executing kernel threads. Large-scale scheduler stress testing (high thread counts, sustained preemption, prolonged execution, and quantum tuning) remains pending.
+## Thread Preemption
+
+### Preemptive Scheduling Tests
+
+- Timer tick synchronization
+- Timer-driven preemption of CPU-bound threads
+- Round-robin scheduling without voluntary yielding
+- Blocked thread exclusion from scheduling
+- Multiple runnable threads under timer preemption
+- Quantum initial value
+- Quantum countdown
+- Quantum reset after context switch
+- Scheduler stress with 32 CPU-bound threads
+
+Result:
+
+```text
+9 tests
+9 passed
+0 failed
+```
 
 ---
 
@@ -265,7 +302,7 @@ Result:
 
 **Note**
 
-The wait queue subsystem provides the generic blocking infrastructure used by future synchronization primitives. Stress tests will be introduced together with semaphores, mutexes, and condition variables.
+The wait queue subsystem provides the generic blocking infrastructure used by synchronization primitives.
 
 ---
 
