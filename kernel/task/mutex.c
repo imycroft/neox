@@ -1,4 +1,5 @@
 #include "mutex.h"
+#include "arch.h"
 #include "assert.h"
 #include "scheduler.h"
 #include "types.h"
@@ -22,7 +23,12 @@ void mutex_lock(struct mutex *mutex)
         return;
     }
 
+    interrupt_state_t state;
+    state = interrupt_save();
+
     wait_queue_sleep(&mutex->wait_queue);
+
+    interrupt_restore(state);
 }
 
 void mutex_unlock(struct mutex *mutex)

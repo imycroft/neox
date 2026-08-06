@@ -1,6 +1,8 @@
 #include "test.h"
 #include "printf.h"
 
+volatile uint32_t test_ticks = 0;
+
 static uint32_t tests_passed;
 static uint32_t tests_failed;
 
@@ -52,4 +54,14 @@ void test_summary(void)
     printf("Failed : %u\n", tests_failed);
 
     printf("==================================\n");
+}
+
+void test_wait_ticks(uint32_t ticks)
+{
+    uint32_t target;
+
+    target = test_ticks + ticks;
+
+    while (test_ticks < target)
+        __asm__ volatile ("pause");
 }

@@ -9,10 +9,13 @@
 #include "util.h"
 
 #include "arch/x86/context.h"
+#include "wait.h"
 
 static struct list ready_list;
 static struct thread *current;
-
+//DEBUG
+static uint32_t quantum_remaining;
+//END DEBUG
 /*
  * Ticks remaining before the current thread is preempted.
  */
@@ -173,3 +176,27 @@ void scheduler_yield(void)
     scheduler_switch();
 
 }
+
+void scheduler_terminate(struct thread *thread)
+{
+    ASSERT(thread != NULL);
+    ASSERT(!interrupt_enabled());
+
+    scheduler_remove(thread);
+
+    thread->state = THREAD_TERMINATED;
+
+    wait_queue_wake_all(&thread->termination_queue);
+}
+
+bool scheduler_idle(void)
+{
+    return current == &idle_thread;
+}
+
+// DEBUG
+uint32_t scheduler_get_quantum_remaining(void)
+{
+    return quantum_remaining;
+}
+//END DEBUG

@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "pit.h"
 #include "scheduler.h"
+#include "test.h"
 void irq_handler(struct registers *regs)
 {
     uint32_t irq = regs->int_no - 32;
@@ -12,6 +13,7 @@ void irq_handler(struct registers *regs)
     {
         case 0:
             pit_handler();
+            test_ticks++;
             break;
 
         case 1:

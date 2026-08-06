@@ -8,7 +8,9 @@
  * being preempted in favor of the next ready thread.
  */
 #define SCHEDULER_QUANTUM_TICKS 5
-
+// DEBUG
+uint32_t scheduler_get_quantum_remaining(void);
+// END DEBUG
 void scheduler_init(void);
 
 void scheduler_add(struct thread *thread);
@@ -41,6 +43,6 @@ void scheduler_start(void);
  */
 void scheduler_tick(void);
 
-
+bool scheduler_idle(void);
 
 #endif

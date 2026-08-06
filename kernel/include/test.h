@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+extern volatile uint32_t test_ticks;
+
 typedef void (*test_func_t)(void);
 
 typedef struct
@@ -23,6 +25,8 @@ void test_fail(void);
 void test_assertion(const char *expr);
 
 void test_summary(void);
+
+void test_wait_ticks(uint32_t ticks);
 
 #define TEST_ASSERT(expr)                 \
 do                                    \

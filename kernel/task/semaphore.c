@@ -1,4 +1,5 @@
 #include "semaphore.h"
+#include "arch.h"
 #include "assert.h"
 #include "thread.h"
 
@@ -22,7 +23,12 @@ void semaphore_acquire(struct semaphore *sem)
         return;
     }
 
+    interrupt_state_t state;
+    state = interrupt_save();
+
     wait_queue_sleep(&sem->wait_queue);
+
+    interrupt_restore(state);
 }
 
 void semaphore_release(struct semaphore *sem)

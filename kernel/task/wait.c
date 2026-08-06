@@ -87,15 +87,13 @@ void wait_queue_wake_all(struct wait_queue *queue)
 void wait_queue_sleep(struct wait_queue *queue)
 {
     struct thread *thread;
-    interrupt_state_t state;
 
     ASSERT(queue != NULL);
+    ASSERT(!interrupt_enabled());
 
     thread = scheduler_current();
 
     ASSERT(thread != NULL);
-
-    state = interrupt_save();
 
     wait_queue_add(queue, thread);
 
@@ -104,7 +102,5 @@ void wait_queue_sleep(struct wait_queue *queue)
     scheduler_remove(thread);
 
     scheduler_yield();
-
-    interrupt_restore(state);
 }
 

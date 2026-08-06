@@ -1,3 +1,5 @@
+#include "arch.h"
+#include "process.h"
 #include "test.h"
 #include "scheduler.h"
 #include "thread.h"
@@ -26,9 +28,12 @@
 static void make_stub(struct thread *thread, uint32_t tid)
 {
     memset(thread, 0, sizeof(*thread));
-    thread->tid = tid;
-}
 
+    thread->tid = tid;
+    thread->state = THREAD_READY;
+
+    list_node_init(&thread->sched_node);
+}
 /* Test functions */
 
 /*
@@ -103,13 +108,19 @@ static void test_scheduler_add_single(void)
  *
  * - Threads are selected in the order they were added.
  * - Selection wraps around to the first thread after the last.
+ * - scheduler_current() always matches the selected thread.
+ * - Running/ready states are updated correctly.
  *
  * This validates:
  * - Round-robin ready queue ordering.
+ * - Current thread tracking.
+ * - Thread state transitions during scheduling.
  */
 static void test_scheduler_round_robin(void)
 {
-    struct thread a, b, c;
+    struct thread a;
+    struct thread b;
+    struct thread c;
 
     make_stub(&a, 102);
     make_stub(&b, 103);
@@ -122,10 +133,39 @@ static void test_scheduler_round_robin(void)
     scheduler_add(&c);
 
     TEST_ASSERT_EQ(scheduler_next(), &a);
+    TEST_ASSERT_EQ(scheduler_current(), &a);
+
+    TEST_ASSERT_EQ(a.state, THREAD_RUNNING);
+    TEST_ASSERT_EQ(b.state, THREAD_READY);
+    TEST_ASSERT_EQ(c.state, THREAD_READY);
+
     TEST_ASSERT_EQ(scheduler_next(), &b);
+    TEST_ASSERT_EQ(scheduler_current(), &b);
+
+    TEST_ASSERT_EQ(a.state, THREAD_READY);
+    TEST_ASSERT_EQ(b.state, THREAD_RUNNING);
+    TEST_ASSERT_EQ(c.state, THREAD_READY);
+
     TEST_ASSERT_EQ(scheduler_next(), &c);
+    TEST_ASSERT_EQ(scheduler_current(), &c);
+
+    TEST_ASSERT_EQ(a.state, THREAD_READY);
+    TEST_ASSERT_EQ(b.state, THREAD_READY);
+    TEST_ASSERT_EQ(c.state, THREAD_RUNNING);
+
     TEST_ASSERT_EQ(scheduler_next(), &a);
+    TEST_ASSERT_EQ(scheduler_current(), &a);
+
+    TEST_ASSERT_EQ(a.state, THREAD_RUNNING);
+    TEST_ASSERT_EQ(b.state, THREAD_READY);
+    TEST_ASSERT_EQ(c.state, THREAD_READY);
+
     TEST_ASSERT_EQ(scheduler_next(), &b);
+    TEST_ASSERT_EQ(scheduler_current(), &b);
+
+    TEST_ASSERT_EQ(a.state, THREAD_READY);
+    TEST_ASSERT_EQ(b.state, THREAD_RUNNING);
+    TEST_ASSERT_EQ(c.state, THREAD_READY);
 
     test_pass();
 }
@@ -256,6 +296,31 @@ static void test_scheduler_block_current(void)
     test_pass();
 }
 
+static void test_scheduler_remove_current(void)
+{
+    struct thread a;
+    struct thread b;
+
+    make_stub(&a, 110);
+    make_stub(&b, 111);
+
+    scheduler_init();
+
+    scheduler_add(&a);
+    scheduler_add(&b);
+
+    TEST_ASSERT_EQ(scheduler_next(), &a);
+
+    scheduler_remove(&a);
+
+    TEST_ASSERT_EQ(scheduler_next(), &b);
+    TEST_ASSERT_EQ(scheduler_current(), &b);
+    TEST_ASSERT_EQ(b.state, THREAD_RUNNING);
+
+    test_pass();
+}
+
+
 // API
 
 static test_entry_t tests[] =
@@ -268,6 +333,7 @@ static test_entry_t tests[] =
     { "scheduler_single_thread_repeats", test_scheduler_single_thread_repeats },
     { "scheduler_remove_ready_thread",   test_scheduler_remove_ready_thread   },
     { "scheduler_block_current",         test_scheduler_block_current         },
+    { "scheduler_remove_current",         test_scheduler_remove_current       },
 };
 
 void test_scheduler(void)
@@ -283,7 +349,9 @@ void test_scheduler(void)
      * cannot land mid-test and trigger scheduler_tick() to
      * context switch into one of them.
      */
-    __asm__ volatile ("cli");
+    interrupt_state_t state;
+
+    state = interrupt_save();
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
@@ -303,7 +371,7 @@ void test_scheduler(void)
     scheduler_init();
     scheduler_start();
 
-    __asm__ volatile ("sti");
+    interrupt_restore(state);
 
     test_end();
 }

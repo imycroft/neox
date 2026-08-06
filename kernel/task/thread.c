@@ -1,5 +1,6 @@
 #include "thread.h"
 #include "assert.h"
+#include "panic.h"
 #include "scheduler.h"
 #include "scheduler_internal.h"
 #include "process.h"
@@ -16,20 +17,17 @@ static void thread_exit(void)
 {
     struct thread *thread;
 
+    interrupt_save();
+
     thread = scheduler_current();
 
-    if (thread != NULL)
-        thread->state = THREAD_TERMINATED;
+    ASSERT(thread != NULL);
 
-    /*
-     * Reclaiming the thread's process/stack/tid is future work.
-     * The thread remains in the ready list and continues to be
-     * scheduled, but simply halts until preempted again.
-     */
-    for (;;)
-    {
-        __asm__ volatile ("hlt");
-    }
+    scheduler_terminate(thread);
+
+    scheduler_yield();
+
+    panic("terminated thread resumed");
 }
 
 /*
@@ -125,6 +123,10 @@ struct thread *thread_create(
     list_node_init(&thread->sched_node);
     list_node_init(&thread->wait_node);
 
+    wait_queue_init(&thread->termination_queue);
+
+    thread->wait_queue = NULL;
+
     thread->entry = entry;
 
     thread->kernel_stack = kmalloc(THREAD_STACK_SIZE);
@@ -163,6 +165,20 @@ struct thread *thread_create(
     thread->process = process;
 
     return thread;
+}
+
+void thread_wait(struct thread *thread)
+{
+    interrupt_state_t state;
+
+    ASSERT(thread != NULL);
+
+    state = interrupt_save();
+
+    if (thread->state != THREAD_TERMINATED)
+        wait_queue_sleep(&thread->termination_queue);
+
+    interrupt_restore(state);
 }
 
 void thread_yield(void)

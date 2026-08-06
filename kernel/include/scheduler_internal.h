@@ -9,3 +9,5 @@
  */
 
 void scheduler_yield(void);
+
+void scheduler_terminate(struct thread *thread);

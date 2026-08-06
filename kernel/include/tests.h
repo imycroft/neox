@@ -14,6 +14,9 @@ void test_process(void);
 void test_thread(void);
 void test_scheduler(void);
 
+void test_thread_integration(void);
+void test_thread_preemption(void);
+
 void test_list(void);
 void test_wait(void);
 

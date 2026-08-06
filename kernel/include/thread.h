@@ -5,6 +5,7 @@
 #include "types.h"
 
 #include "list.h"
+#include "wait.h"
 
 #define THREAD_STACK_SIZE PAGE_SIZE
 
@@ -17,7 +18,6 @@ enum thread_state
 };
 
 struct process;
-struct wait_queue;
 
 struct thread
 {
@@ -42,6 +42,15 @@ struct thread
     struct list_node sched_node;
     struct list_node wait_node;
 
+    /*
+     * Threads waiting for this thread to terminate
+     * sleep in this queue.
+     */
+    struct wait_queue termination_queue;
+
+    /*
+     * Wait queue this thread is currently sleeping in.
+     */
     struct wait_queue *wait_queue;
 };
 
@@ -56,7 +65,11 @@ void thread_block(void);
 
 void thread_unblock(struct thread *thread);
 
+void thread_wait(struct thread *thread);
+
 void thread_yield(void);
+
+
 
 
 #endif
