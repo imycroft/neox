@@ -13,9 +13,6 @@
 
 static struct list ready_list;
 static struct thread *current;
-//DEBUG
-static uint32_t quantum_remaining;
-//END DEBUG
 /*
  * Ticks remaining before the current thread is preempted.
  */

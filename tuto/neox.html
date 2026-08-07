@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neox — Task Management Internals</title>
+<style>
+:root {
+  --bg:        #0d0f12;
+  --surface:   #13161b;
+  --card:      #1a1d24;
+  --border:    #252830;
+  --border2:   #30343f;
+  --text:      #d8dce8;
+  --muted:     #7a8099;
+  --accent:    #5b8fff;
+  --accent2:   #3d6eea;
+  --green:     #3ecf8e;
+  --amber:     #f59e0b;
+  --red:       #f87171;
+  --purple:    #a78bfa;
+  --teal:      #2dd4bf;
+  --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --sans:      'Inter', system-ui, -apple-system, sans-serif;
+  --r:         6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.75;
+  padding: 0;
+}
+
+/* ── Layout ── */
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+}
+
+/* ── Cover ── */
+.cover {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 4rem 2rem 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(91,143,255,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cover-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+}
+.cover-title {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  color: #fff;
+  margin-bottom: .75rem;
+}
+.cover-title span { color: var(--accent); }
+.cover-sub {
+  color: var(--muted);
+  font-size: 1rem;
+  max-width: 520px;
+  margin: 0 auto 2rem;
+}
+.cover-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: center;
+}
+.pill {
+  background: rgba(91,143,255,.1);
+  border: 1px solid rgba(91,143,255,.25);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: .25rem .75rem;
+  border-radius: 20px;
+  letter-spacing: .05em;
+}
+
+/* ── TOC ── */
+.toc {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.5rem 2rem;
+  margin: 2.5rem 0;
+}
+.toc h2 { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; font-family: var(--mono); }
+.toc ol { padding-left: 1.25rem; }
+.toc li { margin: .3rem 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 14px; }
+.toc a:hover { text-decoration: underline; }
+.toc .sub { margin-left: 1rem; list-style: none; padding-left: 0; }
+.toc .sub li::before { content: '↳ '; color: var(--muted); font-size: 12px; }
+
+/* ── Section headings ── */
+h1.sec {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: #fff;
+  margin: 3.5rem 0 .75rem;
+  padding-top: 3.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+h1.sec .num {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--accent);
+  background: rgba(91,143,255,.1);
+  border: 1px solid rgba(91,143,255,.2);
+  border-radius: 4px;
+  padding: .1rem .4rem;
+}
+h2.sub-sec {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e8eaf0;
+  margin: 2.25rem 0 .6rem;
+}
+h3.sub-sub {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 1.75rem 0 .5rem;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+p { margin: .65rem 0; color: var(--text); }
+
+/* ── Code ── */
+pre {
+  background: #0a0c0f;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.65;
+}
+code { font-family: var(--mono); font-size: .875em; color: var(--teal); background: rgba(45,212,191,.08); padding: .1em .35em; border-radius: 3px; }
+pre code { background: none; padding: 0; color: var(--text); font-size: 13px; }
+.kw  { color: var(--purple); }
+.fn  { color: var(--accent); }
+.cm  { color: #4a5060; font-style: italic; }
+.str { color: var(--green); }
+.num { color: var(--amber); }
+.tp  { color: var(--teal); }
+
+/* ── Callout boxes ── */
+.callout {
+  border-radius: var(--r);
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  border-left: 3px solid;
+  font-size: 14px;
+}
+.callout.warn  { background: rgba(245,158,11,.06); border-color: var(--amber); }
+.callout.bug   { background: rgba(248,113,113,.06); border-color: var(--red);   }
+.callout.info  { background: rgba(91,143,255,.06);  border-color: var(--accent);}
+.callout.ok    { background: rgba(62,207,142,.06);  border-color: var(--green); }
+.callout strong { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .35rem; font-family: var(--mono); }
+.callout.warn  strong { color: var(--amber); }
+.callout.bug   strong { color: var(--red);   }
+.callout.info  strong { color: var(--accent);}
+.callout.ok    strong { color: var(--green); }
+
+/* ── Diagram figures ── */
+.fig {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+.fig-cap {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: .75rem;
+  font-family: var(--mono);
+}
+
+/* ── ASCII/SVG diagrams ── */
+.dia {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--text);
+}
+.dia .hi  { color: var(--accent); }
+.dia .gr  { color: var(--green); }
+.dia .am  { color: var(--amber); }
+.dia .rd  { color: var(--red); }
+.dia .pr  { color: var(--purple); }
+.dia .tl  { color: var(--teal); }
+.dia .mu  { color: var(--muted); }
+
+/* SVG diagrams */
+svg.diag text { font-family: var(--mono); }
+
+/* ── Tables ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin: 1rem 0;
+}
+th {
+  background: var(--card);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .6rem .85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border2);
+}
+td {
+  padding: .55rem .85rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+td code { font-size: 12px; }
+
+/* ── Horizontal rule ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ── State badges ── */
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .15rem .5rem;
+  border-radius: 3px;
+}
+.badge.ready    { background: rgba(91,143,255,.15); color: var(--accent);  border: 1px solid rgba(91,143,255,.3); }
+.badge.running  { background: rgba(62,207,142,.15); color: var(--green);   border: 1px solid rgba(62,207,142,.3); }
+.badge.blocked  { background: rgba(245,158,11,.15); color: var(--amber);   border: 1px solid rgba(245,158,11,.3); }
+.badge.term     { background: rgba(248,113,113,.15); color: var(--red);    border: 1px solid rgba(248,113,113,.3); }
+.badge.bug      { background: rgba(248,113,113,.15); color: var(--red);    border: 1px solid rgba(248,113,113,.3); }
+.badge.safe     { background: rgba(62,207,142,.15); color: var(--green);   border: 1px solid rgba(62,207,142,.3); }
+
+ul.list { padding-left: 1.4rem; margin: .5rem 0; }
+ul.list li { margin: .3rem 0; font-size: 14px; }
+
+</style>
+</head>
+<body>
+
+<!-- ─────────────── COVER ─────────────── -->
+<div class="cover">
+  <div class="cover-eyebrow">kernel internals · reference document</div>
+  <h1 class="cover-title">neox — <span>Task Management</span><br>From Boot to Preemption</h1>
+  <p class="cover-sub">A complete walkthrough of how neox creates processes and threads, switches between them, blocks and wakes them, and guards shared state — including every race condition in the current code.</p>
+  <div class="cover-pills">
+    <span class="pill">x86-32 · C23</span>
+    <span class="pill">process</span>
+    <span class="pill">thread</span>
+    <span class="pill">scheduler</span>
+    <span class="pill">wait queue</span>
+    <span class="pill">mutex</span>
+    <span class="pill">semaphore</span>
+    <span class="pill">context switch</span>
+    <span class="pill">race conditions</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ─────────────── TOC ─────────────── -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">System Overview</a></li>
+    <li><a href="#s2">Boot Sequence & Interrupt Infrastructure</a>
+      <ul class="sub">
+        <li><a href="#s2-pit">PIT Timer & IRQ Path</a></li>
+        <li><a href="#s2-interrupt">Interrupt Save / Restore</a></li>
+      </ul>
+    </li>
+    <li><a href="#s3">Data Structures</a>
+      <ul class="sub">
+        <li><a href="#s3-list">Intrusive Linked List</a></li>
+        <li><a href="#s3-process">struct process</a></li>
+        <li><a href="#s3-thread">struct thread</a></li>
+      </ul>
+    </li>
+    <li><a href="#s4">The Kernel Stack & Initial Stack Layout</a></li>
+    <li><a href="#s5">Context Switch (Assembly Deep Dive)</a></li>
+    <li><a href="#s6">The Scheduler</a>
+      <ul class="sub">
+        <li><a href="#s6-start">scheduler_start & the Idle Thread</a></li>
+        <li><a href="#s6-roundrobin">Round-Robin Algorithm</a></li>
+        <li><a href="#s6-tick">Preemption: The Tick Path</a></li>
+        <li><a href="#s6-yield">Cooperative: The Yield Path</a></li>
+        <li><a href="#s6-quantum">Quantum Mechanics</a></li>
+      </ul>
+    </li>
+    <li><a href="#s7">Thread Lifecycle — All Paths</a>
+      <ul class="sub">
+        <li><a href="#s7-create">Creation</a></li>
+        <li><a href="#s7-bootstrap">First Run: thread_bootstrap</a></li>
+        <li><a href="#s7-block">Blocking & Unblocking</a></li>
+        <li><a href="#s7-exit">Termination</a></li>
+        <li><a href="#s7-wait">thread_wait</a></li>
+      </ul>
+    </li>
+    <li><a href="#s8">Wait Queues</a></li>
+    <li><a href="#s9">Mutex</a>
+      <ul class="sub">
+        <li><a href="#s9-lock">Lock Path</a></li>
+        <li><a href="#s9-unlock">Unlock & Ownership Transfer</a></li>
+      </ul>
+    </li>
+    <li><a href="#s10">Semaphore</a></li>
+    <li><a href="#s11">Race Conditions — Complete Analysis</a>
+      <ul class="sub">
+        <li><a href="#s11-model">The x86 UP Race Model</a></li>
+        <li><a href="#s11-mutex">mutex_lock Fast-Path Race</a></li>
+        <li><a href="#s11-sem">semaphore_acquire Fast-Path Race</a></li>
+        <li><a href="#s11-unlock">Unlock/Release Structural Races</a></li>
+        <li><a href="#s11-exit">thread_exit Discard Bug</a></li>
+        <li><a href="#s11-safe">What Is Safe</a></li>
+      </ul>
+    </li>
+    <li><a href="#s12">Full Execution Scenarios</a>
+      <ul class="sub">
+        <li><a href="#s12-a">Scenario A: Preemptive Round-Robin</a></li>
+        <li><a href="#s12-b">Scenario B: Thread Blocks on Mutex</a></li>
+        <li><a href="#s12-c">Scenario C: thread_wait</a></li>
+      </ul>
+    </li>
+    <li><a href="#s13">Interrupt Discipline Reference Card</a></li>
+  </ol>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §1  SYSTEM OVERVIEW
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s1"><span class="num">§1</span> System Overview</h1>
+
+<p>neox is a 32-bit x86 monolithic kernel written in C23 and NASM assembly. All code runs in Ring 0 (kernel mode). There is no user space yet. The entire task management stack — processes, threads, the scheduler, synchronisation — lives in <code>kernel/task/</code> and is glued together by the interrupt infrastructure in <code>kernel/arch/x86/</code>.</p>
+
+<p>The dependency graph flows strictly downward: nothing in a lower layer knows about a higher layer.</p>
+
+<div class="fig">
+<svg class="diag" width="100%" viewBox="0 0 820 340" role="img">
+<title>neox task management layer dependency diagram</title>
+<desc>Six horizontal layers from hardware at the bottom to process at the top, with arrows showing dependency direction</desc>
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- Layer boxes -->
+<!-- process -->
+<rect x="20" y="20" width="780" height="44" rx="6" fill="rgba(45,212,191,.08)" stroke="#2dd4bf" stroke-width="1"/>
+<text x="410" y="39" text-anchor="middle" fill="#2dd4bf" font-size="12" font-weight="600" font-family="monospace">process</text>
+<text x="410" y="56" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">process_create / add / remove / find  ·  owns thread list  ·  has pid + name</text>
+
+<!-- thread -->
+<rect x="20" y="84" width="780" height="44" rx="6" fill="rgba(167,139,250,.08)" stroke="#a78bfa" stroke-width="1"/>
+<text x="410" y="103" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="600" font-family="monospace">thread</text>
+<text x="410" y="120" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">thread_create / add / block / unblock / yield / wait / exit  ·  owns kernel_stack</text>
+
+<!-- scheduler -->
+<rect x="20" y="148" width="780" height="44" rx="6" fill="rgba(91,143,255,.08)" stroke="#5b8fff" stroke-width="1"/>
+<text x="410" y="167" text-anchor="middle" fill="#5b8fff" font-size="12" font-weight="600" font-family="monospace">scheduler</text>
+<text x="410" y="184" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">ready_list (round-robin)  ·  quantum_remaining  ·  idle_thread  ·  scheduler_tick / yield / terminate</text>
+
+<!-- wait queue -->
+<rect x="20" y="212" width="370" height="44" rx="6" fill="rgba(62,207,142,.08)" stroke="#3ecf8e" stroke-width="1"/>
+<text x="205" y="231" text-anchor="middle" fill="#3ecf8e" font-size="12" font-weight="600" font-family="monospace">wait_queue</text>
+<text x="205" y="248" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">FIFO list of blocked threads  ·  wake / wake_all / sleep</text>
+
+<!-- mutex + semaphore -->
+<rect x="410" y="212" width="185" height="44" rx="6" fill="rgba(248,113,113,.08)" stroke="#f87171" stroke-width="1"/>
+<text x="502" y="231" text-anchor="middle" fill="#f87171" font-size="12" font-weight="600" font-family="monospace">mutex</text>
+<text x="502" y="248" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">owner + wait_queue</text>
+
+<rect x="615" y="212" width="185" height="44" rx="6" fill="rgba(245,158,11,.08)" stroke="#f59e0b" stroke-width="1"/>
+<text x="707" y="231" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="600" font-family="monospace">semaphore</text>
+<text x="707" y="248" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">count + wait_queue</text>
+
+<!-- context switch -->
+<rect x="20" y="276" width="370" height="44" rx="6" fill="rgba(91,143,255,.05)" stroke="#30343f" stroke-width="1"/>
+<text x="205" y="295" text-anchor="middle" fill="#d8dce8" font-size="12" font-weight="600" font-family="monospace">context_switch  (asm)</text>
+<text x="205" y="312" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">saves ebp/ebx/esi/edi  ·  swaps esp  ·  ret</text>
+
+<!-- PIT/IRQ -->
+<rect x="410" y="276" width="390" height="44" rx="6" fill="rgba(91,143,255,.05)" stroke="#30343f" stroke-width="1"/>
+<text x="605" y="295" text-anchor="middle" fill="#d8dce8" font-size="12" font-weight="600" font-family="monospace">PIT 100 Hz  →  irq_handler  →  scheduler_tick</text>
+<text x="605" y="312" text-anchor="middle" fill="#7a8099" font-size="11" font-family="monospace">hardware timer drives preemption</text>
+
+<!-- Arrows top-down -->
+<line x1="410" y1="64" x2="410" y2="82" stroke="#30343f" stroke-width="1.5" marker-end="url(#arr)"/>
+<line x1="410" y1="128" x2="410" y2="146" stroke="#30343f" stroke-width="1.5" marker-end="url(#arr)"/>
+<line x1="300" y1="192" x2="205" y2="210" stroke="#30343f" stroke-width="1.5" marker-end="url(#arr)"/>
+<line x1="410" y1="192" x2="502" y2="210" stroke="#30343f" stroke-width="1.5" marker-end="url(#arr)"/>
+<line x1="500" y1="192" x2="707" y2="210" stroke="#30343f" stroke-width="1.5" marker-end="url(#arr)"/>
+<line x1="205" y1="256" x2="205" y2="274" stroke="#30343f" stroke-width="1.5" marker-end="url(#arr)"/>
+<line x1="502" y1="256" x2="502" y2="290" stroke="#30343f" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="707" y1="256" x2="707" y2="290" stroke="#30343f" stroke-width="1" stroke-dasharray="4 3"/>
+</svg>
+<div class="fig-cap">Fig 1 — Layer dependency graph. Arrows point from higher to lower layers. Nothing in a lower layer #includes a higher one.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §2  BOOT & INTERRUPT INFRASTRUCTURE
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s2"><span class="num">§2</span> Boot Sequence & Interrupt Infrastructure</h1>
+
+<p><code>kernel_main</code> is the C entry point after the GRUB bootloader hands over control. It calls <code>kernel_init</code>, then <code>kernel_tests</code>, then drops into the idle loop.</p>
+
+<pre><code><span class="cm">// kernel_main.c — the entire main function</span>
+<span class="fn">kernel_init</span>(magic, mb_info);   <span class="cm">// hardware + memory + scheduler</span>
+<span class="fn">kernel_tests</span>();               <span class="cm">// run all test suites</span>
+<span class="fn">kernel_loop</span>();                <span class="cm">// hlt loop — becomes the idle thread</span></code></pre>
+
+<p><code>kernel_init</code> calls subsystems in strict order. The tasking part is just two lines:</p>
+
+<pre><code><span class="fn">scheduler_init</span>();    <span class="cm">// zero the ready list, current = NULL</span>
+<span class="fn">scheduler_start</span>();   <span class="cm">// register the boot stack as idle_thread</span>
+                     <span class="cm">// ← from this point, timer ticks can preempt</span></code></pre>
+
+<p>Between those two calls, <code>arch_init</code> has already run, which enables interrupts and programs the PIT.</p>
+
+<h2 class="sub-sec" id="s2-pit">The PIT Timer & IRQ Path</h2>
+
+<p>The PIT is programmed at 100 Hz (10 ms per tick). Every tick generates IRQ0, which goes through the following chain:</p>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">PIT fires IRQ0</span>
+     │
+     ▼
+<span class="hi">irq0:</span>  (irq_stubs.asm)
+     cli                     <span class="mu">← interrupts disabled from here on</span>
+     push 0                  <span class="mu">← error code placeholder</span>
+     push 32                 <span class="mu">← interrupt number (IRQ0 = 32)</span>
+     jmp common_irq_stub
+     │
+     ▼
+<span class="hi">common_irq_stub:</span>
+     pusha                   <span class="mu">← saves eax,ecx,edx,ebx,esp,ebp,esi,edi</span>
+     push ds/es/fs/gs        <span class="mu">← saves segment registers</span>
+     mov ax, 0x10 → ds/es/fs/gs   <span class="mu">← load kernel data segment</span>
+     push esp                <span class="mu">← pass registers struct as argument</span>
+     call irq_handler        <span class="mu">← C function</span>
+     add esp, 4
+     pop gs/fs/es/ds
+     popa
+     add esp, 8              <span class="mu">← pop int_no + error code</span>
+     iret                    <span class="mu">← restores EIP, CS, EFLAGS (re-enables IF if it was set)</span>
+     │
+     ▼
+<span class="hi">irq_handler()</span>  (irq.c)
+     pit_handler()           <span class="mu">← increments pit_ticks</span>
+     test_ticks++
+     <span class="gr">pic_send_eoi(irq)</span>       <span class="mu">← ACK the PIC BEFORE scheduling decision</span>
+     if (irq == 0):
+         <span class="hi">scheduler_tick()</span>
+         │
+         ▼
+         if (--quantum_remaining &gt; 0) return
+         <span class="hi">scheduler_switch()</span>     <span class="mu">← may never return to this thread</span>
+              │
+              ▼
+              scheduler_next()      <span class="mu">← pick next thread</span>
+              quantum_remaining = 5
+              if (next == old) return
+              <span class="hi">context_switch(&amp;old-&gt;kernel_sp, next-&gt;kernel_sp)</span>
+                                    <span class="mu">← CPU is now on a different stack</span>
+</div>
+<div class="fig-cap">Fig 2 — Complete IRQ0 path from hardware to context switch</div>
+</div>
+
+<div class="callout info">
+<strong>Why EOI before scheduler_tick?</strong>
+<code>scheduler_tick</code> may call <code>context_switch</code>, which switches to a different thread's stack. The current thread's stack frame in <code>common_irq_stub</code> is suspended indefinitely. If the PIC hadn't been acknowledged yet, IRQ0 would be permanently masked — no more ticks, no more preemption, the system freezes.
+</div>
+
+<h2 class="sub-sec" id="s2-interrupt">Interrupt Save / Restore</h2>
+
+<p>All of neox's concurrency control reduces to one mechanism: turning interrupts on and off. <code>interrupt_save()</code> atomically captures EFLAGS and issues <code>cli</code>. <code>interrupt_restore(state)</code> pushes the saved EFLAGS back, re-enabling interrupts only if they were on.</p>
+
+<pre><code><span class="cm">// arch/x86/arch.c</span>
+<span class="tp">interrupt_state_t</span> <span class="fn">interrupt_save</span>(<span class="kw">void</span>) {
+    <span class="tp">interrupt_state_t</span> state;
+    __asm__ <span class="kw">volatile</span>(
+        <span class="str">"pushf\n\t"</span>   <span class="cm">// push EFLAGS</span>
+        <span class="str">"pop %0\n\t"</span>  <span class="cm">// save to state</span>
+        <span class="str">"cli"</span>         <span class="cm">// disable interrupts</span>
+        : <span class="str">"=r"</span>(state) :: <span class="str">"memory"</span>
+    );
+    <span class="kw">return</span> state;       <span class="cm">// caller must pass this to interrupt_restore</span>
+}
+
+<span class="kw">void</span> <span class="fn">interrupt_restore</span>(<span class="tp">interrupt_state_t</span> state) {
+    __asm__ <span class="kw">volatile</span>(
+        <span class="str">"push %0\n\t"</span> <span class="cm">// push saved EFLAGS</span>
+        <span class="str">"popf"</span>        <span class="cm">// pop into EFLAGS — IF restored to original state</span>
+        :: <span class="str">"r"</span>(state) : <span class="str">"memory"</span>, <span class="str">"cc"</span>
+    );
+}</code></pre>
+
+<p>The pattern is used everywhere critical sections exist:</p>
+
+<pre><code><span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();   <span class="cm">// cli, save IF</span>
+<span class="cm">/* ... critical section ... */</span>
+<span class="fn">interrupt_restore</span>(state);                      <span class="cm">// restore IF (sti if it was set)</span></code></pre>
+
+
+<!-- ═══════════════════════════════════════════════
+     §3  DATA STRUCTURES
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s3"><span class="num">§3</span> Data Structures</h1>
+
+<h2 class="sub-sec" id="s3-list">The Intrusive Linked List</h2>
+
+<p>Everything in neox is linked together using an <em>intrusive</em> doubly-linked list. Instead of allocating a separate list node that holds a pointer to the object, the list node is embedded directly inside the object. This means zero extra allocations and O(1) removal from any list given only a pointer to the node.</p>
+
+<pre><code><span class="kw">struct</span> <span class="tp">list_node</span> { <span class="kw">struct</span> <span class="tp">list_node</span> *prev, *next; };
+<span class="kw">struct</span> <span class="tp">list</span>      { <span class="kw">struct</span> <span class="tp">list_node</span> head; };  <span class="cm">// sentinel</span></code></pre>
+
+<div class="fig">
+<div class="dia">
+  list.head  ←→  thread_A.sched_node  ←→  thread_B.sched_node  ←→  (sentinel)
+<span class="mu">  (sentinel)</span>     <span class="mu">  ↑ container_of recovers thread_A from node pointer</span>
+
+  <span class="hi">container_of(node, struct thread, sched_node)</span>
+      = (struct thread *)((char *)node - offsetof(struct thread, sched_node))
+</div>
+<div class="fig-cap">Fig 3 — Intrusive list. The sentinel's next/prev form a circular ring. An empty list has both pointing at the sentinel itself.</div>
+</div>
+
+<p>Crucially, <code>list_remove</code> sets both pointers to <code>NULL</code> after removal. <code>list_push_*</code> asserts they are <code>NULL</code> before insertion. This prevents double-insert bugs and lets the scheduler check <code>node.next == NULL && node.prev == NULL</code> to detect a removed-current-thread.</p>
+
+<h2 class="sub-sec" id="s3-process">struct process</h2>
+
+<pre><code><span class="kw">struct</span> <span class="tp">process</span> {
+    <span class="tp">pid_t</span>           pid;                         <span class="cm">// monotonic, starts at 1</span>
+    <span class="kw">char</span>            name[<span class="num">32</span>];                   <span class="cm">// PROCESS_NAME_MAX</span>
+    <span class="kw">struct</span> <span class="tp">list_node</span> process_node;               <span class="cm">// in global process_list</span>
+    <span class="kw">struct</span> <span class="tp">list</span>     threads;                     <span class="cm">// owns thread group_nodes</span>
+};</code></pre>
+
+<p>A process is an ownership container — a name, a PID, and a list of threads. It has no address space yet (all processes share <code>kernel_directory</code>).</p>
+
+<h2 class="sub-sec" id="s3-thread">struct thread</h2>
+
+<pre><code><span class="kw">struct</span> <span class="tp">thread</span> {
+    <span class="tp">tid_t</span>             tid;               <span class="cm">// monotonic, starts at 1</span>
+    <span class="tp">uintptr_t</span>         kernel_sp;         <span class="cm">// current saved stack pointer</span>
+    <span class="kw">void</span>             *kernel_stack;      <span class="cm">// base of allocated stack (PAGE_SIZE)</span>
+    <span class="kw">void</span>            (*entry)(<span class="kw">void</span>);      <span class="cm">// function to run</span>
+    <span class="kw">enum</span> <span class="tp">thread_state</span> state;            <span class="cm">// READY / RUNNING / BLOCKED / TERMINATED</span>
+    <span class="kw">struct</span> <span class="tp">process</span>   *process;          <span class="cm">// owning process (back-pointer)</span>
+
+    <span class="cm">// three independent list memberships — zero extra allocs</span>
+    <span class="kw">struct</span> <span class="tp">list_node</span>  group_node;       <span class="cm">// in process-&gt;threads</span>
+    <span class="kw">struct</span> <span class="tp">list_node</span>  sched_node;       <span class="cm">// in scheduler ready_list</span>
+    <span class="kw">struct</span> <span class="tp">list_node</span>  wait_node;        <span class="cm">// in a wait_queue-&gt;threads</span>
+
+    <span class="kw">struct</span> <span class="tp">wait_queue</span> termination_queue; <span class="cm">// threads sleeping until this exits</span>
+    <span class="kw">struct</span> <span class="tp">wait_queue</span>*wait_queue;        <span class="cm">// which queue this thread is sleeping in</span>
+};</code></pre>
+
+<div class="fig">
+<div class="dia">
+<span class="tl">struct thread (one instance)</span>
+┌─────────────────────────────────────────────────────────────────┐
+│  tid=3   state=BLOCKED   kernel_sp=0xc012f3a0                   │
+│  kernel_stack → [4096 bytes at 0xc012e000]                      │
+│  entry → my_func   process → process "worker"                   │
+│                                                                  │
+│  group_node  ←→  <span class="tl">process-&gt;threads</span>                              │
+│  sched_node  ←→  <span class="hi">scheduler ready_list</span>  (NULL if blocked)        │
+│  wait_node   ←→  <span class="am">some wait_queue-&gt;threads</span>  (NULL if not waiting) │
+│                                                                  │
+│  termination_queue: [list of threads waiting for ME to finish]  │
+│  wait_queue*: → <span class="am">pointer to queue I'm sleeping in</span> (or NULL)      │
+└─────────────────────────────────────────────────────────────────┘
+</div>
+<div class="fig-cap">Fig 4 — struct thread layout. One struct, three independent list memberships.</div>
+</div>
+
+<p>The four thread states and their valid transitions:</p>
+
+<div class="fig">
+<svg class="diag" width="100%" viewBox="0 0 780 200" role="img">
+<title>Thread state machine diagram</title>
+<desc>Four states: READY, RUNNING, BLOCKED, TERMINATED with labeled transitions</desc>
+<defs>
+  <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<!-- READY -->
+<rect x="30" y="70" width="140" height="56" rx="6" fill="rgba(91,143,255,.12)" stroke="#5b8fff" stroke-width="1.5"/>
+<text x="100" y="95" text-anchor="middle" fill="#5b8fff" font-size="12" font-weight="700" font-family="monospace">READY</text>
+<text x="100" y="113" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">in ready_list</text>
+<!-- RUNNING -->
+<rect x="310" y="70" width="160" height="56" rx="6" fill="rgba(62,207,142,.12)" stroke="#3ecf8e" stroke-width="1.5"/>
+<text x="390" y="95" text-anchor="middle" fill="#3ecf8e" font-size="12" font-weight="700" font-family="monospace">RUNNING</text>
+<text x="390" y="113" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">= scheduler.current</text>
+<!-- BLOCKED -->
+<rect x="310" y="155" width="160" height="36" rx="6" fill="rgba(245,158,11,.12)" stroke="#f59e0b" stroke-width="1.5"/>
+<text x="390" y="179" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="700" font-family="monospace">BLOCKED</text>
+<!-- TERMINATED -->
+<rect x="600" y="70" width="160" height="56" rx="6" fill="rgba(248,113,113,.12)" stroke="#f87171" stroke-width="1.5"/>
+<text x="680" y="95" text-anchor="middle" fill="#f87171" font-size="12" font-weight="700" font-family="monospace">TERMINATED</text>
+<text x="680" y="113" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">never runs again</text>
+
+<!-- Arrows -->
+<!-- READY → RUNNING -->
+<line x1="170" y1="92" x2="308" y2="92" stroke="#5b8fff" stroke-width="1.5" marker-end="url(#arr2)"/>
+<text x="240" y="86" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">scheduler_next()</text>
+
+<!-- RUNNING → READY -->
+<line x1="310" y1="106" x2="172" y2="106" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr2)"/>
+<text x="240" y="120" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">preempt / yield</text>
+
+<!-- RUNNING → BLOCKED -->
+<line x1="390" y1="126" x2="390" y2="153" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr2)"/>
+<text x="430" y="145" text-anchor="start" fill="#7a8099" font-size="10" font-family="monospace">thread_block() / wait_queue_sleep()</text>
+
+<!-- BLOCKED → READY -->
+<line x1="310" y1="162" x2="170" y2="122" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr2)"/>
+<text x="200" y="158" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">thread_unblock()</text>
+
+<!-- RUNNING → TERMINATED -->
+<line x1="470" y1="92" x2="598" y2="92" stroke="#f87171" stroke-width="1.5" marker-end="url(#arr2)"/>
+<text x="534" y="86" text-anchor="middle" fill="#7a8099" font-size="10" font-family="monospace">thread_exit()</text>
+</svg>
+<div class="fig-cap">Fig 5 — Thread state machine. TERMINATED is a sink — no transitions out.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §4  KERNEL STACK & INITIAL LAYOUT
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s4"><span class="num">§4</span> The Kernel Stack & Initial Layout</h1>
+
+<p>Each thread owns a <code>PAGE_SIZE</code> (4096 byte) kernel stack allocated from the heap. <code>thread_create</code> sets up the stack so that the first time <code>context_switch</code> restores this thread, execution begins at <code>thread_bootstrap</code>.</p>
+
+<pre><code><span class="cm">// Pointer starts at top-of-stack (high address), grows downward</span>
+stack = (uintptr_t *)((uint8_t *)thread-&gt;kernel_stack + THREAD_STACK_SIZE);
+
+*--stack = (uintptr_t)<span class="fn">thread_exit</span>;      <span class="cm">// [top-4]  safety net if entry() returns</span>
+*--stack = (uintptr_t)<span class="fn">thread_bootstrap</span>; <span class="cm">// [top-8]  first IP via context_switch ret</span>
+
+context = (struct cpu_context *)(stack - <span class="num">4</span>); <span class="cm">// 4 × uint32_t = 16 bytes</span>
+memset(context, <span class="num">0</span>, sizeof(*context));       <span class="cm">// zeroed edi/esi/ebx/ebp</span>
+thread-&gt;kernel_sp = (uintptr_t)context;    <span class="cm">// esp will point here on first switch</span></code></pre>
+
+<div class="fig">
+<div class="dia">
+High address (top of stack)
+┌─────────────────────────────────────────┐
+│   thread_exit   address  ← [esp+20 after push × 4]     │
+├─────────────────────────────────────────┤
+│   thread_bootstrap addr  ← will be ret'd into          │
+├─────────────────────────────────────────┤
+│   ebp = 0                               │
+├─────────────────────────────────────────┤
+│   ebx = 0                               │
+├─────────────────────────────────────────┤
+│   esi = 0                               │
+├─────────────────────────────────────────┤
+│   edi = 0               ← <span class="hi">kernel_sp points here</span>        │
+├─────────────────────────────────────────┤
+│   (unused stack space)                  │
+└─────────────────────────────────────────┘
+Low address (base of allocation)
+
+When context_switch restores this thread:
+  pop edi, pop esi, pop ebx, pop ebp   ← all zero
+  ret                                  → jumps to <span class="hi">thread_bootstrap</span>
+  (thread_exit is the return address if entry() returns)
+</div>
+<div class="fig-cap">Fig 6 — Initial kernel stack layout. The cpu_context struct sits at the bottom; thread_bootstrap is the first ret target.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §5  CONTEXT SWITCH
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s5"><span class="num">§5</span> Context Switch (Assembly Deep Dive)</h1>
+
+<p><code>context_switch(uintptr_t *old_sp, uintptr_t new_sp)</code> is 9 lines of NASM. It saves the current thread's callee-saved registers, swaps the stack pointer, and restores the next thread's registers. The CPU then <code>ret</code>s into whatever is on the new stack.</p>
+
+<pre><code><span class="cm">; Stack on entry (32-bit cdecl):</span>
+<span class="cm">;   [esp+0]  = return address (inside scheduler_switch)</span>
+<span class="cm">;   [esp+4]  = old_sp  (pointer to where we save current esp)</span>
+<span class="cm">;   [esp+8]  = new_sp  (the value to load into esp)</span>
+
+context_switch:
+    <span class="kw">push</span> ebp        <span class="cm">; save callee-saved registers</span>
+    <span class="kw">push</span> ebx
+    <span class="kw">push</span> esi
+    <span class="kw">push</span> edi
+                    <span class="cm">; now esp has moved down 16 bytes, so:</span>
+                    <span class="cm">;   old_sp is at [esp+20]  (16 + 4 ret addr)</span>
+                    <span class="cm">;   new_sp is at [esp+24]</span>
+
+    <span class="kw">mov</span> eax, [esp + <span class="num">20</span>]   <span class="cm">; eax = old_sp (the pointer)</span>
+    <span class="kw">mov</span> [eax], esp         <span class="cm">; *old_sp = current esp → saved!</span>
+
+    <span class="kw">mov</span> eax, [esp + <span class="num">24</span>]   <span class="cm">; eax = new_sp (the value)</span>
+    <span class="kw">mov</span> esp, eax           <span class="cm">; CPU is now on the new thread's stack</span>
+
+    <span class="kw">pop</span> edi         <span class="cm">; restore new thread's saved registers</span>
+    <span class="kw">pop</span> esi
+    <span class="kw">pop</span> ebx
+    <span class="kw">pop</span> ebp
+
+    <span class="kw">ret</span>             <span class="cm">; pop IP from new stack → jumps to thread_bootstrap (first run)</span>
+                    <span class="cm">;                      → or back into scheduler_switch (subsequent)</span></code></pre>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">Thread A</span> (being switched away from)        <span class="tl">Thread B</span> (being switched to)
+
+Stack A:                                     Stack B (first run):
+┌──────────────────┐                        ┌──────────────────┐
+│ ... A's frames   │                        │ thread_exit addr  │
+│ scheduler_switch │                        │ thread_bootstrap  │
+│ context_switch   │                        ├──────────────────┤
+│   ret addr       │                        │ ebp = 0          │
+│   old_sp ptr     │                        │ ebx = 0          │
+│   new_sp val     │                        │ esi = 0          │
+├──────────────────┤                        │ edi = 0          │ ← B's kernel_sp
+│ ebp              │                        └──────────────────┘
+│ ebx              │
+│ esi              │
+│ edi              │ ← A's kernel_sp <span class="hi">written here</span>
+
+After <span class="hi">mov esp, eax</span>: CPU is on Stack B
+After <span class="hi">pop edi..ebp</span>: B's saved regs restored  (all zero on first run)
+After <span class="hi">ret</span>: jumps to thread_bootstrap → <span class="tl">B now running</span>
+</div>
+<div class="fig-cap">Fig 7 — What context_switch does to both stacks simultaneously.</div>
+</div>
+
+<div class="callout warn">
+<strong>The iret / ret asymmetry</strong>
+When a context switch happens inside the PIT interrupt handler (<code>irq0</code> → <code>common_irq_stub</code> → <code>irq_handler</code> → <code>scheduler_tick</code> → <code>context_switch</code>), the thread that runs next gets there via <code>ret</code>, not <code>iret</code>. The ISR's <code>iret</code> never fires for that thread, so <strong>EFLAGS.IF is still clear</strong> — interrupts remain disabled. <code>thread_bootstrap</code> fixes this with an explicit <code>interrupt_enable()</code> as its very first instruction.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §6  THE SCHEDULER
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s6"><span class="num">§6</span> The Scheduler</h1>
+
+<h2 class="sub-sec" id="s6-start">scheduler_start & the Idle Thread</h2>
+
+<p>After <code>scheduler_init</code> zeroes the ready list, <code>scheduler_start</code> registers the current execution context (the boot stack) as the <em>idle thread</em>:</p>
+
+<pre><code><span class="kw">static</span> <span class="kw">struct</span> <span class="tp">thread</span> idle_thread;   <span class="cm">// static, no allocated kernel_stack</span>
+
+<span class="kw">void</span> <span class="fn">scheduler_start</span>(<span class="kw">void</span>) {
+    idle_thread.tid   = <span class="num">0</span>;           <span class="cm">// tid=0 identifies it everywhere</span>
+    idle_thread.state = THREAD_RUNNING;
+    <span class="fn">scheduler_add</span>(&amp;idle_thread);      <span class="cm">// push sched_node onto ready_list</span>
+    current = &amp;idle_thread;          <span class="cm">// it's running right now</span>
+    quantum_remaining = SCHEDULER_QUANTUM_TICKS;
+}</code></pre>
+
+<p>From this point on, <code>kernel_loop</code>'s <code>hlt</code> is interruptible, and a timer tick can switch away from the idle thread to any real thread added later.</p>
+
+<h2 class="sub-sec" id="s6-roundrobin">Round-Robin Algorithm</h2>
+
+<p><code>scheduler_next()</code> advances <code>current</code> one step forward in the ready list and wraps around. It never removes threads from the list — it only demotes the outgoing thread from RUNNING to READY and promotes the incoming thread to RUNNING.</p>
+
+<pre><code><span class="kw">struct</span> <span class="tp">thread</span> *<span class="fn">scheduler_next</span>(<span class="kw">void</span>) {
+    <span class="kw">if</span> (<span class="fn">list_empty</span>(&amp;ready_list)) <span class="kw">return</span> NULL;
+
+    <span class="kw">if</span> (current == NULL) {          <span class="cm">// bootstrap: pick the first thread</span>
+        node = <span class="fn">list_front</span>(&amp;ready_list);
+    } <span class="kw">else</span> {
+        <span class="kw">if</span> (current-&gt;state == THREAD_RUNNING)
+            current-&gt;state = THREAD_READY;   <span class="cm">// demote</span>
+
+        <span class="kw">if</span> (sched_node.next == NULL &amp;&amp; sched_node.prev == NULL)
+            node = <span class="fn">list_front</span>(&amp;ready_list); <span class="cm">// current was removed (blocked)</span>
+        <span class="kw">else</span> {
+            node = <span class="fn">list_next</span>(&amp;current-&gt;sched_node);
+            <span class="kw">if</span> (node == &amp;ready_list.head)
+                node = <span class="fn">list_front</span>(&amp;ready_list); <span class="cm">// wrap around</span>
+        }
+    }
+    current = <span class="fn">container_of</span>(node, <span class="kw">struct</span> <span class="tp">thread</span>, sched_node);
+    current-&gt;state = THREAD_RUNNING;
+    <span class="kw">return</span> current;
+}</code></pre>
+
+<div class="fig">
+<div class="dia">
+ready_list (circular, sentinel = head node):
+
+  head ←→ [idle tid=0] ←→ [A tid=1] ←→ [B tid=2] ←→ [C tid=3] ←→ head
+
+Round-robin steps (current starts at A):
+  tick 1–5:  A runs          (quantum_remaining: 5→1)
+  tick 6:    quantum = 0  →  scheduler_next() picks B
+             A demoted to READY, B promoted to RUNNING
+  tick 7–11: B runs
+  tick 12:   C runs
+  tick 13:   idle runs  (if idle is still in list)
+  tick 14:   A runs again  ← wrap around
+</div>
+<div class="fig-cap">Fig 8 — Round-robin step-through with 3 threads + idle in the ready list.</div>
+</div>
+
+<h2 class="sub-sec" id="s6-tick">Preemption: The Tick Path</h2>
+
+<div class="fig">
+<div class="dia">
+PIT fires (every 10ms at 100Hz)
+  │
+  ▼
+irq_handler → <span class="hi">scheduler_tick()</span>
+  │
+  ├─ if current == NULL: return  (scheduling not started)
+  ├─ if --quantum_remaining &gt; 0: return  (quantum not expired)
+  └─ <span class="hi">scheduler_switch()</span>
+       │
+       old = current
+       next = scheduler_next()     ← advances round-robin
+       quantum_remaining = 5       ← reset unconditionally
+       │
+       ├─ if next == old: return   ← only one runnable thread
+       └─ <span class="hi">context_switch(&amp;old-&gt;kernel_sp, next-&gt;kernel_sp)</span>
+              │
+              ← old thread is suspended here
+              → next thread resumes from its kernel_sp
+</div>
+<div class="fig-cap">Fig 9 — Preemptive tick path through scheduler_tick and scheduler_switch.</div>
+</div>
+
+<h2 class="sub-sec" id="s6-yield">Cooperative: The Yield Path</h2>
+
+<p>A thread can voluntarily hand the CPU to the next thread by calling <code>thread_yield()</code>. This goes through the same <code>scheduler_switch</code> but is triggered by the thread itself rather than a timer.</p>
+
+<pre><code><span class="kw">void</span> <span class="fn">thread_yield</span>(<span class="kw">void</span>) {
+    <span class="kw">if</span> (<span class="fn">scheduler_current</span>() == NULL) <span class="kw">return</span>;
+    <span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();  <span class="cm">// cli</span>
+    <span class="fn">scheduler_yield</span>();                           <span class="cm">// → scheduler_switch()</span>
+    <span class="fn">interrupt_restore</span>(state);                   <span class="cm">// sti (when we return)</span>
+}</code></pre>
+
+<h2 class="sub-sec" id="s6-quantum">Quantum Mechanics</h2>
+
+<table>
+<tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr>
+<tr><td><code>SCHEDULER_QUANTUM_TICKS</code></td><td>5</td><td>Timer ticks per quantum</td></tr>
+<tr><td>PIT frequency</td><td>100 Hz</td><td>Ticks per second</td></tr>
+<tr><td>Quantum duration</td><td>50 ms</td><td>Max CPU time per thread</td></tr>
+<tr><td>Reset</td><td>every <code>scheduler_switch()</code></td><td>Even if no actual switch occurs</td></tr>
+</table>
+
+<div class="callout info">
+<strong>Quantum reset even on same thread</strong>
+<code>scheduler_switch</code> resets <code>quantum_remaining = 5</code> unconditionally, even if <code>next == old</code> (meaning the thread runs again). This means a thread that is the only runnable thread always gets a fresh 5-tick quantum after each "switch" decision, rather than accumulating.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §7  THREAD LIFECYCLE
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s7"><span class="num">§7</span> Thread Lifecycle — All Paths</h1>
+
+<h2 class="sub-sec" id="s7-create">Creation: thread_create</h2>
+
+<p>Creating a thread allocates the struct, sets up the kernel stack, and returns — but does <em>not</em> add the thread to the scheduler. The caller must call <code>thread_add</code> separately (under interrupt disable).</p>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">thread_create(process, entry)</span>
+  1. kmalloc(sizeof(struct thread))
+  2. memset zero
+  3. list_node_init(group_node, sched_node, wait_node)  ← prev=next=NULL
+  4. wait_queue_init(termination_queue)
+  5. thread-&gt;entry = entry
+  6. kmalloc(PAGE_SIZE) → kernel_stack
+  7. Set up initial stack:
+        *--stack = thread_exit     ← return address if entry() returns
+        *--stack = thread_bootstrap ← first IP
+        context = stack - 4        ← space for cpu_context (all zero)
+        thread-&gt;kernel_sp = context
+  8. thread-&gt;state = THREAD_READY
+  9. thread-&gt;tid = next_tid++
+ 10. thread-&gt;process = process
+ 11. return thread       ← NOT yet in any list. Call thread_add() next.
+
+<span class="hi">thread_add(thread)</span>  ← caller must hold interrupts off
+  1. list_push_back(&amp;process-&gt;threads, &amp;thread-&gt;group_node)
+  2. scheduler_add(thread)   ← pushes sched_node to ready_list tail
+</div>
+<div class="fig-cap">Fig 10 — thread_create + thread_add sequence.</div>
+</div>
+
+<h2 class="sub-sec" id="s7-bootstrap">First Run: thread_bootstrap</h2>
+
+<p>The very first time a thread gets CPU time, <code>context_switch</code>'s <code>ret</code> lands in <code>thread_bootstrap</code>. This function has two critical jobs before it ever calls <code>entry()</code>:</p>
+
+<pre><code><span class="kw">static void</span> <span class="fn">thread_bootstrap</span>(<span class="kw">void</span>) {
+    <span class="fn">interrupt_enable</span>();           <span class="cm">// ← CRITICAL: cli from the ISR is still in effect</span>
+    <span class="kw">struct</span> <span class="tp">thread</span> *t = <span class="fn">scheduler_current</span>();
+    t-&gt;<span class="fn">entry</span>();                   <span class="cm">// run the user-provided function</span>
+    <span class="fn">thread_exit</span>();                <span class="cm">// if entry() returns</span>
+}</code></pre>
+
+<p>Without <code>interrupt_enable()</code>, the thread would run to completion with all timer interrupts masked — no preemption ever, and no other thread would run.</p>
+
+<h2 class="sub-sec" id="s7-block">Blocking & Unblocking</h2>
+
+<p><code>thread_block()</code> is the self-blocking primitive. It's called directly (by code that wants to block itself without a specific wait queue) or indirectly through <code>wait_queue_sleep</code>.</p>
+
+<pre><code><span class="kw">void</span> <span class="fn">thread_block</span>(<span class="kw">void</span>) {
+    <span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();
+    thread-&gt;state = THREAD_BLOCKED;
+    <span class="fn">scheduler_remove</span>(thread);     <span class="cm">// pulls sched_node from ready_list</span>
+    <span class="fn">scheduler_yield</span>();            <span class="cm">// switch to another thread NOW</span>
+    <span class="fn">interrupt_restore</span>(state);    <span class="cm">// reached only after thread_unblock + reschedule</span>
+}</code></pre>
+
+<p>The <code>interrupt_restore</code> at the end runs when this thread is eventually unblocked and runs again — it resumes exactly from that point in the stack frame.</p>
+
+<pre><code><span class="kw">void</span> <span class="fn">thread_unblock</span>(<span class="kw">struct</span> <span class="tp">thread</span> *thread) {
+    ASSERT(thread-&gt;state == THREAD_BLOCKED);
+    <span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();
+    thread-&gt;state = THREAD_READY;
+    <span class="fn">scheduler_add</span>(thread);       <span class="cm">// pushes back onto ready_list</span>
+    <span class="fn">interrupt_restore</span>(state);
+    <span class="cm">// caller decides when to yield — the unblocked thread competes normally</span>
+}</code></pre>
+
+<h2 class="sub-sec" id="s7-exit">Termination: thread_exit</h2>
+
+<pre><code><span class="kw">static void</span> <span class="fn">thread_exit</span>(<span class="kw">void</span>) {
+    <span class="fn">interrupt_save</span>();             <span class="cm">// cli (return value discarded — BUG, should be interrupt_disable)</span>
+    <span class="kw">struct</span> <span class="tp">thread</span> *thread = <span class="fn">scheduler_current</span>();
+    <span class="fn">scheduler_terminate</span>(thread);  <span class="cm">// remove from ready_list, TERMINATED, wake_all(termination_queue)</span>
+    <span class="fn">scheduler_yield</span>();            <span class="cm">// switch away — this thread never runs again</span>
+    <span class="fn">panic</span>(<span class="str">"terminated thread resumed"</span>);  <span class="cm">// should never reach here</span>
+}
+
+<span class="kw">void</span> <span class="fn">scheduler_terminate</span>(<span class="kw">struct</span> <span class="tp">thread</span> *thread) {
+    ASSERT(!<span class="fn">interrupt_enabled</span>());
+    <span class="fn">scheduler_remove</span>(thread);         <span class="cm">// out of ready_list</span>
+    thread-&gt;state = THREAD_TERMINATED;
+    <span class="fn">wait_queue_wake_all</span>(&amp;thread-&gt;termination_queue); <span class="cm">// wake thread_wait() callers</span>
+}</code></pre>
+
+<h2 class="sub-sec" id="s7-wait">Joining: thread_wait</h2>
+
+<p><code>thread_wait(target)</code> blocks the caller until <code>target</code> terminates. It sleeps in <code>target->termination_queue</code>. The race window between the check and the sleep is closed by the surrounding <code>interrupt_save</code>.</p>
+
+<pre><code><span class="kw">void</span> <span class="fn">thread_wait</span>(<span class="kw">struct</span> <span class="tp">thread</span> *thread) {
+    <span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();  <span class="cm">// cli — close TOCTOU window</span>
+    <span class="kw">if</span> (thread-&gt;state != THREAD_TERMINATED)
+        <span class="fn">wait_queue_sleep</span>(&amp;thread-&gt;termination_queue);
+    <span class="fn">interrupt_restore</span>(state);
+    <span class="cm">// returns only after target is TERMINATED</span>
+}</code></pre>
+
+<div class="fig">
+<div class="dia">
+              <span class="hi">Caller</span>                              <span class="tl">Target thread</span>
+                │                                      │
+          thread_wait(target)                      ...running...
+                │ interrupt_save()                     │
+                │ check: not TERMINATED                │
+                │ wait_queue_sleep(                    │
+                │   &amp;target-&gt;termination_queue)        │
+                │   ← blocks, switches away            │  &lt;-- resumes
+                │                                      │
+                │                              entry() returns
+                │                              thread_exit()
+                │                              scheduler_terminate()
+                │                                 wake_all(termination_queue)
+                │                                 ↓
+           ← <span class="gr">unblocked</span> ←────────────────────────┘
+                │ thread_unblock(caller)
+                │ caller resumes in thread_block
+                │ interrupt_restore()
+                │ returns from thread_wait ✓
+</div>
+<div class="fig-cap">Fig 11 — thread_wait synchronization timeline.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §8  WAIT QUEUES
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s8"><span class="num">§8</span> Wait Queues</h1>
+
+<p>A <code>wait_queue</code> is a FIFO list of blocked threads. It is the building block for mutex, semaphore, and thread_wait. The struct is one field:</p>
+
+<pre><code><span class="kw">struct</span> <span class="tp">wait_queue</span> { <span class="kw">struct</span> <span class="tp">list</span> threads; };</code></pre>
+
+<table>
+<tr><th>Function</th><th>Interrupt guard?</th><th>What it does</th></tr>
+<tr><td><code>wait_queue_init</code></td><td>none needed</td><td>Init the threads list (sentinel)</td></tr>
+<tr><td><code>wait_queue_add</code></td><td>caller's</td><td>Set thread→wait_queue, push wait_node</td></tr>
+<tr><td><code>wait_queue_remove</code></td><td>caller's</td><td>Pop front, clear thread→wait_queue, return</td></tr>
+<tr><td><code>wait_queue_sleep</code></td><td><strong>asserts off</strong></td><td>add + BLOCKED + remove from sched + yield</td></tr>
+<tr><td><code>wait_queue_wake</code></td><td>none (relies on thread_unblock)</td><td>remove one + thread_unblock</td></tr>
+<tr><td><code>wait_queue_wake_all</code></td><td>none (relies on thread_unblock)</td><td>loop: remove + thread_unblock</td></tr>
+</table>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">wait_queue_sleep(queue)</span>  ← caller MUST have interrupts disabled
+  1. ASSERT(!interrupt_enabled())
+  2. thread = scheduler_current()
+  3. wait_queue_add(queue, thread)
+       thread-&gt;wait_queue = queue
+       list_push_back(&amp;queue-&gt;threads, &amp;thread-&gt;wait_node)
+  4. thread-&gt;state = THREAD_BLOCKED
+  5. scheduler_remove(thread)        ← off the ready list
+  6. scheduler_yield()               ← switch to next thread
+  ← returns here when thread_unblock() puts it back
+
+<span class="hi">wait_queue_wake(queue)</span>
+  1. thread = wait_queue_remove(queue)  ← FIFO: takes front
+       list_remove(&amp;thread-&gt;wait_node)
+       thread-&gt;wait_queue = NULL
+  2. thread_unblock(thread)
+       interrupt_save()
+       thread-&gt;state = THREAD_READY
+       scheduler_add(thread)
+       interrupt_restore()
+</div>
+<div class="fig-cap">Fig 12 — wait_queue_sleep and wait_queue_wake internals.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §9  MUTEX
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s9"><span class="num">§9</span> Mutex</h1>
+
+<pre><code><span class="kw">struct</span> <span class="tp">mutex</span> {
+    <span class="kw">struct</span> <span class="tp">thread</span>    *owner;       <span class="cm">// NULL = unlocked</span>
+    <span class="kw">struct</span> <span class="tp">wait_queue</span> wait_queue;  <span class="cm">// threads waiting to acquire</span>
+};</code></pre>
+
+<h2 class="sub-sec" id="s9-lock">Lock Path</h2>
+
+<pre><code><span class="kw">void</span> <span class="fn">mutex_lock</span>(<span class="kw">struct</span> <span class="tp">mutex</span> *mutex) {
+    <span class="kw">if</span> (mutex-&gt;owner == NULL) {          <span class="cm">// ← BUG: not interrupt-guarded</span>
+        mutex-&gt;owner = <span class="fn">scheduler_current</span>();
+        <span class="kw">return</span>;
+    }
+    <span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();
+    <span class="fn">wait_queue_sleep</span>(&amp;mutex-&gt;wait_queue); <span class="cm">// blocks until unlock transfers ownership</span>
+    <span class="fn">interrupt_restore</span>(state);
+}</code></pre>
+
+<h2 class="sub-sec" id="s9-unlock">Unlock & Ownership Transfer</h2>
+
+<pre><code><span class="kw">void</span> <span class="fn">mutex_unlock</span>(<span class="kw">struct</span> <span class="tp">mutex</span> *mutex) {
+    ASSERT(mutex-&gt;owner == <span class="fn">scheduler_current</span>());
+    <span class="kw">struct</span> <span class="tp">thread</span> *thread = <span class="fn">wait_queue_remove</span>(&amp;mutex-&gt;wait_queue);
+    <span class="kw">if</span> (thread != NULL) {
+        mutex-&gt;owner = thread;           <span class="cm">// ← direct transfer, no NULL gap</span>
+        <span class="fn">thread_unblock</span>(thread);
+        <span class="kw">return</span>;
+    }
+    mutex-&gt;owner = NULL;
+}</code></pre>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">Lock scenario: A holds, B and C waiting</span>
+
+mutex.owner = A
+mutex.wait_queue = [B] ←→ [C]
+
+A calls mutex_unlock():
+  1. wait_queue_remove() → pops B
+  2. mutex.owner = B           ← ownership never drops to NULL
+  3. thread_unblock(B)         ← B goes back on ready_list
+
+  wait_queue = [C]   (C still waiting)
+  mutex.owner = B
+
+Next: B eventually calls mutex_unlock()
+  → C gets ownership the same way
+</div>
+<div class="fig-cap">Fig 13 — Mutex ownership transfer. No thundering herd — exactly one waiter unblocked per unlock.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §10  SEMAPHORE
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s10"><span class="num">§10</span> Semaphore</h1>
+
+<pre><code><span class="kw">struct</span> <span class="tp">semaphore</span> {
+    <span class="tp">uint32_t</span>         count;       <span class="cm">// current count</span>
+    <span class="kw">struct</span> <span class="tp">wait_queue</span> wait_queue;
+};</code></pre>
+
+<pre><code><span class="kw">void</span> <span class="fn">semaphore_acquire</span>(<span class="kw">struct</span> <span class="tp">semaphore</span> *sem) {
+    <span class="kw">if</span> (sem-&gt;count &gt; <span class="num">0</span>) { sem-&gt;count--; <span class="kw">return</span>; }   <span class="cm">// ← BUG: not guarded</span>
+    <span class="tp">interrupt_state_t</span> state = <span class="fn">interrupt_save</span>();
+    <span class="fn">wait_queue_sleep</span>(&amp;sem-&gt;wait_queue);
+    <span class="fn">interrupt_restore</span>(state);
+    <span class="cm">// note: count NOT decremented here — release handles it via handoff</span>
+}
+
+<span class="kw">void</span> <span class="fn">semaphore_release</span>(<span class="kw">struct</span> <span class="tp">semaphore</span> *sem) {
+    <span class="kw">struct</span> <span class="tp">thread</span> *thread = <span class="fn">wait_queue_remove</span>(&amp;sem-&gt;wait_queue);
+    <span class="kw">if</span> (thread != NULL) { <span class="fn">thread_unblock</span>(thread); <span class="kw">return</span>; }
+    sem-&gt;count++;                                  <span class="cm">// ← BUG: not guarded</span>
+}</code></pre>
+
+<div class="callout info">
+<strong>The handoff model</strong>
+When a waiter exists, <code>semaphore_release</code> does NOT increment <code>count</code>. The release "gives its slot" directly to the woken thread. <code>count</code> stays at 0. This keeps the invariant: <code>count</code> is the number of available resources when no one is waiting, not an absolute counter of all releases.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §11  RACE CONDITIONS
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s11"><span class="num">§11</span> Race Conditions — Complete Analysis</h1>
+
+<h2 class="sub-sec" id="s11-model">The x86 UP Race Model</h2>
+
+<p>neox runs on a single CPU. There is no true parallelism. The only way two threads can "interleave" is if a PIT interrupt fires between two instructions. Therefore:</p>
+
+<ul class="list">
+  <li>Any sequence of instructions that is not interrupted is atomic.</li>
+  <li>A race condition exists wherever a timer interrupt between two instructions leaves shared state inconsistent.</li>
+  <li>The fix is always the same: <code>interrupt_save()</code> before the check, <code>interrupt_restore()</code> after the write.</li>
+</ul>
+
+<h2 class="sub-sec" id="s11-mutex">Race 1 — mutex_lock Fast Path <span class="badge bug">BUG</span></h2>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">Thread A</span>                       <span class="rd">PIT fires here</span>       <span class="tl">Thread B</span>
+
+mutex_lock(m):
+  if (m-&gt;owner == NULL)       ← TRUE, proceeds
+                                   ↕ interrupt
+                              scheduler_switch → B runs
+                              mutex_lock(m):
+                                if (m-&gt;owner == NULL)  ← still NULL!
+                                  m-&gt;owner = B          ← B claims it
+                              B continues, holds mutex...
+                              tick expires → A resumes
+  m-&gt;owner = A               ← A ALSO claims it
+
+<span class="rd">Result: both A and B believe they hold the mutex. Critical section is not exclusive.</span>
+</div>
+<div class="fig-cap">Fig 14 — mutex_lock fast-path race. A timer interrupt between the NULL-check and the assignment corrupts ownership.</div>
+</div>
+
+<p><strong>Fix:</strong> wrap the entire fast path in <code>interrupt_save / interrupt_restore</code>.</p>
+
+<h2 class="sub-sec" id="s11-sem">Race 2 — semaphore_acquire Fast Path <span class="badge bug">BUG</span></h2>
+
+<div class="fig">
+<div class="dia">
+sem.count = 1
+
+<span class="hi">Thread A</span>                       <span class="rd">PIT fires here</span>       <span class="tl">Thread B</span>
+
+semaphore_acquire(sem):
+  if (sem-&gt;count &gt; 0)         ← TRUE (count=1)
+                                   ↕ interrupt → B runs
+                              semaphore_acquire(sem):
+                                if (sem-&gt;count &gt; 0)  ← still 1
+                                  sem-&gt;count--        ← count = 0
+                              B holds resource
+                              tick expires → A resumes
+  sem-&gt;count--                ← count = 0xFFFFFFFF (uint32 underflow!)
+
+<span class="rd">Result: both threads acquired a semaphore with count=1. count wraps to UINT32_MAX.</span>
+</div>
+<div class="fig-cap">Fig 15 — semaphore_acquire fast-path race. uint32_t underflow wraps to 4 billion.</div>
+</div>
+
+<h2 class="sub-sec" id="s11-unlock">Race 3 — Unlock/Release Structural Gap <span class="badge bug">BUG</span></h2>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">Thread A</span> (holding mutex)         <span class="rd">PIT fires here</span>      <span class="tl">Thread C</span>
+
+mutex_unlock(m):
+  thread = wait_queue_remove()   ← B removed from queue
+                                      ↕ interrupt → C runs
+                                 mutex_lock(m):
+                                   if (m-&gt;owner == NULL) ← TRUE, m-&gt;owner not yet set!
+                                   m-&gt;owner = C          ← C claims it
+                                 tick → A resumes
+  m-&gt;owner = B                  ← A overwrites C's claim
+  thread_unblock(B)              ← B also gets ownership
+
+<span class="rd">Result: both B and C believe they own the mutex. m-&gt;owner = B but C also holds it.</span>
+</div>
+<div class="fig-cap">Fig 16 — mutex_unlock structural race. The window between remove and owner-assignment allows a new lock to sneak in.</div>
+</div>
+
+<h2 class="sub-sec" id="s11-exit">Bug 4 — thread_exit Discards interrupt_save Return Value <span class="badge bug">BUG</span></h2>
+
+<pre><code><span class="kw">static void</span> <span class="fn">thread_exit</span>(<span class="kw">void</span>) {
+    <span class="fn">interrupt_save</span>();    <span class="cm">// ← return value discarded — the cli side-effect is intentional</span>
+                         <span class="cm">// but the semantics are wrong. Should be: interrupt_disable()</span>
+    ...
+}</code></pre>
+
+<p>The code works because the side effect of <code>interrupt_save()</code> is always <code>cli</code>. But discarding the return value signals to a reader that "I want to save and restore" when the real intent is "I want to disable permanently (the thread is dying)". Use <code>interrupt_disable()</code>.</p>
+
+<h2 class="sub-sec" id="s11-safe">What Is Safe <span class="badge safe">SAFE</span></h2>
+
+<table>
+<tr><th>Path</th><th>Status</th><th>Reason</th></tr>
+<tr><td><code>wait_queue_sleep</code></td><td><span class="badge safe">safe</span></td><td>Asserts <code>!interrupt_enabled()</code>. All callers provide the guard.</td></tr>
+<tr><td><code>thread_block</code></td><td><span class="badge safe">safe</span></td><td>Saves interrupts around the full block-and-yield sequence.</td></tr>
+<tr><td><code>thread_unblock</code></td><td><span class="badge safe">safe</span></td><td>Saves interrupts around <code>scheduler_add</code>.</td></tr>
+<tr><td><code>thread_wait</code></td><td><span class="badge safe">safe</span></td><td>interrupt_save before the TOCTOU check; <code>wait_queue_sleep</code> sees interrupts off.</td></tr>
+<tr><td><code>scheduler_terminate</code></td><td><span class="badge safe">safe</span></td><td>Asserts interrupts off; caller (<code>thread_exit</code>) provides the cli.</td></tr>
+<tr><td><code>mutex_unlock</code> slow path</td><td><span class="badge warn">partial</span></td><td>thread_unblock's internal guard rescues the scheduler_add, but the ownership window is open (see Race 3).</td></tr>
+<tr><td><code>mutex_lock</code> slow path</td><td><span class="badge safe">safe</span></td><td>interrupt_save before wait_queue_sleep, which asserts off.</td></tr>
+<tr><td><code>mutex_lock</code> fast path</td><td><span class="badge bug">race</span></td><td>No interrupt guard — Race 1.</td></tr>
+<tr><td><code>semaphore_acquire</code> fast path</td><td><span class="badge bug">race</span></td><td>No interrupt guard — Race 2.</td></tr>
+<tr><td><code>semaphore_release</code></td><td><span class="badge warn">partial</span></td><td>count++ unguarded; thread_unblock internally safe.</td></tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════
+     §12  FULL EXECUTION SCENARIOS
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s12"><span class="num">§12</span> Full Execution Scenarios</h1>
+
+<h2 class="sub-sec" id="s12-a">Scenario A — Preemptive Round-Robin (3 threads)</h2>
+
+<div class="fig">
+<div class="dia">
+ready_list:  [idle] ←→ [A] ←→ [B] ←→ [C]    quantum=5
+
+<span class="hi">Ticks 1–5:</span>   A runs (A's entry() executing)
+  tick 5:   --quantum_remaining → 0
+            scheduler_switch()
+              scheduler_next(): A→READY, advance to B, B→RUNNING
+              quantum_remaining = 5
+              context_switch(&amp;A.kernel_sp, B.kernel_sp)
+                → B's stack loaded, pop edi/esi/ebx/ebp, ret → B's last IP
+
+<span class="hi">Ticks 6–10:</span>  B runs
+  tick 10:  quantum → 0, switch to C
+
+<span class="hi">Ticks 11–15:</span> C runs
+  tick 15:  quantum → 0, switch to idle
+
+<span class="hi">Ticks 16–20:</span> idle runs (kernel_loop hlt)
+  tick 20:  switch back to A  (wrap around)
+
+<span class="hi">State at each switch:</span>
+  outgoing thread: state = READY (still in ready_list)
+  incoming thread: state = RUNNING
+  idle thread: always in list, gets time when it's its turn
+</div>
+<div class="fig-cap">Fig 17 — 20-tick preemptive round-robin timeline with 3 threads + idle.</div>
+</div>
+
+<h2 class="sub-sec" id="s12-b">Scenario B — Thread Blocks on Mutex</h2>
+
+<div class="fig">
+<div class="dia">
+Initial: mutex free, ready_list = [idle, A, B]
+
+<span class="hi">A runs → calls mutex_lock(m):</span>
+  m-&gt;owner == NULL → m-&gt;owner = A, returns immediately
+  A continues in critical section
+
+<span class="hi">Tick fires → B runs → calls mutex_lock(m):</span>
+  m-&gt;owner != NULL (= A)
+  interrupt_save()          ← cli
+  wait_queue_sleep(&amp;m-&gt;wait_queue):
+    wait_queue_add(queue, B)      ← B.wait_queue = &amp;m.wait_queue
+    B.state = THREAD_BLOCKED
+    scheduler_remove(B)           ← B.sched_node pulled from ready_list
+    scheduler_yield()             ← switch away
+  → ready_list = [idle, A]    (B is gone)
+
+<span class="hi">A runs again (preempt or yield) → calls mutex_unlock(m):</span>
+  wait_queue_remove(&amp;m-&gt;wait_queue) → returns B
+  m-&gt;owner = B
+  thread_unblock(B):
+    interrupt_save()
+    B.state = THREAD_READY
+    scheduler_add(B)          ← B.sched_node back in ready_list
+    interrupt_restore()
+  → ready_list = [idle, A, B]
+
+<span class="hi">Next tick with B selected:</span>
+  scheduler_next() picks B → B.state = RUNNING
+  context_switch → B resumes inside wait_queue_sleep → scheduler_yield returns
+  → interrupt_restore() in mutex_lock restores IF
+  B is now past mutex_lock, inside critical section, mutex.owner = B
+</div>
+<div class="fig-cap">Fig 18 — Complete mutex block/unblock scenario showing every state and list change.</div>
+</div>
+
+<h2 class="sub-sec" id="s12-c">Scenario C — thread_wait (join)</h2>
+
+<div class="fig">
+<div class="dia">
+<span class="hi">Main thread</span> calls thread_wait(worker):
+  interrupt_save()
+  worker-&gt;state != TERMINATED → enter sleep
+  wait_queue_sleep(&amp;worker-&gt;termination_queue):
+    main.state = BLOCKED
+    scheduler_remove(main)
+    scheduler_yield()
+  → main is now off the ready list
+
+<span class="hi">Worker thread</span> runs and returns from entry():
+  thread_bootstrap calls thread_exit():
+    interrupt_save()  (cli)
+    scheduler_terminate(worker):
+      scheduler_remove(worker)       ← out of ready_list
+      worker.state = THREAD_TERMINATED
+      wait_queue_wake_all(&amp;worker-&gt;termination_queue):
+        while thread = wait_queue_remove():
+          thread_unblock(thread)     ← main: READY, added to ready_list
+    scheduler_yield()                ← worker off CPU forever
+
+<span class="hi">Main thread resumes:</span>
+  context_switch lands main back in scheduler_yield inside wait_queue_sleep
+  → returns up through wait_queue_sleep → scheduler_yield → thread_block
+  → interrupt_restore() in thread_wait
+  → main sees worker-&gt;state == TERMINATED, returns from thread_wait ✓
+</div>
+<div class="fig-cap">Fig 19 — thread_wait join: main blocks until worker terminates, then resumes.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     §13  INTERRUPT DISCIPLINE REFERENCE
+══════════════════════════════════════════════════ -->
+<h1 class="sec" id="s13"><span class="num">§13</span> Interrupt Discipline Reference Card</h1>
+
+<p>The single rule: <strong>interrupts must be off whenever you touch scheduler state (ready_list, current, quantum) or shared per-thread state (thread state, wait_queue pointer).</strong></p>
+
+<table>
+<tr><th>Function</th><th>Enters with IF?</th><th>Guards itself?</th><th>Notes</th></tr>
+<tr><td><code>scheduler_add</code></td><td>must be OFF</td><td>ASSERT(!enabled)</td><td>Never call with interrupts on</td></tr>
+<tr><td><code>scheduler_remove</code></td><td>must be OFF</td><td>ASSERT(!enabled)</td><td>Same</td></tr>
+<tr><td><code>scheduler_yield</code></td><td>must be OFF</td><td>ASSERT(!enabled)</td><td>Called from thread_block, wait_queue_sleep</td></tr>
+<tr><td><code>scheduler_terminate</code></td><td>must be OFF</td><td>ASSERT(!enabled)</td><td>Called from thread_exit which does cli</td></tr>
+<tr><td><code>scheduler_tick</code></td><td>OFF (inside ISR)</td><td>already off</td><td>cli from irq stub still active</td></tr>
+<tr><td><code>thread_block</code></td><td>any</td><td>interrupt_save</td><td>Saves and restores around the block</td></tr>
+<tr><td><code>thread_unblock</code></td><td>any</td><td>interrupt_save</td><td>Saves around scheduler_add</td></tr>
+<tr><td><code>thread_yield</code></td><td>any</td><td>interrupt_save</td><td>Saves before scheduler_yield</td></tr>
+<tr><td><code>thread_wait</code></td><td>any</td><td>interrupt_save</td><td>Closes TOCTOU window for terminated check</td></tr>
+<tr><td><code>wait_queue_sleep</code></td><td>must be OFF</td><td>ASSERT(!enabled)</td><td>Caller must have saved interrupts</td></tr>
+<tr><td><code>wait_queue_wake</code></td><td>any</td><td>via thread_unblock</td><td>Should also have ASSERT — currently doesn't</td></tr>
+<tr><td><code>mutex_lock fast</code></td><td>any</td><td><span class="badge bug">NONE — BUG</span></td><td>Race condition on owner assignment</td></tr>
+<tr><td><code>mutex_lock slow</code></td><td>any</td><td>interrupt_save before sleep</td><td>Correct</td></tr>
+<tr><td><code>mutex_unlock</code></td><td>any</td><td><span class="badge bug">NONE — BUG</span></td><td>Race on owner transfer</td></tr>
+<tr><td><code>semaphore_acquire fast</code></td><td>any</td><td><span class="badge bug">NONE — BUG</span></td><td>Race on count decrement</td></tr>
+<tr><td><code>semaphore_release</code></td><td>any</td><td><span class="badge bug">NONE — BUG</span></td><td>count++ unguarded</td></tr>
+<tr><td><code>thread_add</code></td><td>must be OFF</td><td>none (relies on caller)</td><td>Documented — callers use interrupt_save</td></tr>
+</table>
+
+<div class="callout ok">
+<strong>The pattern to follow for all future synchronization primitives</strong>
+Every function that reads-then-writes shared state must wrap the entire read-check-write sequence in a single interrupt_save / interrupt_restore pair. The save must happen <em>before</em> the first read, not after. The restore happens after the last write. Anything in between is atomic from the scheduler's perspective.
+</div>
+
+</div><!-- /wrap -->
+</body>
+</html>
