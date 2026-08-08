@@ -113,8 +113,14 @@ struct thread *scheduler_next(void)
         return current;
     }
 
-    if (current->state == THREAD_RUNNING)
+    /*
+     * Only demote a real thread back to READY; idle_thread is
+     * never in the ready list and must never be marked READY
+     * (it would confuse any code that inspects thread state).
+     */
+    if (current->state == THREAD_RUNNING && current != &idle_thread)
         current->state = THREAD_READY;
+
 
     /*
      * current's sched_node is NULL/NULL when:
@@ -227,6 +233,27 @@ void scheduler_restore(struct thread *thread)
     ASSERT(thread != NULL);
     
     list_init(&ready_list);
+
+    /*
+    * Re-initialise the node so list_push_back()'s ASSERT
+    * (prev == NULL && next == NULL) passes cleanly, even if
+    * the node was previously linked into a list that was
+    * wiped by scheduler_init() during a test.
+    */
+
+    list_node_init(&thread->sched_node);
+
+    /*
+     * Put the init/test thread back into the ready list so
+     * that round-robin scheduling can return to it after
+     * worker threads consume their quanta.  Without this
+     * the thread is invisible to scheduler_next() and
+     * test_wait_ticks() deadlocks waiting for ticks that
+     * are never delivered to it.
+     */
+
+    list_push_back(&ready_list, &thread->sched_node);
+
     current = thread;
     current->state = THREAD_RUNNING;
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
