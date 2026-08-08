@@ -51,8 +51,13 @@ void kernel_init(uint32_t magic,
 
 void kernel_loop(void)
 {
+    /*
+     * This function runs on the idle thread's stack after
+     * scheduler_start().  It should never be reached again
+     * once the scheduler is running — idle's own
+     * scheduler_idle_loop() takes over via context_switch.
+     * The hlt here is a last-resort safety net.
+     */
     for (;;)
-    {
         __asm__ volatile("hlt");
-    }
 }

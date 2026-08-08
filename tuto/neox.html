@@ -523,7 +523,7 @@ ul.list li { margin: .3rem 0; font-size: 14px; }
 
 <h2 class="sub-sec" id="s2-interrupt">Interrupt Save / Restore</h2>
 
-<p>All of neox's concurrency control reduces to one mechanism: turning interrupts on and off. <code>interrupt_save()</code> atomically captures EFLAGS and issues <code>cli</code>. <code>interrupt_restore(state)</code> pushes the saved EFLAGS back, re-enabling interrupts only if they were on.</p>
+<p>On the current uniprocessor x86 implementation, task synchronization relies on disabling local interrupts to prevent preemption during critical sections. <code>interrupt_save()</code> atomically captures EFLAGS and issues <code>cli</code>. <code>interrupt_restore(state)</code> pushes the saved EFLAGS back, re-enabling interrupts only if they were on.</p>
 
 <pre><code><span class="cm">// arch/x86/arch.c</span>
 <span class="tp">interrupt_state_t</span> <span class="fn">interrupt_save</span>(<span class="kw">void</span>) {

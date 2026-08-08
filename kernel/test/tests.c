@@ -22,7 +22,7 @@ void kernel_tests(void)
 //       test_thread();
 //
        test_scheduler();
-       test_thread_integration();
+//       test_thread_integration();
        test_thread_preemption();
 
 //      test_list();

@@ -31,6 +31,9 @@ struct thread *scheduler_next(void);
  */
 void scheduler_start(void);
 
+// for tests
+void scheduler_restore(struct thread *thread);
+
 /*
  * Timer tick notification.
  *

@@ -1,3 +1,4 @@
+#include "arch.h"
 #include "test.h"
 #include "tests.h"
 
@@ -55,6 +56,9 @@ static void test_semaphore_release_wakes(void)
     struct semaphore sem;
     struct process *process;
     struct thread *thread;
+    interrupt_state_t state;
+
+    state = interrupt_save();
 
     scheduler_init();
 
@@ -77,6 +81,8 @@ static void test_semaphore_release_wakes(void)
     TEST_ASSERT_EQ(thread->state, THREAD_READY);
     TEST_ASSERT_NULL(thread->wait_queue);
     TEST_ASSERT_EQ(sem.count, 0);
+
+    interrupt_restore(state);
 
     test_pass();
 }

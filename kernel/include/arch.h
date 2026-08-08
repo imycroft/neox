@@ -13,6 +13,8 @@ void interrupt_enable(void);
 
 void interrupt_disable(void);
 
+void interrupt_enable_and_halt(void);
+
 bool interrupt_enabled(void);
 
 void arch_init(void);

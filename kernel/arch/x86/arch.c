@@ -54,6 +54,26 @@ void interrupt_enable(void)
     );
 }
 
+/*
+ * Re-enable interrupts and immediately halt the CPU.
+ *
+ * The x86 guarantee that `sti` delays its effect by one
+ * instruction means the `hlt` is always reached before any
+ * pending interrupt is delivered.  This closes the race where
+ * an interrupt could fire between a plain `sti` and a
+ * subsequent `hlt`, causing the CPU to sleep past a wakeup.
+ */
+void interrupt_enable_and_halt(void)
+{
+    __asm__ volatile(
+        "sti\n\t"
+        "hlt"
+        :
+        :
+        : "memory"
+    );
+}
+
 bool interrupt_enabled(void)
 {
     interrupt_state_t state;

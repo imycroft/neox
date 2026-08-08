@@ -95,6 +95,17 @@ static void test_thread_add(void)
     struct thread *thread;
     interrupt_state_t state;
 
+    /*
+     * This test exercises the raw bootstrap path of
+     * scheduler_next() (current == NULL → pick front).
+     * It must call scheduler_init() directly rather than
+     * scheduler_reset() because reset leaves current pointing
+     * at the idle thread, which would fail the NULL assertion
+     * below.  State is restored with scheduler_reset() after
+     * the assertions so the init thread can continue.
+     */
+    state = interrupt_save();
+
     scheduler_init();
 
     process = process_create("test");
@@ -104,8 +115,6 @@ static void test_thread_add(void)
     thread = thread_create(process, dummy_entry);
 
     TEST_ASSERT_NOT_NULL(thread);
-
-    state = interrupt_save();
 
     thread_add(thread);
 
@@ -148,12 +157,6 @@ static void test_thread_execution(void)
 
     interrupt_state_t state;
 
-
-    scheduler_init();
-    scheduler_start();
-
-
-
     thread_executed = false;
 
     process = process_create("test");
@@ -175,7 +178,7 @@ static void test_thread_execution(void)
 
     TEST_ASSERT_TRUE(thread_executed);
 
-    TEST_ASSERT_EQ(scheduler_current()->tid, 0);
+    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }
@@ -198,13 +201,6 @@ static void test_thread_exit(void)
     struct thread *thread;
 
     interrupt_state_t state;
-
-
-
-    scheduler_init();
-    scheduler_start();
-
-
 
     thread_started = false;
 
@@ -263,12 +259,6 @@ static void test_multiple_thread_yield(void)
     struct thread *thread_b;
 
     interrupt_state_t state;
-
-
-    scheduler_init();
-    scheduler_start();
-
-
 
     thread_a_started = false;
     thread_b_started = false;
@@ -332,13 +322,6 @@ static void test_thread_block(void)
     struct thread *thread;
     interrupt_state_t state;
 
-
-
-    scheduler_init();
-    scheduler_start();
-
-
-
     thread_blocked = false;
 
     process = process_create("test");
@@ -387,13 +370,6 @@ static void test_thread_unblock_resume(void)
     struct process *process;
     struct thread *thread;
     interrupt_state_t state;
-
-
-
-    scheduler_init();
-    scheduler_start();
-
-
 
     unblock_stage = 0;
     blocked_thread = NULL;
@@ -471,9 +447,6 @@ static void test_thread_wait(void)
     struct process *process;
     struct thread *thread;
     interrupt_state_t state;
-
-    scheduler_init();
-    scheduler_start();
 
     thread_wait_executed = false;
 

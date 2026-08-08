@@ -29,6 +29,9 @@ static void test_mutex_lock(void)
     struct mutex mutex;
     struct process *process;
     struct thread *thread;
+    interrupt_state_t state;
+
+    state = interrupt_save();
 
     scheduler_init();
 
@@ -38,21 +41,15 @@ static void test_mutex_lock(void)
     thread = thread_create(process, dummy_entry);
     TEST_ASSERT_NOT_NULL(thread);
 
-    interrupt_state_t state;
-
-    state = interrupt_save();
-
     scheduler_add(thread);
-
     scheduler_next();
 
-    interrupt_restore(state);
-
     mutex_init(&mutex);
-
     mutex_lock(&mutex);
 
     TEST_ASSERT_EQ(mutex.owner, thread);
+
+    interrupt_restore(state);
 
     test_pass();
 }
@@ -62,6 +59,9 @@ static void test_mutex_unlock(void)
     struct mutex mutex;
     struct process *process;
     struct thread *thread;
+    interrupt_state_t state;
+
+    state = interrupt_save();
 
     scheduler_init();
 
@@ -71,18 +71,10 @@ static void test_mutex_unlock(void)
     thread = thread_create(process, dummy_entry);
     TEST_ASSERT_NOT_NULL(thread);
 
-    interrupt_state_t state;
-
-    state = interrupt_save();
-
     scheduler_add(thread);
-
     scheduler_next();
 
-    interrupt_restore(state);
-
     mutex_init(&mutex);
-
     mutex_lock(&mutex);
 
     TEST_ASSERT_EQ(mutex.owner, thread);
@@ -90,6 +82,8 @@ static void test_mutex_unlock(void)
     mutex_unlock(&mutex);
 
     TEST_ASSERT_NULL(mutex.owner);
+
+    interrupt_restore(state);
 
     test_pass();
 }
@@ -100,6 +94,9 @@ static void test_mutex_unlock_transfers_owner(void)
     struct process *process;
     struct thread *owner;
     struct thread *waiter;
+    interrupt_state_t state;
+
+    state = interrupt_save();
 
     scheduler_init();
 
@@ -112,22 +109,13 @@ static void test_mutex_unlock_transfers_owner(void)
     waiter = thread_create(process, dummy_entry);
     TEST_ASSERT_NOT_NULL(waiter);
 
-    interrupt_state_t state;
-
-    state = interrupt_save();
-
     scheduler_add(owner);
-
     scheduler_next();
 
-    interrupt_restore(state);
-
     mutex_init(&mutex);
-
     mutex_lock(&mutex);
 
     waiter->state = THREAD_BLOCKED;
-
     wait_queue_add(&mutex.wait_queue, waiter);
 
     mutex_unlock(&mutex);
@@ -135,6 +123,8 @@ static void test_mutex_unlock_transfers_owner(void)
     TEST_ASSERT_EQ(mutex.owner, waiter);
     TEST_ASSERT_EQ(waiter->state, THREAD_READY);
     TEST_ASSERT_NULL(waiter->wait_queue);
+
+    interrupt_restore(state);
 
     test_pass();
 }
@@ -147,7 +137,6 @@ static test_entry_t tests[] =
     { "mutex_lock",                   test_mutex_lock                  },
     { "mutex_unlock",                 test_mutex_unlock                },
     { "mutex_unlock_transfers_owner", test_mutex_unlock_transfers_owner},
-
 };
 
 void test_mutex(void)
@@ -156,10 +145,10 @@ void test_mutex(void)
 
     test_begin("MUTEX");
 
-    for (i = 0; i < (sizeof(tests) / sizeof((tests)[0])); i++) {
-      test_case(tests[i].name);
-
-      tests[i].func();
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
+    {
+        test_case(tests[i].name);
+        tests[i].func();
     }
 
     test_end();

@@ -17,12 +17,13 @@
  * stack or entry point.
  *
  * scheduler_init() resets the module's ready list and current
- * thread. Because the scheduler is a live singleton that the
- * running kernel depends on (kernel_init() has already called
- * scheduler_start() before kernel_tests() runs), test_scheduler()
- * restores the scheduler to a fresh idle-only state before
- * returning, exactly as kernel_init() originally left it. Do not
- * remove this restoration.
+ * thread.  Because the scheduler is a live singleton, each test
+ * that calls scheduler_init() must ensure the scheduler is left
+ * in a valid state before returning.  test_scheduler() calls
+ * scheduler_reset() at the end of the suite to restore the idle
+ * thread so the init thread (which is running these tests) can
+ * continue executing after the suite returns.  Do not remove
+ * this restoration.
  */
 
 static void make_stub(struct thread *thread, uint32_t tid)
@@ -49,8 +50,12 @@ static void test_scheduler_empty(void)
 {
     scheduler_init();
 
-    TEST_ASSERT_NULL(scheduler_next());
-    TEST_ASSERT_NULL(scheduler_current());
+    struct thread *next = scheduler_next();
+
+    /* Empty list falls back to idle — never returns NULL */
+    TEST_ASSERT_NOT_NULL(next);
+    TEST_ASSERT_EQ(next->tid, 0);
+    TEST_ASSERT_EQ(scheduler_current()->tid, 0);
 
     test_pass();
 }
@@ -69,7 +74,11 @@ static void test_scheduler_add_null(void)
 
     scheduler_add(NULL);
 
-    TEST_ASSERT_NULL(scheduler_next());
+    struct thread *next = scheduler_next();
+
+    /* NULL add is ignored, list still empty, falls back to idle */
+    TEST_ASSERT_NOT_NULL(next);
+    TEST_ASSERT_EQ(next->tid, 0);
 
     test_pass();
 }
@@ -317,6 +326,11 @@ static void test_scheduler_remove_current(void)
     TEST_ASSERT_EQ(scheduler_current(), &b);
     TEST_ASSERT_EQ(b.state, THREAD_RUNNING);
 
+    scheduler_remove(&b);
+        /* Empty list falls back to idle — never returns NULL */
+    TEST_ASSERT_NOT_NULL(scheduler_next());
+    TEST_ASSERT_EQ(scheduler_current()->tid, 0);
+
     test_pass();
 }
 
@@ -339,39 +353,17 @@ static test_entry_t tests[] =
 void test_scheduler(void)
 {
     uint32_t i;
-
     test_begin("Scheduler");
-
-    /*
-     * These tests point the live scheduler singleton at zeroed
-     * stub threads with no real stack. Interrupts are disabled
-     * for the duration of the suite so that a real timer tick
-     * cannot land mid-test and trigger scheduler_tick() to
-     * context switch into one of them.
-     */
-    interrupt_state_t state;
-
-    state = interrupt_save();
+    interrupt_state_t state = interrupt_save();
+    struct thread *me = scheduler_current();
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         test_case(tests[i].name);
-
         tests[i].func();
     }
 
-    /*
-     * Restore live scheduler state before re-enabling
-     * interrupts. The kernel's idle thread (the boot stack
-     * currently executing kernel_tests()) must be re-registered
-     * exactly as kernel_init() originally left it, since
-     * execution continues on this same stack after this
-     * function returns.
-     */
-    scheduler_init();
-    scheduler_start();
-
+    scheduler_restore(me);   /* one call, no idle rebuild, no kmalloc */   
     interrupt_restore(state);
-
     test_end();
 }

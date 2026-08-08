@@ -134,9 +134,6 @@ static void test_timer_preemption(void)
     struct thread *thread;
     interrupt_state_t state;
 
-    scheduler_init();
-    scheduler_start();
-
     stop = false;
     counter = 0;
 
@@ -204,9 +201,6 @@ static void test_timer_round_robin(void)
     struct thread *thread_b;
     interrupt_state_t state;
 
-    scheduler_init();
-    scheduler_start();
-
     stop = false;
 
     counter_a = 0;
@@ -271,10 +265,7 @@ static void test_timer_blocked_thread(void)
     struct thread *blocked;
     interrupt_state_t state;
 
-    scheduler_init();
-    scheduler_start();
-
-    stop = false;
+     stop = false;
 
     runner_counter = 0;
     blocked_counter = 0;
@@ -350,9 +341,6 @@ static void test_timer_multiple_threads(void)
     struct thread *thread_c;
     interrupt_state_t state;
 
-    scheduler_init();
-    scheduler_start();
-
     stop = false;
 
     counter_a = 0;
@@ -424,9 +412,6 @@ static void test_quantum_initial_value(void)
 
     state = interrupt_save();
 
-    scheduler_init();
-    scheduler_start();
-
     TEST_ASSERT_EQ(
         scheduler_get_quantum_remaining(),
                    SCHEDULER_QUANTUM_TICKS
@@ -452,9 +437,6 @@ static void test_quantum_countdown(void)
     uint32_t remaining;
 
     state = interrupt_save();
-
-    scheduler_init();
-    scheduler_start();
 
     interrupt_restore(state);
 
@@ -497,9 +479,6 @@ static void test_quantum_reset_after_switch(void)
     struct thread *thread_a;
     struct thread *thread_b;
     interrupt_state_t state;
-
-    scheduler_init();
-    scheduler_start();
 
     stop = false;
 
@@ -569,9 +548,6 @@ static void test_timer_stress(void)
     struct process *process;
     interrupt_state_t state;
     uint32_t i;
-
-    scheduler_init();
-    scheduler_start();
 
     stop = false;
 
