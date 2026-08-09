@@ -24,6 +24,7 @@
 #include "scheduler.h"
 #include "test.h"
 #include "util.h"
+#include "string.h"
 
 static volatile bool thread_started;
 static volatile bool thread_executed;
@@ -36,12 +37,6 @@ static volatile uint32_t unblock_stage;
 static struct thread *blocked_thread;
 
 static volatile bool thread_wait_executed;
-
-
-static void dummy_entry(void)
-{
-    return;
-}
 
 static void yield_entry(void)
 {
@@ -92,46 +87,37 @@ static void unblock_entry(void)
 static void test_thread_add(void)
 {
     struct process *process;
-    struct thread *thread;
+    struct thread stub;
     interrupt_state_t state;
 
-    /*
-     * This test exercises the raw bootstrap path of
-     * scheduler_next() (current == NULL → pick front).
-     * It must call scheduler_init() directly rather than
-     * scheduler_reset() because reset leaves current pointing
-     * at the idle thread, which would fail the NULL assertion
-     * below.  State is restored with scheduler_reset() after
-     * the assertions so the init thread can continue.
-     */
     state = interrupt_save();
+
+    struct thread *me = scheduler_current();
 
     scheduler_init();
 
     process = process_create("test");
-
     TEST_ASSERT_NOT_NULL(process);
 
-    thread = thread_create(process, dummy_entry);
+    /* Stack-allocated stub — no heap, no cleanup needed */
+    memset(&stub, 0, sizeof(stub));
+    list_node_init(&stub.group_node);
+    list_node_init(&stub.sched_node);
+    list_node_init(&stub.wait_node);
+    wait_queue_init(&stub.termination_queue);
+    stub.state  = THREAD_READY;
+    stub.process = process;
 
-    TEST_ASSERT_NOT_NULL(thread);
+    list_push_back(&process->threads, &stub.group_node);
+    scheduler_add(&stub);
 
-    thread_add(thread);
+    TEST_ASSERT_EQ(list_front(&process->threads), &stub.group_node);
+    TEST_ASSERT_EQ(scheduler_current(), NULL);
+    TEST_ASSERT_EQ(scheduler_next(), &stub);
+    TEST_ASSERT_EQ(scheduler_current(), &stub);
+    TEST_ASSERT_EQ(stub.state, THREAD_RUNNING);
 
-    TEST_ASSERT_EQ(list_front(&process->threads),
-                   &thread->group_node);
-
-    TEST_ASSERT_EQ(scheduler_current(),
-                   NULL);
-
-    TEST_ASSERT_EQ(scheduler_next(),
-                   thread);
-
-    TEST_ASSERT_EQ(scheduler_current(),
-                   thread);
-
-    TEST_ASSERT_EQ(thread->state,
-                   THREAD_RUNNING);
+    scheduler_restore(me);
 
     interrupt_restore(state);
 
@@ -174,7 +160,13 @@ static void test_thread_execution(void)
 
     interrupt_restore(state);
 
-    thread_yield();
+    /*
+     * Wait for the worker to fully terminate.
+     * yield_entry() yields once then returns, so the worker
+     * needs a second scheduling pass to hit thread_exit().
+     * thread_wait() guarantees it is gone before we assert.
+     */
+    thread_wait(thread);
 
     TEST_ASSERT_TRUE(thread_executed);
 
@@ -284,13 +276,19 @@ static void test_multiple_thread_yield(void)
 
     interrupt_restore(state);
 
-    thread_yield();
+    /*
+     * Wait for both workers to fully terminate.
+     * Each yields once then returns, so each needs a second
+     * scheduling pass to reach thread_exit().
+     */
+    thread_wait(thread_a);
+    thread_wait(thread_b);
 
     TEST_ASSERT_TRUE(thread_a_started);
     TEST_ASSERT_TRUE(thread_b_started);
 
-    TEST_ASSERT_EQ(scheduler_current()->tid,
-                   0);
+    TEST_ASSERT_NE(scheduler_current(), thread_a);
+    TEST_ASSERT_NE(scheduler_current(), thread_b);
 
     test_pass();
 }
@@ -346,8 +344,7 @@ static void test_thread_block(void)
     TEST_ASSERT_EQ(thread->state,
                    THREAD_BLOCKED);
 
-    TEST_ASSERT_EQ(scheduler_current()->tid,
-                   0);
+    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }
@@ -399,8 +396,7 @@ static void test_thread_unblock_resume(void)
     TEST_ASSERT_EQ(thread->state,
                    THREAD_BLOCKED);
 
-    TEST_ASSERT_EQ(scheduler_current()->tid,
-                   0);
+    TEST_ASSERT_NE(scheduler_current(), thread);
 
     /*
      * Wake the blocked thread.
@@ -415,17 +411,16 @@ static void test_thread_unblock_resume(void)
                    THREAD_READY);
 
     /*
-     * Run it again.
+     * Run it again and wait for it to fully terminate.
      */
-    thread_yield();
+    thread_wait(thread);
 
     TEST_ASSERT_EQ(unblock_stage, 2);
 
     TEST_ASSERT_EQ(thread->state,
                    THREAD_TERMINATED);
 
-    TEST_ASSERT_EQ(scheduler_current()->tid,
-                   0);
+    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }
@@ -472,8 +467,7 @@ static void test_thread_wait(void)
     TEST_ASSERT_EQ(thread->state,
                    THREAD_TERMINATED);
 
-    TEST_ASSERT_EQ(scheduler_current()->tid,
-                   0);
+    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }

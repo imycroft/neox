@@ -347,7 +347,7 @@ static test_entry_t tests[] =
     { "scheduler_single_thread_repeats", test_scheduler_single_thread_repeats },
     { "scheduler_remove_ready_thread",   test_scheduler_remove_ready_thread   },
     { "scheduler_block_current",         test_scheduler_block_current         },
-    { "scheduler_remove_current",         test_scheduler_remove_current       },
+    { "scheduler_remove_current",        test_scheduler_remove_current        },
 };
 
 void test_scheduler(void)

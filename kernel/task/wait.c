@@ -65,6 +65,7 @@ void wait_queue_wake(struct wait_queue *queue)
     struct thread *thread;
 
     ASSERT(queue != NULL);
+    ASSERT(!interrupt_enabled());
 
     thread = wait_queue_remove(queue);
 
@@ -79,6 +80,7 @@ void wait_queue_wake_all(struct wait_queue *queue)
     struct thread *thread;
 
     ASSERT(queue != NULL);
+    ASSERT(!interrupt_enabled());
 
     while ((thread = wait_queue_remove(queue)) != NULL)
         thread_unblock(thread);

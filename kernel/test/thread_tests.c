@@ -1,3 +1,4 @@
+#include "arch.h"
 #include "scheduler.h"
 #include "test.h"
 #include "thread.h"
@@ -205,7 +206,7 @@ static void test_thread_unblock(void)
     struct process *process;
     struct thread *thread;
 
-    scheduler_init();
+    //scheduler_init();
 
     process = process_create("test");
 

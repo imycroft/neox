@@ -3,7 +3,6 @@
 #include "tests.h"
 #include "process.h"
 #include "thread.h"
-#include "scheduler.h"
 #include "arch.h"
 
 static void init_entry(void)

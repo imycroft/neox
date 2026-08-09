@@ -17,14 +17,14 @@ void mutex_lock(struct mutex *mutex)
 {
     ASSERT(mutex != NULL);
 
+    interrupt_state_t state = interrupt_save();
+
     if (mutex->owner == NULL)
     {
         mutex->owner = scheduler_current();
+        interrupt_restore(state);
         return;
     }
-
-    interrupt_state_t state;
-    state = interrupt_save();
 
     wait_queue_sleep(&mutex->wait_queue);
 
@@ -33,21 +33,22 @@ void mutex_lock(struct mutex *mutex)
 
 void mutex_unlock(struct mutex *mutex)
 {
-    struct thread *thread;
-
     ASSERT(mutex != NULL);
     ASSERT(mutex->owner == scheduler_current());
 
-    thread = wait_queue_remove(&mutex->wait_queue);
+    interrupt_state_t state = interrupt_save();
+
+    struct thread *thread = wait_queue_remove(&mutex->wait_queue);
 
     if (thread != NULL)
     {
         mutex->owner = thread;
-
+        interrupt_restore(state);      // restore before unblock (unblock saves its own)
         thread_unblock(thread);
-
         return;
     }
 
     mutex->owner = NULL;
+
+    interrupt_restore(state);
 }

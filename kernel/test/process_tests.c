@@ -146,11 +146,11 @@ static void test_process_find_by_name_existing(void)
     struct process *process;
     struct process *found;
 
-    process = process_create("init");
+    process = process_create("test1");
 
     TEST_ASSERT_NOT_NULL(process);
 
-    found = process_find_by_name("init");
+    found = process_find_by_name("test1");
 
     TEST_ASSERT_EQ(found, process);
 

@@ -17,7 +17,7 @@ static void thread_exit(void)
 {
     struct thread *thread;
 
-    interrupt_save();
+    interrupt_disable();
 
     thread = scheduler_current();
 
@@ -66,22 +66,18 @@ void thread_add(struct thread *thread)
 
     scheduler_add(thread);
 }
-
 void thread_block(void)
 {
-    struct thread *thread;
     interrupt_state_t state;
 
-    thread = scheduler_current();
-
-    ASSERT(thread != NULL);
+    ASSERT(scheduler_current() != NULL);
 
     state = interrupt_save();
 
+    struct thread *thread = scheduler_current();
+
     thread->state = THREAD_BLOCKED;
-
     scheduler_remove(thread);
-
     scheduler_yield();
 
     interrupt_restore(state);

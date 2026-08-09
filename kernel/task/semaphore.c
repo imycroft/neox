@@ -17,14 +17,14 @@ void semaphore_acquire(struct semaphore *sem)
 {
     ASSERT(sem != NULL);
 
+    interrupt_state_t state = interrupt_save();
+
     if (sem->count > 0)
     {
         sem->count--;
+        interrupt_restore(state);
         return;
     }
-
-    interrupt_state_t state;
-    state = interrupt_save();
 
     wait_queue_sleep(&sem->wait_queue);
 
@@ -37,6 +37,8 @@ void semaphore_release(struct semaphore *sem)
 
     ASSERT(sem != NULL);
 
+    interrupt_state_t state = interrupt_save();
+
     thread = wait_queue_remove(&sem->wait_queue);
 
     if (thread != NULL)
@@ -46,4 +48,6 @@ void semaphore_release(struct semaphore *sem)
     }
 
     sem->count++;
+
+    interrupt_restore(state);
 }

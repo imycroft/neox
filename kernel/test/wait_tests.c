@@ -1,3 +1,4 @@
+#include "arch.h"
 #include "process.h"
 #include "scheduler.h"
 #include "tests.h"
@@ -56,6 +57,12 @@ static void test_wait_queue_wake(void)
     struct thread *thread;
     struct wait_queue queue;
 
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
+    struct thread *me = scheduler_current();
+
     scheduler_init();
 
     process = process_create("test");
@@ -80,6 +87,10 @@ static void test_wait_queue_wake(void)
 
     TEST_ASSERT_NULL(thread->wait_queue);
 
+    scheduler_restore(me);
+
+    interrupt_restore(state);
+
     test_pass();
 }
 
@@ -89,6 +100,12 @@ static void test_wait_queue_wake_one(void)
     struct process *process;
     struct thread *a;
     struct thread *b;
+
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
+    struct thread *me = scheduler_current();
 
     scheduler_init();
 
@@ -118,6 +135,10 @@ static void test_wait_queue_wake_one(void)
     TEST_ASSERT_NULL(a->wait_queue);
     TEST_ASSERT_EQ(b->wait_queue, &queue);
 
+    scheduler_restore(me);
+
+    interrupt_restore(state);
+
     test_pass();
 }
 
@@ -128,6 +149,12 @@ static void test_wait_queue_wake_all(void)
     struct thread *a;
     struct thread *b;
     struct thread *c;
+
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
+    struct thread *me = scheduler_current();
 
     scheduler_init();
 
@@ -164,6 +191,10 @@ static void test_wait_queue_wake_all(void)
     TEST_ASSERT_NULL(c->wait_queue);
 
     TEST_ASSERT_TRUE(list_empty(&queue.threads));
+
+    scheduler_restore(me);
+
+    interrupt_restore(state);
 
     test_pass();
 }
