@@ -22,5 +22,6 @@ void test_wait(void);
 
 void test_semaphore(void);
 void test_mutex(void);
+void test_condvar(void);
 
 #endif

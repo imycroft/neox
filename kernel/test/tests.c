@@ -30,6 +30,7 @@ void kernel_tests(void)
 
       test_semaphore();
       test_mutex();
+      test_condvar();
 
       test_summary();
 }
