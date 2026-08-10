@@ -4,6 +4,8 @@
 #include "idt.h"
 #include "pic.h"
 #include "pit.h"
+#include "tss.h"
+#include "syscall.h"
 
 #define EFLAGS_IF (1u << 9)
 
@@ -93,7 +95,13 @@ void arch_init(void)
 {
     gdt_init();
 
+    /* TSS must be installed after GDT so gdt_set_tss() can write slot 5 */
+    tss_init();
+
     idt_init();
+
+    /* Register INT 0x80 with DPL=3 so Ring-3 code can invoke syscalls */
+    syscall_init();
 
     pic_init();
 
@@ -101,5 +109,3 @@ void arch_init(void)
 
     interrupt_enable();
 }
-
-

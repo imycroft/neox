@@ -118,8 +118,8 @@ void idt_init(void)
         idt_set_gate(
             i,
             (uint32_t)isr_table[i],
-            GDT_CODE_SELECTOR,
-            IDT_FLAG_INTERRUPT_GATE
+                     GDT_CODE_SELECTOR,
+                     IDT_FLAG_INTERRUPT_GATE
         );
     }
 
@@ -137,5 +137,14 @@ void idt_init(void)
     idt_load(&idtr);
 }
 
-
-
+/*
+ * idt_set_syscall_gate() — install a gate with a caller-supplied flags
+ * byte.  Used by syscall_init() to register INT 0x80 with DPL=3 (0xEE).
+ */
+void idt_set_syscall_gate(uint8_t  vector,
+                          uint32_t handler,
+                          uint16_t selector,
+                          uint8_t  flags)
+{
+    idt_set_gate(vector, handler, selector, flags);
+}

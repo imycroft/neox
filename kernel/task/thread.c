@@ -122,8 +122,9 @@ struct thread *thread_create(
 
     wait_queue_init(&thread->termination_queue);
 
-    thread->wait_queue = NULL;
-    thread->detached   = false;
+    thread->wait_queue    = NULL;
+    thread->detached      = false;
+    thread->usermode_desc = NULL;
 
     thread->entry = entry;
 

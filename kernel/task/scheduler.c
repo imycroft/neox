@@ -5,6 +5,7 @@
 #include "list.h"
 #include "thread.h"
 #include "string.h"
+#include "tss.h"
 
 #include "util.h"
 
@@ -180,6 +181,17 @@ static void scheduler_switch(void)
 
     if (next == old)
         return;
+
+    /*
+     * Update the TSS kernel stack pointer before switching.
+     * When the next thread is running in Ring 3 and gets interrupted,
+     * the CPU reads esp0 from the TSS to find the kernel stack.
+     * For pure kernel threads this is a no-op in practice (they never
+     * enter Ring 3), but it must always be correct.
+     */
+    tss_set_kernel_stack(
+        (uintptr_t)next->kernel_stack + THREAD_STACK_SIZE
+    );
 
     context_switch(&old->kernel_sp, next->kernel_sp);
 }

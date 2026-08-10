@@ -64,6 +64,14 @@ struct thread
      * Wait queue this thread is currently sleeping in.
      */
     struct wait_queue *wait_queue;
+
+    /*
+     * Non-NULL when this thread is a user-mode thread.
+     * Points to a `struct usermode_desc` (defined in usermode.c)
+     * that holds the Ring-3 entry point and user stack info.
+     * The trampoline frees it after jumping to Ring 3.
+     */
+    void *usermode_desc;
 };
 
 void thread_add(struct thread *thread);

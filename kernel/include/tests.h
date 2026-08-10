@@ -24,4 +24,6 @@ void test_semaphore(void);
 void test_mutex(void);
 void test_condvar(void);
 
+void test_usermode(void);
+
 #endif
