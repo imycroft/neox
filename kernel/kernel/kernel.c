@@ -12,6 +12,7 @@
 #include "process.h"
 #include "thread.h"
 
+
 void kernel_init(uint32_t magic,
                  struct multiboot_info *mb_info)
 {
@@ -19,14 +20,15 @@ void kernel_init(uint32_t magic,
     /* Console */
     console_init();
 
+
     /* Boot */
     boot_init(magic, mb_info);
 
 
     /* Hardware */
     drivers_init();
-    arch_init();
 
+    arch_init();
 
     /* Memory */
     pmm_init();

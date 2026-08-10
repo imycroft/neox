@@ -1,7 +1,6 @@
 #include "multiboot2.h"
-
+#include "memory_layout.h"
 #include "panic.h"
-
 #include "printf.h"
 
 static struct multiboot_info *boot_info;
@@ -10,7 +9,7 @@ static struct multiboot_info *boot_info;
 static const struct multiboot_tag *multiboot2_first_tag(void);
 
 static const struct multiboot_tag *multiboot2_next_tag(
-        const struct multiboot_tag *tag);
+    const struct multiboot_tag *tag);
 
 
 void multiboot2_init(uint32_t magic,
@@ -19,7 +18,27 @@ void multiboot2_init(uint32_t magic,
     if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
         panic("Invalid Multiboot2 magic");
 
-    boot_info = mb_info;
+    /*
+     * GRUB passes mb_info as a physical address.
+     *
+     * Before the higher-half transition this was used directly through
+     * the identity mapping.  Now that paging is active and the kernel
+     * runs in the higher half, low physical addresses below 0xC0000000
+     * are not guaranteed to be mapped.
+     *
+     * The bootstrap maps the first 16 MiB of physical memory at both:
+     *
+     *     0x00000000  (identity)
+     *     0xC0000000  (higher-half)
+     *
+     * GRUB places the multiboot info structure in low memory (typically
+     * around 0x00007000), well within the first 16 MiB.
+     *
+     * PHYS_TO_VIRT() converts it to its higher-half virtual address,
+     * which is valid under the current page directory.
+     */
+    boot_info = (struct multiboot_info *)
+    PHYS_TO_VIRT((uintptr_t)mb_info);
 }
 
 const struct multiboot_info *multiboot2_info(void)

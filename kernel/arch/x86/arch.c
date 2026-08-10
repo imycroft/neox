@@ -93,7 +93,9 @@ bool interrupt_enabled(void)
 
 void arch_init(void)
 {
+
     gdt_init();
+
 
     /* TSS must be installed after GDT so gdt_set_tss() can write slot 5 */
     tss_init();

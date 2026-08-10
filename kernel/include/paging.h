@@ -1,12 +1,11 @@
 #pragma once
 
 #include "types.h"
+#include "memory_layout.h"
 
 /* Entries per table */
 
 #define PAGE_ENTRIES 1024
-
-#define KERNEL_VIRTUAL_END 0xC0000000u
 
 /* Page table / directory entry flags */
 

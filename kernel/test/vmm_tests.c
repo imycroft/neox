@@ -3,6 +3,7 @@
 #include "vam.h"
 #include "vmm.h"
 #include "memory.h"
+#include "memory_layout.h"
 #include "printf.h"
 #include "util.h"
 
@@ -23,7 +24,7 @@ static void test_vmm_allocate_one_page(void)
 {
     uintptr_t virt;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_page(virt)
@@ -53,7 +54,7 @@ static void test_vmm_page_is_mapped(void)
     uintptr_t virt;
     uintptr_t phys;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_page(virt)
@@ -89,7 +90,7 @@ static void test_vmm_allocate_two_pages(void)
     uintptr_t phys1;
     uintptr_t phys2;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_pages(virt, 2)
@@ -137,7 +138,7 @@ static void test_vmm_allocate_many_pages(void)
     uintptr_t phys;
     uint32_t i;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_pages(virt, VMM_TEST_PAGES)
@@ -180,7 +181,7 @@ static void test_vmm_unique_physical_pages(void)
     uintptr_t phys1;
     uintptr_t phys2;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_pages(virt, 2)
@@ -214,7 +215,7 @@ static void test_vmm_free_reuse(void)
     uintptr_t phys1;
     uintptr_t phys2;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_page(virt)
@@ -263,7 +264,7 @@ static void test_vmm_free_reverse(void)
     uintptr_t virt;
     uint32_t i;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_pages(virt, 3)
@@ -297,7 +298,7 @@ static void test_vmm_reallocate_same_virtual_page(void)
 {
     uintptr_t virt;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_page(virt)
@@ -373,7 +374,7 @@ static void test_vmm_alloc_over_existing_fails(void)
     uintptr_t virt;
     uintptr_t phys;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_page(virt)
@@ -410,7 +411,7 @@ static void test_vmm_free_unmapped(void)
 {
     uintptr_t virt;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_EQ(
         paging_translate(paging_get_kernel_directory(), virt),
@@ -440,7 +441,7 @@ static void test_vmm_zero_page_allocation(void)
 {
     uintptr_t virt;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NULL(
         vmm_alloc_pages(virt, 0)
@@ -487,7 +488,7 @@ static void test_vmm_large_allocation(void)
     uintptr_t phys;
     uint32_t i;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_pages(virt, VMM_TEST_PAGES)
@@ -525,7 +526,7 @@ static void test_vmm_large_free_reuse(void)
 {
     uintptr_t virt;
 
-    virt = VAM_START;
+    virt = KERNEL_REMAINING_START;
 
     TEST_ASSERT_NOT_NULL(
         vmm_alloc_pages(virt, VMM_TEST_PAGES)

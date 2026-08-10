@@ -1,6 +1,6 @@
 #include "gdt.h"
 #include "tss.h"
-
+#include "printf.h"
 /* ------------------------------------------------------------------ */
 /* GDT descriptor layout (32-bit protected mode)                       */
 /* ------------------------------------------------------------------ */
@@ -112,4 +112,6 @@ void gdt_init(void)
     gdt_set_entry(GDT_TSS_ENTRY,   0, 0,       0x00, 0x00);
 
     gdt_load(&gdtr);
+
+     printf("Welcome to Neox 1.0\n");
 }

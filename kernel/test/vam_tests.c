@@ -1,6 +1,7 @@
 #include "test.h"
 #include "vam.h"
 #include "memory.h"
+#include "memory_layout.h"
 #include "printf.h"
 #include "util.h"
 
@@ -234,7 +235,7 @@ static void test_vam_kernel_space_reserved(void)
     TEST_ASSERT_NOT_NULL(addr);
 
     TEST_ASSERT_TRUE(
-        (uintptr_t)addr >= VAM_START
+        (uintptr_t)addr >= KERNEL_REMAINING_START
     );
 
     test_pass();

@@ -67,6 +67,7 @@ void pmm_init(void)
 
     const struct multiboot_info *mb_info;
     uintptr_t reserved_end;
+    uintptr_t kernel_physical_end;
 
     uint32_t count;
     uint32_t i;
@@ -115,7 +116,11 @@ void pmm_init(void)
 
     bitmap_size = (total_pages + 7) / 8;
 
-    reserved_end = (uintptr_t)&kernel_end;
+    kernel_physical_end =
+    ((uintptr_t)&kernel_end + PAGE_SIZE - 1)
+    & ~(PAGE_SIZE - 1);
+
+    reserved_end = kernel_physical_end;
 
     if ((uintptr_t)mb_info + mb_info->total_size > reserved_end)
         reserved_end = (uintptr_t)mb_info + mb_info->total_size;
@@ -158,8 +163,10 @@ void pmm_init(void)
 
     /* Reserve pages occupied by the kernel and the bitmap. */
 
-    bitmap_set_range(0x00100000,
-                     (uintptr_t)&kernel_end - 0x00100000);
+    bitmap_set_range(
+        KERNEL_LOAD_ADDRESS,
+        kernel_physical_end - KERNEL_LOAD_ADDRESS
+    );
     bitmap_set_range((uintptr_t)mb_info,
                      mb_info->total_size);
     bitmap_set_range(bitmap_address,
