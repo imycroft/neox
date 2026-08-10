@@ -31,4 +31,12 @@ struct process *process_find_by_name(const char *name);
 
 struct process *process_create(const char *name);
 
+/*
+ * process_destroy() — remove the process from the global list
+ * and free it.  Must only be called after all threads belonging
+ * to the process have been destroyed.  Interrupts must be
+ * disabled by the caller.
+ */
+void process_destroy(struct process *process);
+
 #endif

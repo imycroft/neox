@@ -3,6 +3,9 @@
 #include "heap.h"
 #include "string.h"
 #include "util.h"
+#include "assert.h"
+#include "arch.h"
+#include "list.h"
 
 static uint32_t next_pid = 1;
 
@@ -103,4 +106,15 @@ struct process *process_create(const char *name)
     process_add(process);
 
     return process;
+}
+
+void process_destroy(struct process *process)
+{
+    ASSERT(process != NULL);
+    ASSERT(!interrupt_enabled());
+    ASSERT(list_empty(&process->threads));
+
+    process_remove(process);
+
+    kfree(process);
 }

@@ -11,3 +11,11 @@
 void scheduler_yield(void);
 
 void scheduler_terminate(struct thread *thread);
+
+/*
+ * Push a terminated detached thread onto the zombie list and
+ * wake the reaper.  Called by scheduler_terminate() and by
+ * thread_detach() when the thread already terminated.
+ * Interrupts must be disabled by the caller.
+ */
+void scheduler_push_zombie(struct thread *thread);

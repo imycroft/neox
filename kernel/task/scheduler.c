@@ -11,9 +11,16 @@
 #include "arch/x86/context.h"
 #include "wait.h"
 #include "heap.h"
+#include "reaper.h"
 
 static struct list ready_list;
 static struct thread *current;
+
+/*
+ * Terminated detached threads whose stacks cannot be freed by
+ * themselves are placed here for the reaper thread to drain.
+ */
+static struct list zombie_list;
 
 /*
  * Ticks remaining before the current thread is preempted.
@@ -43,6 +50,7 @@ static void scheduler_idle_loop(void)
 void scheduler_init(void)
 {
     list_init(&ready_list);
+    list_init(&zombie_list);
 
     current = NULL;
 
@@ -231,15 +239,15 @@ void scheduler_restore(struct thread *thread)
 {
     ASSERT(!interrupt_enabled());
     ASSERT(thread != NULL);
-    
+
     list_init(&ready_list);
 
     /*
-    * Re-initialise the node so list_push_back()'s ASSERT
-    * (prev == NULL && next == NULL) passes cleanly, even if
-    * the node was previously linked into a list that was
-    * wiped by scheduler_init() during a test.
-    */
+     * Re-initialise the node so list_push_back()'s ASSERT
+     * (prev == NULL && next == NULL) passes cleanly, even if
+     * the node was previously linked into a list that was
+     * wiped by scheduler_init() during a test.
+     */
 
     list_node_init(&thread->sched_node);
 
@@ -281,16 +289,74 @@ void scheduler_yield(void)
     scheduler_switch();
 }
 
+struct thread *scheduler_next_zombie(void)
+{
+    struct list_node *node;
+
+    ASSERT(!interrupt_enabled());
+
+    if (list_empty(&zombie_list))
+        return NULL;
+
+    node = list_front(&zombie_list);
+    list_remove(node);
+
+    return container_of(node, struct thread, zombie_node);
+}
+
+/*
+ * scheduler_push_zombie() — push a terminated detached thread
+ * onto the zombie list and wake the reaper.
+ *
+ * Returns early without pushing if the reaper is not yet
+ * initialised (early boot, before reaper_init()).  This is safe
+ * because no detached thread can exist before reaper_init() runs.
+ *
+ * Interrupts must be disabled by the caller.
+ */
+void scheduler_push_zombie(struct thread *thread)
+{
+    struct wait_queue *wq;
+
+    ASSERT(thread != NULL);
+    ASSERT(!interrupt_enabled());
+    ASSERT(thread->state == THREAD_TERMINATED);
+
+    wq = reaper_wait_queue();
+
+    if (wq == NULL)
+        return;
+
+    list_push_back(&zombie_list, &thread->zombie_node);
+    wait_queue_wake(wq);
+}
+
 void scheduler_terminate(struct thread *thread)
 {
     ASSERT(thread != NULL);
     ASSERT(!interrupt_enabled());
 
+    /*
+     * The reaper must never terminate — it would have no one
+     * left to free it and would leak itself permanently.
+     */
+    ASSERT(thread != reaper_thread_get());
+
     scheduler_remove(thread);
 
     thread->state = THREAD_TERMINATED;
 
+    /*
+     * Wake any thread blocked in thread_join() on this thread.
+     */
     wait_queue_wake_all(&thread->termination_queue);
+
+    /*
+     * For detached threads nobody calls thread_join(), so hand
+     * the struct to the reaper for cleanup.
+     */
+    if (thread->detached)
+        scheduler_push_zombie(thread);
 }
 
 bool scheduler_idle(void)

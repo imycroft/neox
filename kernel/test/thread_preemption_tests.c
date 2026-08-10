@@ -2,6 +2,7 @@
 #include "process.h"
 #include "scheduler.h"
 #include "test.h"
+#include "thread.h"
 #include "util.h"
 #include "printf.h"
 
@@ -162,10 +163,11 @@ static void test_timer_preemption(void)
 
     stop = true;
 
-    thread_wait(thread);
-
-    TEST_ASSERT_EQ(thread->state,
-                   THREAD_TERMINATED);
+    /*
+     * thread_join() waits for termination then frees the thread.
+     * Pointer is invalid after this returns.
+     */
+    thread_join(thread);
 
     test_pass();
 }
@@ -231,17 +233,11 @@ static void test_timer_round_robin(void)
 
     stop = true;
 
-    thread_wait(thread_a);
-    thread_wait(thread_b);
+    thread_join(thread_a);
+    thread_join(thread_b);
 
     TEST_ASSERT_TRUE(counter_a > 0);
     TEST_ASSERT_TRUE(counter_b > 0);
-
-    TEST_ASSERT_EQ(thread_a->state,
-                   THREAD_TERMINATED);
-
-    TEST_ASSERT_EQ(thread_b->state,
-                   THREAD_TERMINATED);
 
     test_pass();
 }
@@ -265,7 +261,7 @@ static void test_timer_blocked_thread(void)
     struct thread *blocked;
     interrupt_state_t state;
 
-     stop = false;
+    stop = false;
 
     runner_counter = 0;
     blocked_counter = 0;
@@ -314,8 +310,8 @@ static void test_timer_blocked_thread(void)
 
     stop = true;
 
-    thread_wait(runner);
-    thread_wait(blocked);
+    thread_join(runner);
+    thread_join(blocked);
 
     TEST_ASSERT_TRUE(blocked_counter > 0);
 
@@ -378,22 +374,13 @@ static void test_timer_multiple_threads(void)
 
     stop = true;
 
-    thread_wait(thread_a);
-    thread_wait(thread_b);
-    thread_wait(thread_c);
+    thread_join(thread_a);
+    thread_join(thread_b);
+    thread_join(thread_c);
 
     TEST_ASSERT_TRUE(counter_a > 0);
     TEST_ASSERT_TRUE(counter_b > 0);
     TEST_ASSERT_TRUE(counter_c > 0);
-
-    TEST_ASSERT_EQ(thread_a->state,
-                   THREAD_TERMINATED);
-
-    TEST_ASSERT_EQ(thread_b->state,
-                   THREAD_TERMINATED);
-
-    TEST_ASSERT_EQ(thread_c->state,
-                   THREAD_TERMINATED);
 
     test_pass();
 }
@@ -526,8 +513,8 @@ static void test_quantum_reset_after_switch(void)
 
     stop = true;
 
-    thread_wait(thread_a);
-    thread_wait(thread_b);
+    thread_join(thread_a);
+    thread_join(thread_b);
 
     test_pass();
 }
@@ -586,7 +573,7 @@ static void test_timer_stress(void)
 
 
     for (i = 0; i < PREEMPTION_STRESS_COUNT; i++)
-        thread_wait(stress_threads[i]);
+        thread_join(stress_threads[i]);
 
 
     for (i = 0; i < PREEMPTION_STRESS_COUNT; i++)

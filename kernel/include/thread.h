@@ -43,8 +43,20 @@ struct thread
     struct list_node wait_node;
 
     /*
-     * Threads waiting for this thread to terminate
-     * sleep in this queue.
+     * Links this thread into the scheduler's zombie_list after
+     * termination.  NULL/NULL when the thread is not a zombie.
+     */
+    struct list_node zombie_node;
+
+    /*
+     * When true the reaper owns this thread's lifetime and will
+     * call thread_destroy() once it terminates.
+     * When false the caller is expected to call thread_join().
+     */
+    bool detached;
+
+    /*
+     * Threads waiting for this thread to terminate sleep here.
      */
     struct wait_queue termination_queue;
 
@@ -65,7 +77,27 @@ void thread_block(void);
 
 void thread_unblock(struct thread *thread);
 
-void thread_wait(struct thread *thread);
+/*
+ * thread_join() — wait for a joinable (non-detached) thread to
+ * terminate, then destroy it.  The pointer is invalid after this
+ * returns; the caller must not dereference it.
+ */
+void thread_join(struct thread *thread);
+
+/*
+ * thread_detach() — transfer lifetime ownership to the reaper.
+ * The caller must not touch the pointer again after this returns.
+ * If the thread has already terminated the reaper is signalled
+ * immediately.
+ */
+void thread_detach(struct thread *thread);
+
+/*
+ * thread_destroy() — free the kernel stack and the struct itself.
+ * Must only be called by thread_join() or the reaper, never by
+ * the thread itself.  Interrupts must be disabled by the caller.
+ */
+void thread_destroy(struct thread *thread);
 
 void thread_yield(void);
 

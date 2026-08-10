@@ -48,4 +48,11 @@ void scheduler_tick(void);
 
 bool scheduler_idle(void);
 
+/*
+ * Remove and return the next terminated thread from the zombie
+ * list, or NULL if the list is empty.
+ * Interrupts must be disabled by the caller.
+ */
+struct thread *scheduler_next_zombie(void);
+
 #endif

@@ -161,16 +161,15 @@ static void test_thread_execution(void)
     interrupt_restore(state);
 
     /*
-     * Wait for the worker to fully terminate.
+     * Wait for the worker to fully terminate and free it.
      * yield_entry() yields once then returns, so the worker
      * needs a second scheduling pass to hit thread_exit().
-     * thread_wait() guarantees it is gone before we assert.
+     * thread_join() waits then destroys; thread is invalid
+     * after this point.
      */
-    thread_wait(thread);
+    thread_join(thread);
 
     TEST_ASSERT_TRUE(thread_executed);
-
-    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }
@@ -222,12 +221,16 @@ static void test_thread_exit(void)
 
     /*
      * The terminated thread should no longer be current.
+     * Assert state while the pointer is still valid, then
+     * join to free the thread struct and its stack.
      */
     TEST_ASSERT_NE(scheduler_current(),
                    thread);
 
     TEST_ASSERT_EQ(thread->state,
                    THREAD_TERMINATED);
+
+    thread_join(thread);
 
     test_pass();
 }
@@ -277,18 +280,16 @@ static void test_multiple_thread_yield(void)
     interrupt_restore(state);
 
     /*
-     * Wait for both workers to fully terminate.
+     * Wait for both workers to fully terminate and free them.
      * Each yields once then returns, so each needs a second
      * scheduling pass to reach thread_exit().
+     * Pointers are invalid after thread_join() returns.
      */
-    thread_wait(thread_a);
-    thread_wait(thread_b);
+    thread_join(thread_a);
+    thread_join(thread_b);
 
     TEST_ASSERT_TRUE(thread_a_started);
     TEST_ASSERT_TRUE(thread_b_started);
-
-    TEST_ASSERT_NE(scheduler_current(), thread_a);
-    TEST_ASSERT_NE(scheduler_current(), thread_b);
 
     test_pass();
 }
@@ -345,6 +346,16 @@ static void test_thread_block(void)
                    THREAD_BLOCKED);
 
     TEST_ASSERT_NE(scheduler_current(), thread);
+
+    /*
+     * The thread is blocked forever — unblock it so it can
+     * run to completion, then join to free it.
+     */
+    state = interrupt_save();
+    thread_unblock(thread);
+    interrupt_restore(state);
+
+    thread_join(thread);
 
     test_pass();
 }
@@ -412,15 +423,12 @@ static void test_thread_unblock_resume(void)
 
     /*
      * Run it again and wait for it to fully terminate.
+     * thread_join() destroys the thread; pointer is invalid
+     * after this point.
      */
-    thread_wait(thread);
+    thread_join(thread);
 
     TEST_ASSERT_EQ(unblock_stage, 2);
-
-    TEST_ASSERT_EQ(thread->state,
-                   THREAD_TERMINATED);
-
-    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }
@@ -428,16 +436,16 @@ static void test_thread_unblock_resume(void)
 /*
  * Verify:
  *
- * - thread_wait() blocks until the target thread terminates.
- * - The waiting thread resumes after the worker exits.
- * - The worker is left in the THREAD_TERMINATED state.
+ * - thread_join() blocks until the target thread terminates.
+ * - The joining thread resumes after the worker exits.
+ * - The worker's memory is freed; the pointer is invalid after join.
  *
  * This validates:
  * - Thread termination synchronization.
  * - wait_queue_sleep()/wait_queue_wake_all() integration.
- * - thread_wait() behavior.
+ * - thread_join() wait-and-destroy semantics.
  */
-static void test_thread_wait(void)
+static void test_thread_join(void)
 {
     struct process *process;
     struct thread *thread;
@@ -460,14 +468,13 @@ static void test_thread_wait(void)
 
     interrupt_restore(state);
 
-    thread_wait(thread);
+    /*
+     * thread_join() waits for termination then frees the thread.
+     * The pointer is invalid after this returns.
+     */
+    thread_join(thread);
 
     TEST_ASSERT_TRUE(thread_wait_executed);
-
-    TEST_ASSERT_EQ(thread->state,
-                   THREAD_TERMINATED);
-
-    TEST_ASSERT_NE(scheduler_current(), thread);
 
     test_pass();
 }
@@ -482,7 +489,7 @@ static test_entry_t tests[] =
     { "multiple_thread_yield",  test_multiple_thread_yield   },
     { "thread_block",           test_thread_block            },
     { "thread_unblock_resume",  test_thread_unblock_resume   },
-    { "thread_wait",            test_thread_wait             },
+    { "thread_join",            test_thread_join             },
 
 };
 

@@ -4,6 +4,7 @@
 #include "process.h"
 #include "thread.h"
 #include "arch.h"
+#include "reaper.h"
 
 static void init_entry(void)
 {
@@ -16,9 +17,15 @@ int kernel_main(uint32_t magic,
     kernel_init(magic, mb_info);
 
     /*
+     * Start the reaper kernel thread before any detached thread
+     * can terminate.
+     */
+    reaper_init();
+
+    /*
      * Spawn the init thread.  All test suites and any future
      * kernel work runs from here, not from the idle/boot stack.
-     * This ensures that blocking calls (thread_wait, mutex_lock,
+     * This ensures that blocking calls (thread_join, mutex_lock,
      * wait_queue_sleep ...) always have a real thread to remove
      * from the ready list.
      */

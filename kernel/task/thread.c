@@ -118,10 +118,12 @@ struct thread *thread_create(
     list_node_init(&thread->group_node);
     list_node_init(&thread->sched_node);
     list_node_init(&thread->wait_node);
+    list_node_init(&thread->zombie_node);
 
     wait_queue_init(&thread->termination_queue);
 
     thread->wait_queue = NULL;
+    thread->detached   = false;
 
     thread->entry = entry;
 
@@ -163,16 +165,82 @@ struct thread *thread_create(
     return thread;
 }
 
-void thread_wait(struct thread *thread)
+void thread_destroy(struct thread *thread)
 {
-    interrupt_state_t state;
+    void *stack;
 
     ASSERT(thread != NULL);
+    ASSERT(!interrupt_enabled());
+    ASSERT(thread->state == THREAD_TERMINATED);
+
+    /*
+     * Remove from process->threads if still linked.
+     * Stack-allocated test stubs may never have been added via
+     * thread_add(), so guard with the NULL/NULL sentinel.
+     */
+    if (thread->group_node.prev != NULL &&
+        thread->group_node.next != NULL)
+    {
+        list_remove(&thread->group_node);
+    }
+
+    /*
+     * Null the stack pointer before freeing to catch any
+     * use-after-free that tries to dereference it.
+     */
+    stack = thread->kernel_stack;
+    thread->kernel_stack = NULL;
+
+    kfree(stack);
+    kfree(thread);
+}
+
+void thread_join(struct thread *thread)
+{
+    interrupt_state_t state;
+    struct process   *process;
+
+    ASSERT(thread != NULL);
+    ASSERT(!thread->detached);
 
     state = interrupt_save();
 
     if (thread->state != THREAD_TERMINATED)
         wait_queue_sleep(&thread->termination_queue);
+
+    /*
+     * Thread is now THREAD_TERMINATED and off the scheduler.
+     * We are the sole owner (joinable, not detached), so it is
+     * safe to destroy it here.
+     */
+    process = thread->process;
+
+    thread_destroy(thread);
+
+    if (process != NULL && list_empty(&process->threads))
+        process_destroy(process);
+
+    interrupt_restore(state);
+}
+
+void thread_detach(struct thread *thread)
+{
+    interrupt_state_t state;
+
+    ASSERT(thread != NULL);
+    ASSERT(!thread->detached);
+
+    state = interrupt_save();
+
+    thread->detached = true;
+
+    /*
+     * If the thread already terminated before we called detach,
+     * scheduler_terminate() did not push it (detached was false
+     * at the time).  Do it now.
+     */
+    if (thread->state == THREAD_TERMINATED)
+        scheduler_push_zombie(thread);
 
     interrupt_restore(state);
 }

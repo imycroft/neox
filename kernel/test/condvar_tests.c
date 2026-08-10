@@ -82,10 +82,11 @@ static void test_condvar_signal(void)
 
     mutex_unlock(&cv_mutex);
 
-    /* Wait for the worker to fully terminate. */
-    thread_wait(worker);
-
-    TEST_ASSERT_EQ(worker->state, THREAD_TERMINATED);
+    /*
+     * thread_join() waits for the worker to terminate then
+     * frees it.  The pointer is invalid after this returns.
+     */
+    thread_join(worker);
 
     test_pass();
 }
@@ -157,7 +158,7 @@ static void test_condvar_broadcast(void)
 
     /* Wait for every worker to terminate. */
     for (i = 0; i < BROADCAST_WORKERS; i++)
-        thread_wait(workers[i]);
+        thread_join(workers[i]);
 
     TEST_ASSERT_EQ(broadcast_woken, (uint32_t)BROADCAST_WORKERS);
 
@@ -222,7 +223,11 @@ static void test_condvar_no_loss(void)
      * while loop" pattern which is what prevents the lost-wakeup
      * from mattering in correct code.
      */
-    thread_wait(signaller);
+    /*
+     * Let the signaller run first then free it.
+     * Pointer is invalid after thread_join() returns.
+     */
+    thread_join(signaller);
 
     mutex_lock(&cv_mutex);
 
