@@ -99,7 +99,8 @@ struct thread *usermode_thread_create(struct process *process,
         return NULL;
     }
 
-    paging_map(USER_STACK_VIRT,
+    paging_map(paging_get_kernel_directory(),
+               USER_STACK_VIRT,
                (uintptr_t)phys,
                PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
 
@@ -115,7 +116,7 @@ struct thread *usermode_thread_create(struct process *process,
     thread = thread_create(process, usermode_trampoline);
     if (thread == NULL)
     {
-        paging_unmap(USER_STACK_VIRT);
+        paging_unmap(paging_get_kernel_directory(), USER_STACK_VIRT);
         pmm_free_page(phys);
         kfree(desc);
         return NULL;

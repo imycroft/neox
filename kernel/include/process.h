@@ -6,6 +6,8 @@
 
 #define PROCESS_NAME_MAX 32
 
+struct page_directory;
+
 struct thread;
 
 struct process
@@ -13,6 +15,9 @@ struct process
     pid_t pid;
 
     char name[PROCESS_NAME_MAX];
+
+    /* Address space owned by this process */
+    struct page_directory *page_directory;
 
     /* Linked list of all processes */
     struct list_node process_node;

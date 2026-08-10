@@ -6,6 +6,8 @@
 
 #define PAGE_ENTRIES 1024
 
+#define KERNEL_VIRTUAL_END 0xC0000000u
+
 /* Page table / directory entry flags */
 
 #define PAGE_PRESENT   (1 << 0)
@@ -42,11 +44,19 @@ struct page_directory
 
 void paging_init(void);
 
-void paging_map(uintptr_t virt,
+struct page_directory *paging_get_kernel_directory(void);
+
+struct page_directory *paging_create_directory(void);
+
+void paging_map(struct page_directory *directory,
+                uintptr_t virt,
                 uintptr_t phys,
                 uint32_t flags);
 
-void paging_unmap(uintptr_t virt);
+void paging_unmap(struct page_directory *directory,
+                  uintptr_t virt);
 
-uintptr_t paging_translate(uintptr_t virt);
+uintptr_t paging_translate(struct page_directory *directory,
+                           uintptr_t virt);
 
+void paging_copy_kernel_mappings(struct page_directory *directory);

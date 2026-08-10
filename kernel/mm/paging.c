@@ -2,6 +2,8 @@
 #include "pmm.h"
 #include "paging.h"
 #include "printf.h"
+#include "panic.h"
+#include "assert.h"
 
 #define PAGE_FRAME_MASK 0xFFFFF000
 
@@ -9,11 +11,11 @@ static struct page_directory *kernel_directory;
 
 // static struct page_table *kernel_table;
 
-static struct page_table *paging_get_table(uint32_t directory_index)
+static struct page_table *paging_get_table(struct page_directory *directory, uint32_t directory_index)
 {
     page_entry_t entry;
 
-    entry = kernel_directory->entries[directory_index];
+    entry = directory->entries[directory_index];
 
     if (!(entry & PAGE_PRESENT))
         return NULL;
@@ -21,10 +23,9 @@ static struct page_table *paging_get_table(uint32_t directory_index)
     return (struct page_table *)(entry & PAGE_FRAME_MASK);
 }
 
-static bool paging_create_directory(void)
+static bool paging_create_kernel_directory(void)
 {
     kernel_directory = pmm_alloc_page();
-
 
     if (kernel_directory == NULL)
     {
@@ -60,7 +61,8 @@ static void paging_identity_map(void)
 
     for (i = 0; i < PAGE_ENTRIES; i++)
     {
-        paging_map(i * PAGE_SIZE,
+        paging_map(kernel_directory,
+                   i * PAGE_SIZE,
                    i * PAGE_SIZE,
                    PAGE_PRESENT | PAGE_WRITABLE);
     }
@@ -75,10 +77,15 @@ static void paging_enable_cpu(void)
     printf("Paging enabled\n");
 }
 
+struct page_directory *paging_get_kernel_directory(void)
+{
+    return kernel_directory;
+}
+
 void paging_init(void)
 {
-    if(!paging_create_directory())
-        return;
+    if (!paging_create_kernel_directory())
+        panic("Paging: failed to create kernel page directory");
 
     paging_identity_map();
     paging_enable_cpu();
@@ -86,7 +93,8 @@ void paging_init(void)
     printf("Paging initialized\n");
 }
 
-void paging_map(uintptr_t virt,
+void paging_map(struct page_directory *directory,
+                uintptr_t virt,
                 uintptr_t phys,
                 uint32_t flags)
 {
@@ -97,7 +105,7 @@ void paging_map(uintptr_t virt,
     directory_index = virt >> 22;
     table_index = (virt >> 12) & 0x3FF;
 
-    table = paging_get_table(directory_index);
+    table = paging_get_table(directory, directory_index);
 
     if (table == NULL)
     {
@@ -109,7 +117,7 @@ void paging_map(uintptr_t virt,
             return;
         }
 
-        kernel_directory->entries[directory_index] =
+        directory->entries[directory_index] =
         (uint32_t)table |
         PAGE_PRESENT |
         (flags & (PAGE_WRITABLE | PAGE_USER));
@@ -121,7 +129,8 @@ void paging_map(uintptr_t virt,
     paging_invalidate(virt);
 }
 
-void paging_unmap(uintptr_t virt)
+void paging_unmap(struct page_directory *directory,
+                  uintptr_t virt)
 {
     uint32_t directory_index;
     uint32_t table_index;
@@ -130,7 +139,7 @@ void paging_unmap(uintptr_t virt)
     directory_index = virt >> 22;
     table_index = (virt >> 12) & 0x3FF;
 
-    table = paging_get_table(directory_index);
+    table = paging_get_table(directory, directory_index);
 
     if (table == NULL)
         return;
@@ -140,7 +149,8 @@ void paging_unmap(uintptr_t virt)
     paging_invalidate(virt);
 }
 
-uintptr_t paging_translate(uintptr_t virt)
+uintptr_t paging_translate(struct page_directory *directory,
+                           uintptr_t virt)
 {
     uint32_t directory_index;
     uint32_t table_index;
@@ -153,7 +163,7 @@ uintptr_t paging_translate(uintptr_t virt)
     table_index = (virt >> 12) & 0x3FF;
     offset = virt & 0xFFF;
 
-    table = paging_get_table(directory_index);
+    table = paging_get_table(directory, directory_index);
 
     if (table == NULL)
         return 0;
@@ -166,3 +176,38 @@ uintptr_t paging_translate(uintptr_t virt)
     return (entry & PAGE_FRAME_MASK) + offset;
 }
 
+struct page_directory *paging_create_directory(void)
+{
+    struct page_directory *directory;
+
+    directory = pmm_alloc_page();
+
+    if (directory == NULL)
+        return NULL;
+
+    memset(directory, 0, sizeof(*directory));
+
+    paging_copy_kernel_mappings(directory);
+
+    return directory;
+}
+
+void paging_copy_kernel_mappings(struct page_directory *directory)
+{
+    uint32_t i;
+
+    ASSERT(directory != NULL);
+    ASSERT(kernel_directory != NULL);
+
+    /*
+     * Copy the kernel page-directory entries.
+     *
+     * The page tables themselves are shared. We only copy the
+     * PDEs, so both directories reference the same physical
+     * page tables.
+     */
+    for (i = 0; i < PAGE_ENTRIES; i++)
+    {
+        directory->entries[i] = kernel_directory->entries[i];
+    }
+}

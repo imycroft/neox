@@ -6,6 +6,7 @@
 #include "assert.h"
 #include "arch.h"
 #include "list.h"
+#include "paging.h"
 
 static uint32_t next_pid = 1;
 
@@ -94,6 +95,15 @@ struct process *process_create(const char *name)
     list_node_init(&process->process_node);
 
     list_init(&process->threads);
+
+
+    process->page_directory = paging_create_directory();
+
+    if (process->page_directory == NULL)
+    {
+        kfree(process);
+        return NULL;
+    }
 
     process->pid = next_pid++;
 

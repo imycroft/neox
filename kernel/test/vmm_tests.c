@@ -30,7 +30,7 @@ static void test_vmm_allocate_one_page(void)
     );
 
     TEST_ASSERT_NE(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
@@ -59,7 +59,7 @@ static void test_vmm_page_is_mapped(void)
         vmm_alloc_page(virt)
     );
 
-    phys = paging_translate(virt);
+    phys = paging_translate(paging_get_kernel_directory(), virt);
 
     TEST_ASSERT_NE(phys, 0);
 
@@ -95,8 +95,8 @@ static void test_vmm_allocate_two_pages(void)
         vmm_alloc_pages(virt, 2)
     );
 
-    phys1 = paging_translate(virt);
-    phys2 = paging_translate(virt + PAGE_SIZE);
+    phys1 = paging_translate(paging_get_kernel_directory(), virt);
+    phys2 = paging_translate(paging_get_kernel_directory(), virt + PAGE_SIZE);
 
     TEST_ASSERT_NE(phys1, 0);
     TEST_ASSERT_NE(phys2, 0);
@@ -145,7 +145,7 @@ static void test_vmm_allocate_many_pages(void)
 
     for (i = 0; i < VMM_TEST_PAGES; i++)
     {
-        phys = paging_translate(
+        phys = paging_translate(paging_get_kernel_directory(),
             virt + i * PAGE_SIZE
         );
 
@@ -186,8 +186,8 @@ static void test_vmm_unique_physical_pages(void)
         vmm_alloc_pages(virt, 2)
     );
 
-    phys1 = paging_translate(virt);
-    phys2 = paging_translate(virt + PAGE_SIZE);
+    phys1 = paging_translate(paging_get_kernel_directory(), virt);
+    phys2 = paging_translate(paging_get_kernel_directory(), virt + PAGE_SIZE);
 
     TEST_ASSERT_NE(
         phys1,
@@ -220,14 +220,14 @@ static void test_vmm_free_reuse(void)
         vmm_alloc_page(virt)
     );
 
-    phys1 = paging_translate(virt);
+    phys1 = paging_translate(paging_get_kernel_directory(), virt);
 
     TEST_ASSERT_NE(phys1, 0);
 
     vmm_free_page(virt);
 
     TEST_ASSERT_EQ(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
@@ -235,7 +235,7 @@ static void test_vmm_free_reuse(void)
         vmm_alloc_page(virt)
     );
 
-    phys2 = paging_translate(virt);
+    phys2 = paging_translate(paging_get_kernel_directory(), virt);
 
     TEST_ASSERT_NE(phys2, 0);
 
@@ -276,7 +276,7 @@ static void test_vmm_free_reverse(void)
     for (i = 0; i < 3; i++)
     {
         TEST_ASSERT_EQ(
-            paging_translate(virt + i * PAGE_SIZE),
+            paging_translate(paging_get_kernel_directory(), virt + i * PAGE_SIZE),
                        0
         );
     }
@@ -306,7 +306,7 @@ static void test_vmm_reallocate_same_virtual_page(void)
     vmm_free_page(virt);
 
     TEST_ASSERT_EQ(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
@@ -315,7 +315,7 @@ static void test_vmm_reallocate_same_virtual_page(void)
     );
 
     TEST_ASSERT_NE(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
@@ -349,7 +349,7 @@ static void test_vmm_alloc_pages_any(void)
     );
 
     TEST_ASSERT_NE(
-        paging_translate((uintptr_t)addr),
+        paging_translate(paging_get_kernel_directory(), (uintptr_t)addr),
                    0
     );
 
@@ -379,7 +379,7 @@ static void test_vmm_alloc_over_existing_fails(void)
         vmm_alloc_page(virt)
     );
 
-    phys = paging_translate(virt);
+    phys = paging_translate(paging_get_kernel_directory(), virt);
 
     TEST_ASSERT_NE(phys, 0);
 
@@ -388,7 +388,7 @@ static void test_vmm_alloc_over_existing_fails(void)
     );
 
     TEST_ASSERT_EQ(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    phys
     );
 
@@ -413,14 +413,14 @@ static void test_vmm_free_unmapped(void)
     virt = VAM_START;
 
     TEST_ASSERT_EQ(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
     vmm_free_page(virt);
 
     TEST_ASSERT_EQ(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
@@ -447,7 +447,7 @@ static void test_vmm_zero_page_allocation(void)
     );
 
     TEST_ASSERT_EQ(
-        paging_translate(virt),
+        paging_translate(paging_get_kernel_directory(), virt),
                    0
     );
 
@@ -496,6 +496,7 @@ static void test_vmm_large_allocation(void)
     for (i = 0; i < VMM_TEST_PAGES; i++)
     {
         phys = paging_translate(
+            paging_get_kernel_directory(),
             virt + i * PAGE_SIZE
         );
 

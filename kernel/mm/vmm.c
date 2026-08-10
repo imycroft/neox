@@ -11,16 +11,20 @@ static void vmm_unmap_pages(uintptr_t virt,
 {
     uint32_t i;
 
+    struct page_directory *directory;
+
+    directory = paging_get_kernel_directory();
+
     for (i = 0; i < count; i++)
     {
         uintptr_t phys;
 
-        phys = paging_translate(virt + i * PAGE_SIZE);
+        phys = paging_translate(directory, virt + i * PAGE_SIZE);
 
         if (phys == 0)
             continue;
 
-        paging_unmap(virt + i * PAGE_SIZE);
+        paging_unmap(directory, virt + i * PAGE_SIZE);
 
         pmm_free_page(
             (void *)(phys & ~(PAGE_SIZE - 1))
@@ -33,9 +37,13 @@ static bool vmm_map_pages(uintptr_t virt,
 {
     uint32_t i;
 
+    struct page_directory *directory;
+
+    directory = paging_get_kernel_directory();
+
     for (i = 0; i < count; i++)
     {
-        if (paging_translate(virt + i * PAGE_SIZE) != 0)
+        if (paging_translate(directory, virt + i * PAGE_SIZE) != 0)
         {
             printf("VMM: virtual page %x already mapped\n",
                    virt + i * PAGE_SIZE);
@@ -60,6 +68,7 @@ static bool vmm_map_pages(uintptr_t virt,
         }
 
         paging_map(
+            directory,
             virt + i * PAGE_SIZE,
             (uintptr_t)phys,
                    PAGE_PRESENT | PAGE_WRITABLE

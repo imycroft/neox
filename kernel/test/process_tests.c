@@ -4,7 +4,7 @@
 #include "printf.h"
 #include "util.h"
 #include "string.h"
-
+#include "arch.h"
 #define PROCESS_TEST_COUNT 32
 
 /* Test functions */
@@ -175,6 +175,21 @@ static void test_process_find_by_name_missing(void)
     test_pass();
 }
 
+static void test_process_has_page_directory(void)
+{
+    struct process *process;
+
+    process = process_create("page-directory");
+
+    TEST_ASSERT(process != NULL);
+    TEST_ASSERT(process->page_directory != NULL);
+
+    interrupt_state_t state = interrupt_save();
+    process_destroy(process);
+    interrupt_restore(state);
+
+    test_pass();
+}
 // API
 
 static test_entry_t tests[] =
@@ -186,6 +201,7 @@ static test_entry_t tests[] =
     { "process_find_missing",         test_process_find_missing         },
     { "process_find_by_name_existing", test_process_find_by_name_existing },
     { "process_find_by_name_missing",  test_process_find_by_name_missing  },
+    { "process_has_page_directory",   test_process_has_page_directory  },
 };
 
 void test_process(void)

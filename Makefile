@@ -68,7 +68,7 @@ $(IMAGE): $(ISO_KERNEL) $(GRUB_CFG)
 # ------------------------------------------------------------
 
 run: $(IMAGE)
-	$(QEMU) -m 256M -drive format=raw,file=$(IMAGE) -display curses
+	$(QEMU) -m 256M -drive format=raw,file=$(IMAGE) -display curses -no-reboot -no-shutdown
 
 # ------------------------------------------------------------
 # Clean
