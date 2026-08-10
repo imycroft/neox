@@ -39,10 +39,10 @@
 
 - [x] Semaphores
 - [x] Mutexes
-- [ ] Condition variables
-- [ ] Sleep queues
-- [ ] Thread termination
-- [ ] Process termination
+- [x] Condition variables
+- [x] Sleep queues
+- [x] Thread termination
+- [x] Process termination
 - [ ] Synchronization stress testing
 
 ---

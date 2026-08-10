@@ -1,3 +1,4 @@
+```markdown
 # Changelog
 
 All notable changes to Neox will be documented in this file.
@@ -22,6 +23,7 @@ All notable changes to Neox will be documented in this file.
 - Interrupt Request handling (IRQ).
 - Programmable Interrupt Controller (PIC).
 - Programmable Interval Timer (PIT).
+- x86 context switching.
 
 #### Drivers
 
@@ -40,71 +42,111 @@ All notable changes to Neox will be documented in this file.
 
 #### Tasking
 
-- Process infrastructure.
-- Thread infrastructure.
-- Scheduler infrastructure.
-- Timer-driven preemptive round-robin scheduling (`scheduler_tick()`, `scheduler_yield()`, `scheduler_start()`).
-- Scheduler-owned idle thread, replacing the ad hoc `main_sp` boot-stack pointer.
+- Process abstraction.
+- Thread abstraction.
+- Scheduler ready queue.
+- Round-robin scheduler.
+- Timer-driven preemptive scheduling.
+- Scheduler-owned idle thread.
+- Scheduler-owned reaper thread.
+- Thread bootstrap.
 - Thread blocking (`thread_block()`).
 - Thread unblocking (`thread_unblock()`).
 - Thread termination (`thread_exit()`).
-- Terminated thread tracking through the termination wait queue.
-- Thread waiting (`thread_wait()`).
+- Joinable threads.
+- Detached threads.
+- Thread joining (`thread_join()`).
+- Thread detachment.
+- Thread destruction and resource reclamation.
+- Process destruction after the final thread is removed.
+
+#### Synchronization
+
 - Generic wait queue infrastructure.
 - FIFO wait queues.
 - Wake-one (`wait_queue_wake()`).
 - Wake-all (`wait_queue_wake_all()`).
-
-#### Synchronization
-
 - Semaphore implementation using wait queues.
-- Semaphore acquire/release operations.
-- Semaphore wakeup behavior.
+- Semaphore acquire and release operations.
 - Mutex implementation using wait queues.
 - Mutex ownership tracking.
-- Mutex ownership transfer on unlock.
+- Mutex ownership transfer.
+- Condition variable implementation using wait queues and mutexes.
+- Condition variable wait, signal, and broadcast operations.
 
 #### Testing
 
 - Generic kernel testing framework.
-- PMM unit test suite.
-- Paging unit test suite.
-- VAM unit test suite.
-- VMM unit test suite.
-- Heap unit test suite.
-- Process unit test suite.
-- Thread unit test suite.
+- PMM test suite.
+- Paging test suite.
+- VAM test suite.
+- VMM test suite.
+- Heap test suite.
+- Process test suite.
+- Thread test suite.
 - Thread integration test suite.
-- Scheduler unit test suite.
-- Wait queue unit test suite.
+- Scheduler test suite.
+- Thread preemption test suite.
+- Scheduler preemption test suite.
+- Wait queue test suite.
 - Semaphore test suite.
 - Mutex test suite.
-- Timer-driven preemption test suite.
-- Quantum accounting tests.
-- Multi-thread scheduler stress tests.
+- Condition variable test suite.
+- List test suite.
+- String test suite.
 
 ### Changed
 
-- Refactored paging table allocation into `paging_alloc_table()`.
-- Propagated `PAGE_USER` permissions to page-directory entries.
-- Refactored VMM page mapping and rollback into reusable private helpers.
-- `irq_handler()` now sends the PIC EOI before calling `scheduler_tick()` on IRQ0, since `scheduler_tick()` may context switch and suspend the current handler invocation indefinitely; sending EOI first keeps the timer firing for whichever thread runs next.
-- Removed the manual cooperative test scaffold from `kernel_init()` (`thread1`, `main_sp`); replaced with `scheduler_start()`.
-- Refactored scheduler state transitions to correctly handle blocked and terminated threads.
-- Scheduler now safely handles removal of the currently running thread during blocking.
-- Scheduler quantum handling now supports timer-driven preemption and quantum reset after scheduling decisions.
-- Wait queue operations now maintain thread ownership through `thread->wait_queue`.
-- Synchronization primitives now use wait queues instead of direct scheduler manipulation.
+#### Scheduler
+
+- Replaced the manual cooperative test scaffold with `scheduler_start()`.
+- Scheduler state transitions now correctly handle running, ready, blocked, and terminated threads.
+- Blocking the current thread now safely removes it from the ready queue.
+- Timer-driven preemption now uses scheduler quantum accounting.
+- The scheduler now tracks terminated threads separately from runnable threads.
+- Added scheduler-managed reaping of detached terminated threads.
+
+#### Thread Lifecycle
+
+- Thread lifetime is now explicitly divided between joinable and detached threads.
+- Joinable threads remain available for `thread_join()` after termination.
+- Detached terminated threads are reclaimed by the reaper.
+- Thread destruction now releases the thread's kernel stack and thread object.
+- Process destruction is deferred until the process has no remaining threads.
+
+#### Wait Queues
+
+- Wait queue operations now maintain ownership through `thread->wait_queue`.
+- Synchronization primitives now use wait queues rather than directly manipulating scheduler state.
+
+#### Interrupt Handling
+
+- `irq_handler()` sends the PIC EOI before invoking `scheduler_tick()` for IRQ0 so that a context switch from the timer interrupt cannot prevent the PIC from receiving its EOI.
+
+#### Memory Management
+
+- `paging_alloc_table()` centralizes page-table allocation.
+- VMM page mapping and rollback logic was refactored into reusable private helpers.
+- `PAGE_USER` permissions are propagated to page-directory entries.
 
 ### Fixed
 
-- `paging_unmap()` is now idempotent when no page table exists.
+#### Paging
+
+- `paging_unmap()` safely handles an absent page table.
 - Added TLB invalidation after page mapping and unmapping.
-- `thread_bootstrap()` now re-enables interrupts (`sti`) on a thread's first run. A thread's first run is reached via `context_switch()`'s `ret`, not `iret`; when the switch was triggered from inside the timer ISR, interrupts were left disabled for that thread indefinitely without this fix.
+
+#### Threading
+
+- `thread_bootstrap()` re-enables interrupts with `sti` on a thread's first execution.
 - Fixed scheduler state corruption when blocking the current thread.
-- Fixed scheduler handling of detached ready-list nodes during thread blocking.
-- Fixed wait queue ownership bookkeeping when threads leave a wait queue.
-- Fixed terminated thread handling by removing terminated threads from scheduling and tracking them separately.
+- Fixed handling of ready-list nodes when a thread blocks.
+- Fixed wait queue ownership when a thread leaves a wait queue.
+- Fixed terminated threads remaining eligible for scheduling.
+- Fixed thread resource reclamation for joinable and detached threads.
+- Fixed process lifetime handling when the final thread is destroyed.
+
+---
 
 ## v0.5.0
 
@@ -121,3 +163,4 @@ All notable changes to Neox will be documented in this file.
 - Verified kernel → thread → kernel → thread context restoration.
 - Validated preservation of execution state across context switches.
 - Validated thread bootstrap and kernel thread execution.
+```

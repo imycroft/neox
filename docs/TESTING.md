@@ -27,19 +27,11 @@ before being considered complete.
 - Free reuse
 - Reverse free
 - Lowest page reuse
-
+    
 ### Stress Tests
 
 - Allocate until Out Of Memory
 - Recover after Out Of Memory
-
-Result:
-
-```text
-12 tests
-12 passed
-0 failed
-```
 
 ---
 
@@ -60,14 +52,6 @@ Result:
 
 - Allocate multiple page tables
 - Map thousands of pages
-
-Result:
-
-```text
-10 tests
-10 passed
-0 failed
-```
 
 ---
 
@@ -91,13 +75,6 @@ Result:
 - Large allocation free and reuse
 - Repeated single-page allocation (manual stress test)
 
-Result:
-
-```text
-11 tests
-11 passed
-0 failed
-```
 
 **Note**
 
@@ -125,14 +102,6 @@ The repeated single-page allocation stress test is not executed during normal ke
 - Large allocation
 - Large allocation free/reuse
 
-Result:
-
-```text
-15 tests
-15 passed
-0 failed
-```
-
 ---
 
 ## Heap
@@ -156,14 +125,6 @@ Result:
 
 - Allocate until Out Of Memory
 
-Result:
-
-```text
-13 tests
-13 passed
-0 failed
-```
-
 ---
 
 ## Process
@@ -172,21 +133,9 @@ Result:
 
 - Create process
 - Unique PIDs
-- Process lookup by PID
-- Process lookup by name
+- Process lookup by PID  (existing / missing)
+- Process lookup by name (existing / missing)
 - No threads owned initially
-
-Result:
-
-```text
-5 tests
-5 passed
-0 failed
-```
-
-**Note**
-
-Process termination and resource reclamation are not yet implemented.
 
 ---
 
@@ -202,15 +151,6 @@ Process termination and resource reclamation are not yet implemented.
 - Unique TIDs
 - Block thread
 - Unblock thread
-- Wait on queue
-
-Result:
-
-```text
-9 tests
-9 passed
-0 failed
-```
 
 ---
 
@@ -223,15 +163,7 @@ Result:
 - Automatic thread termination after entry return
 - Multiple threads yielding cooperatively
 - Blocking and resuming threads
-- Waiting for thread termination
-
-Result:
-
-```text
-7 tests
-7 passed
-0 failed
-```
+- Waiting for thread termination and free its memory (thread_join)
 
 ---
 
@@ -248,15 +180,7 @@ Result:
 - Remove thread from ready queue
 - Remove current blocked thread
 - Current thread tracking
-
-Result:
-
-```text
-9 tests
-9 passed
-0 failed
-```
-
+    
 ---
 
 ## Thread Preemption
@@ -273,14 +197,6 @@ Result:
 - Quantum reset after context switch
 - Scheduler stress with 32 CPU-bound threads
 
-Result:
-
-```text
-9 tests
-9 passed
-0 failed
-```
-
 ---
 
 ## Wait Queues
@@ -292,17 +208,82 @@ Result:
 - Wake one thread while preserving FIFO order
 - Wake all waiting threads
 
-Result:
-
-```text
-4 tests
-4 passed
-0 failed
-```
-
 **Note**
 
 The wait queue subsystem provides the generic blocking infrastructure used by synchronization primitives.
+
+---
+
+## Mutex
+
+### Unit Tests
+
+- mutex init
+- mutex lock
+- mutex unlock
+- mutex unlock transfers owner
+
+**Note**
+
+The mutex subsystem provides mutual exclusion using an owner field and a wait queue.
+
+---
+
+## Semaphore
+
+- semaphore init
+- semaphore acquire
+- semaphore release
+- semaphore release wakes
+
+**Note**
+
+The semaphore subsystem provides synchronization using a semaphore count and a wait queue.
+
+---
+
+## Condition Variable
+
+- condvar_signal
+- condvar_broadcast
+- condvar_no_loss
+
+**Note**
+
+The condition variable subsystem provides:
+
+- Waiting while atomically releasing the associated mutex
+- Re-acquiring the mutex before returning from `condvar_wait()`
+- Signaling one waiting thread
+- Broadcasting to all waiting threads
+
+---
+
+# Test Organization
+
+The current test suite is organized as follows:
+
+```text
+kernel/test/
+├── condvar_tests.c
+├── heap_tests.c
+├── list_tests.c
+├── mutex_tests.c
+├── paging_tests.c
+├── pmm_tests.c
+├── process_tests.c
+├── scheduler_tests.c
+├── semaphore_tests.c
+├── string_tests.c
+├── test.c
+├── tests.c
+├── thread_integration_tests.c
+├── thread_preemption_tests.c
+├── thread_tests.c
+├── vam_tests.c
+├── vmm_tests.c
+└── wait_tests.c
+```
 
 ---
 

@@ -139,6 +139,9 @@ Provides:
 - Cooperative yielding
 - Thread blocking
 - Thread unblocking
+- Thread termination
+- Thread joining
+- Detached thread reaping
 
 ---
 
@@ -149,14 +152,11 @@ Current layers:
 ```text
 Wait Queue
       │
-      ▼
-Semaphores      (planned)
+      ├──► Semaphores
       │
-      ▼
-Mutexes         (planned)
+      ├──► Mutexes
       │
-      ▼
-Condition Variables (planned)
+      └──► Condition Variables
 ```
 
 ## Wait Queues
@@ -168,8 +168,43 @@ Provides:
 - Thread enqueue
 - Wake one
 - Wake all
+- Blocked-thread ownership tracking
 
 Forms the foundation for all higher-level synchronization primitives.
+
+## Semaphores
+
+Synchronization primitive implemented using wait queues.
+
+Provides:
+
+- Acquire
+- Release
+- Blocking when unavailable
+- Wakeup of waiting threads
+
+## Mutexes
+
+Mutual exclusion primitive implemented using wait queues.
+
+Provides:
+
+- Lock
+- Unlock
+- Ownership tracking
+- Ownership transfer to waiting threads
+
+## Condition Variables
+
+Condition synchronization primitive implemented using wait queues and mutexes.
+
+Provides:
+
+- Wait
+- Signal
+- Broadcast
+
+A condition-variable wait atomically releases the associated mutex while blocking and re-acquires it before returning.
 
 ---
 
