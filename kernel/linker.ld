@@ -27,7 +27,7 @@ ENTRY(start)
 
 KERNEL_PHYS_BASE  = 0x00100000;
 KERNEL_VIRT_BASE  = 0xC0000000;
-KERNEL_VIRT_START = 0xC0100000;
+KERNEL_VIRT_START = 0xC0101000;
 
 
 PHDRS
@@ -75,7 +75,6 @@ SECTIONS
 
         kernel_text_end = .;
     } :seg_kern
-
 
     /*
      * ------------------------------------------------------------------------

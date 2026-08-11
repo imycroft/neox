@@ -11,6 +11,7 @@
 #include "scheduler.h"
 #include "process.h"
 #include "thread.h"
+#include "printf.h"
 
 
 void kernel_init(uint32_t magic,
@@ -29,10 +30,12 @@ void kernel_init(uint32_t magic,
     drivers_init();
 
     arch_init();
-
+    printf("after arch_init\n");
     /* Memory */
     pmm_init();
+    printf("after pmm_init\n");
     paging_init();
+    printf("after paging_init\n");
     vam_init();
     heap_init();
 

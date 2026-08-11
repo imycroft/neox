@@ -53,7 +53,7 @@ KERNEL_PDE_INDEX equ 768
 ; Bootstrap stack
 ; ============================================================================
 
-KERNEL_STACK_SIZE equ 4096
+KERNEL_STACK_SIZE equ 4096 * 1024
 
 
 ; ============================================================================
@@ -160,6 +160,7 @@ start:
 
     mov [PHYS_ADDR(bootstrap_mb_magic)], eax
     mov [PHYS_ADDR(bootstrap_mb_info)], ebx
+
 
 
     ; =========================================================================
@@ -347,6 +348,8 @@ start:
 
     push dword [bootstrap_mb_info]
     push dword [bootstrap_mb_magic]
+
+    ;mov eax, kernel_main ; temp
 
     call kernel_main
 

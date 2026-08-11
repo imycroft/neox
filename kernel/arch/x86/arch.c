@@ -6,7 +6,7 @@
 #include "pit.h"
 #include "tss.h"
 #include "syscall.h"
-
+#include "printf.h"
 #define EFLAGS_IF (1u << 9)
 
 interrupt_state_t interrupt_save(void)
@@ -93,21 +93,20 @@ bool interrupt_enabled(void)
 
 void arch_init(void)
 {
-
     gdt_init();
-
-
+    printf("after gdt_init\n");
     /* TSS must be installed after GDT so gdt_set_tss() can write slot 5 */
     tss_init();
-
+    printf("after tss_init\n");
     idt_init();
-
+    printf("after idt_init\n");
     /* Register INT 0x80 with DPL=3 so Ring-3 code can invoke syscalls */
     syscall_init();
-
+    printf("after syscall_init\n");
     pic_init();
-
+    printf("after pic_init\n");
     pit_init(100);
-
+    printf("after pit_init\n");
     interrupt_enable();
+    printf("after interrupt_enable\n");
 }

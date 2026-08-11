@@ -84,17 +84,14 @@ static struct page_table *paging_get_table(
 static struct page_table *paging_alloc_table(void)
 {
     struct page_table *table;
+    uintptr_t phys;
 
-    /*
-     * pmm_alloc_page() returns a physical address.
-     *
-     * We convert it to a virtual address immediately so the table can be
-     * zeroed and written through the higher-half mapping.
-     */
-    table = (struct page_table *)PHYS_TO_VIRT((uintptr_t)pmm_alloc_page());
+    phys = (uintptr_t)pmm_alloc_page();
 
-    if (table == NULL)
+    if (phys == 0)
         return NULL;
+
+    table = (struct page_table *)PHYS_TO_VIRT(phys);
 
     memset(table, 0, sizeof(*table));
 
@@ -125,7 +122,6 @@ static struct page_table *paging_alloc_table(void)
 void paging_init(void)
 {
     uintptr_t phys;
-    uint32_t  i;
 
     /*
      * Allocate the kernel page directory.
@@ -167,16 +163,45 @@ void paging_init(void)
      * higher-half virtual addresses.
      */
     {
+
+
+        // 1. Force 'i' to be volatile so the compiler CANNOT keep it in a register
         uint32_t               cr3;
         struct page_directory *bootstrap;
 
-        __asm__ volatile("mov %%cr3, %0" : "=r"(cr3));
+        // 2. Read CR3 with proper clobbers so the compiler doesn't reuse registers
+        __asm__ volatile(
+            "mov %%cr3, %0"
+            : "=r"(cr3)
+            :
+            : "memory"
+        );
 
         bootstrap = (struct page_directory *)PHYS_TO_VIRT((uintptr_t)cr3);
 
-        for (i = 0; i < PAGE_DIRECTORY_ENTRIES; i++)
-            kernel_directory->entries[i] = bootstrap->entries[i];
+        // this is a workaround until i fix the assembly code to allocate all the 1024 entries
+
+
+
+        // ONLY copy the specific entries the assembly actually created
+        // This completely avoids reading past index 771 and hitting corrupted memory
+
+        // Copy Identity Maps (0 to 3)
+
+        // Copy Low Identity Maps (0-3)
+        kernel_directory->entries[0] = bootstrap->entries[0];
+        kernel_directory->entries[1] = bootstrap->entries[1];
+        kernel_directory->entries[2] = bootstrap->entries[2];
+        kernel_directory->entries[3] = bootstrap->entries[3];
+
+        // Copy High Half Maps (768-771)
+        kernel_directory->entries[768] = bootstrap->entries[768];
+        kernel_directory->entries[769] = bootstrap->entries[769];
+        kernel_directory->entries[770] = bootstrap->entries[770];
+        kernel_directory->entries[771] = bootstrap->entries[771];
+
     }
+
 
     /*
      * Install the recursive mapping at PDE 1023.

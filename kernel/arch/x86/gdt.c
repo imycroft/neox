@@ -1,5 +1,6 @@
 #include "gdt.h"
 #include "tss.h"
+
 #include "printf.h"
 /* ------------------------------------------------------------------ */
 /* GDT descriptor layout (32-bit protected mode)                       */
@@ -111,7 +112,12 @@ void gdt_init(void)
     /* 5 — TSS: written later by tss_init(), zero-init for now */
     gdt_set_entry(GDT_TSS_ENTRY,   0, 0,       0x00, 0x00);
 
+    printf("GDT virtual = %x\n", (uint32_t)&gdt);
+    printf("GDTR virtual = %x\n", (uint32_t)&gdtr);
+    printf("GDTR base = %x limit = %x\n",
+           gdtr.base,
+           gdtr.limit);
+    printf("Calling gdt_load...\n");
     gdt_load(&gdtr);
-
-     printf("Welcome to Neox 1.0\n");
+    printf("Returned from gdt_load\n");
 }

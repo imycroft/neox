@@ -5,7 +5,7 @@
 #include "thread.h"
 #include "arch.h"
 #include "reaper.h"
-
+#include "printf.h"
 static void init_entry(void)
 {
     kernel_tests();
