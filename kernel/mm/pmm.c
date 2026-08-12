@@ -120,6 +120,8 @@ void pmm_init(void)
     ((uintptr_t)&kernel_end + PAGE_SIZE - 1)
     & ~(PAGE_SIZE - 1);
 
+    printf("kernel physical end = %x\n", (uint32_t)kernel_physical_end);
+
     reserved_end = kernel_physical_end;
 
     if ((uintptr_t)mb_info + mb_info->total_size > reserved_end)
@@ -137,12 +139,12 @@ void pmm_init(void)
 
     printf("Total memory : %u KB\n", total_memory / 1024);
     printf("Usable memory: %u KB\n", usable_memory / 1024);
-
+/*
     printf("Pages : %u\n", total_pages);
     printf("Bitmap: %u bytes\n", bitmap_size);
 
     printf("Bitmap addr : %x\n", (uint32_t)bitmap_address);
-    printf("Bitmap pages: %u\n", bitmap_pages);
+    printf("Bitmap pages: %u\n", bitmap_pages);*/
 
     /* Second pass: mark usable pages as free. */
 

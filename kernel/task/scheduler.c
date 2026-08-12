@@ -13,7 +13,8 @@
 #include "wait.h"
 #include "heap.h"
 #include "reaper.h"
-
+#include "process.h"
+#include "printf.h"
 static struct list ready_list;
 static struct thread *current;
 
@@ -42,11 +43,6 @@ static struct thread idle_thread;
  * arrives, at which point scheduler_tick() will preempt into
  * a real thread if one has become ready.
  */
-static void scheduler_idle_loop(void)
-{
-    while (true)
-        interrupt_enable_and_halt();
-}
 
 void scheduler_init(void)
 {
@@ -177,6 +173,9 @@ static void scheduler_switch(void)
 
     next = scheduler_next();
 
+    printf("inside scheduler switch: next tid=%u\n", next->tid);
+    printf("inside scheduler switch: next name=%s\n", next->process->name);
+
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
 
     if (next == old)
@@ -208,8 +207,6 @@ static void scheduler_switch(void)
 void scheduler_start(void)
 {
     interrupt_state_t state;
-    uintptr_t *stack;
-    struct cpu_context *context;
 
     state = interrupt_save();
 
@@ -218,28 +215,6 @@ void scheduler_start(void)
 
     idle_thread.tid   = 0;
     idle_thread.state = THREAD_RUNNING;
-
-    /* Allocate a real stack for idle. */
-    idle_thread.kernel_stack = kmalloc(THREAD_STACK_SIZE);
-
-    ASSERT(idle_thread.kernel_stack != NULL);
-
-    stack = (uintptr_t *)(
-        (uint8_t *)idle_thread.kernel_stack + THREAD_STACK_SIZE
-    );
-
-    /* Set up the initial stack identically to thread_create():
-     *   [top]   return address  (unreachable — loop never returns)
-     *   [top-4] first IP        (scheduler_idle_loop)
-     *   [top-8 .. top-20] zeroed cpu_context
-     */
-    *--stack = (uintptr_t)scheduler_idle_loop; /* safety ret */
-    *--stack = (uintptr_t)scheduler_idle_loop; /* first IP   */
-
-    context = (struct cpu_context *)(stack - 4);
-    memset(context, 0, sizeof(*context));
-
-    idle_thread.kernel_sp = (uintptr_t)context;
 
     current           = &idle_thread;
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
@@ -298,6 +273,7 @@ void scheduler_yield(void)
     if (current == NULL)
         return;
 
+    printf("current->state = %u\n", current->state);
     scheduler_switch();
 }
 

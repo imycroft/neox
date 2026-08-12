@@ -123,6 +123,7 @@ SECTIONS
         *(.bss)
         *(.bss.*)
 
+        . = ALIGN(0x1000);
         kernel_bss_end = .;
     } :seg_kern
 
@@ -133,16 +134,17 @@ SECTIONS
      * =========================================================================
      */
 
+    /* Virtual addresses*/
+    kernel_virtual_start = ADDR(.text);
+    kernel_virtual_end   = kernel_bss_end;
+
+    /* Physical addresses (LMA) */
     kernel_physical_start = LOADADDR(.text);
-    kernel_physical_end   = LOADADDR(.text) + SIZEOF(.text)
-                          + SIZEOF(.rodata) + SIZEOF(.data)
-                          + SIZEOF(.bss);
+    kernel_physical_end   = LOADADDR(.text)
+                            + (kernel_virtual_end - kernel_virtual_start);
 
     kernel_start = kernel_physical_start;
     kernel_end   = kernel_physical_end;
-
-    kernel_virtual_end = ADDR(.bss) + SIZEOF(.bss);
-
 
     /*
      * =========================================================================

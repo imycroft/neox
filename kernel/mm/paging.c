@@ -163,10 +163,8 @@ void paging_init(void)
      * higher-half virtual addresses.
      */
     {
-
-
-        // 1. Force 'i' to be volatile so the compiler CANNOT keep it in a register
         uint32_t               cr3;
+        uint32_t               i;
         struct page_directory *bootstrap;
 
         // 2. Read CR3 with proper clobbers so the compiler doesn't reuse registers
@@ -179,27 +177,8 @@ void paging_init(void)
 
         bootstrap = (struct page_directory *)PHYS_TO_VIRT((uintptr_t)cr3);
 
-        // this is a workaround until i fix the assembly code to allocate all the 1024 entries
-
-
-
-        // ONLY copy the specific entries the assembly actually created
-        // This completely avoids reading past index 771 and hitting corrupted memory
-
-        // Copy Identity Maps (0 to 3)
-
-        // Copy Low Identity Maps (0-3)
-        kernel_directory->entries[0] = bootstrap->entries[0];
-        kernel_directory->entries[1] = bootstrap->entries[1];
-        kernel_directory->entries[2] = bootstrap->entries[2];
-        kernel_directory->entries[3] = bootstrap->entries[3];
-
-        // Copy High Half Maps (768-771)
-        kernel_directory->entries[768] = bootstrap->entries[768];
-        kernel_directory->entries[769] = bootstrap->entries[769];
-        kernel_directory->entries[770] = bootstrap->entries[770];
-        kernel_directory->entries[771] = bootstrap->entries[771];
-
+        for(i = 0; i < 1024; i++)
+                kernel_directory->entries[i] = bootstrap->entries[i];
     }
 
 

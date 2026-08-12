@@ -30,12 +30,9 @@ void kernel_init(uint32_t magic,
     drivers_init();
 
     arch_init();
-    printf("after arch_init\n");
     /* Memory */
     pmm_init();
-    printf("after pmm_init\n");
     paging_init();
-    printf("after paging_init\n");
     vam_init();
     heap_init();
 
@@ -63,6 +60,7 @@ void kernel_loop(void)
      * scheduler_idle_loop() takes over via context_switch.
      * The hlt here is a last-resort safety net.
      */
-    for (;;)
-        __asm__ volatile("hlt");
+    printf("inside idle_loop\n");
+    while (true)
+        interrupt_enable_and_halt();
 }

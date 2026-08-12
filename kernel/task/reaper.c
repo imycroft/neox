@@ -8,6 +8,8 @@
 #include "thread.h"
 #include "wait.h"
 
+#include "printf.h"
+
 static struct thread    *reaper_thread;
 static struct wait_queue reaper_wq;
 static bool              reaper_ready = false;
@@ -24,6 +26,7 @@ struct thread *reaper_thread_get(void)
 
 static void reaper_entry(void)
 {
+    printf("reaper_entry\n");
     struct thread    *zombie;
     struct process   *process;
     interrupt_state_t state;
@@ -49,8 +52,10 @@ static void reaper_entry(void)
          */
         state = interrupt_save();
 
+
         while ((zombie = scheduler_next_zombie()) != NULL)
         {
+            printf("zombie on destruction = %s\n", zombie->process->name);
             /* Reaper must never reap itself. */
             ASSERT(zombie != reaper_thread);
 

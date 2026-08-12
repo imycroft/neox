@@ -11,7 +11,7 @@
 #include "heap.h"
 #include "string.h"
 #include "wait.h"
-
+#include "printf.h"
 // Private functions
 static void thread_exit(void)
 {
@@ -24,7 +24,6 @@ static void thread_exit(void)
     ASSERT(thread != NULL);
 
     scheduler_terminate(thread);
-
     scheduler_yield();
 
     panic("terminated thread resumed");

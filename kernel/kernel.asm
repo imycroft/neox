@@ -3,9 +3,6 @@ BITS 32
 global start
 
 extern kernel_main
-extern kernel_physical_end
-
-
 
 ; ============================================================================
 ; Kernel address layout
@@ -53,7 +50,7 @@ KERNEL_PDE_INDEX equ 768
 ; Bootstrap stack
 ; ============================================================================
 
-KERNEL_STACK_SIZE equ 4096 * 1024
+KERNEL_STACK_SIZE equ 16384 ; 16 KiB
 
 
 ; ============================================================================
@@ -354,6 +351,8 @@ start:
     call kernel_main
 
     add esp, 8
+
+    jmp hang
 
 
 ; ============================================================================

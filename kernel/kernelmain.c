@@ -6,6 +6,8 @@
 #include "arch.h"
 #include "reaper.h"
 #include "printf.h"
+#include "assert.h"
+
 static void init_entry(void)
 {
     kernel_tests();
@@ -16,12 +18,13 @@ int kernel_main(uint32_t magic,
 {
     kernel_init(magic, mb_info);
 
+    printf("kernel init done\n");
     /*
      * Start the reaper kernel thread before any detached thread
      * can terminate.
      */
     reaper_init();
-
+    printf("reaper init done\n");
     /*
      * Spawn the init thread.  All test suites and any future
      * kernel work runs from here, not from the idle/boot stack.
@@ -31,15 +34,17 @@ int kernel_main(uint32_t magic,
      */
     struct process *process = process_create("init");
     struct thread  *thread  = thread_create(process, init_entry);
+    thread->detached = true;
 
     interrupt_state_t state = interrupt_save();
     thread_add(thread);
     interrupt_restore(state);
-
     /*
      * Drop into the idle loop.  The PIT will preempt into the
      * init thread on the first tick.
      */
+    printf("Tests done\n");
+
     kernel_loop();
 
     return 0;
