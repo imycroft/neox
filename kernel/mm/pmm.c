@@ -116,9 +116,13 @@ void pmm_init(void)
 
     bitmap_size = (total_pages + 7) / 8;
 
-    kernel_physical_end =
-    ((uintptr_t)&kernel_end + PAGE_SIZE - 1)
-    & ~(PAGE_SIZE - 1);
+    kernel_physical_end = (uintptr_t)&kernel_end;
+
+    printf("PMM DEBUG: &kernel_end = %x\n",
+           (uint32_t)&kernel_end);
+
+    printf("PMM DEBUG: kernel_physical_end = %x\n",
+           (uint32_t)kernel_physical_end);
 
     reserved_end = kernel_physical_end;
 
@@ -135,8 +139,6 @@ void pmm_init(void)
 
     bitmap_pages = (bitmap_size + PAGE_SIZE - 1) / PAGE_SIZE;
 
-    printf("Total memory : %u KB\n", total_memory / 1024);
-    printf("Usable memory: %u KB\n", usable_memory / 1024);
 /*
     printf("Pages : %u\n", total_pages);
     printf("Bitmap: %u bytes\n", bitmap_size);

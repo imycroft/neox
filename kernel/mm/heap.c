@@ -163,10 +163,7 @@ void heap_init(void)
     heap_head->free = true;
     heap_head->next = NULL;
 
-    printf("Heap initialized\n");
-    printf("Heap start : %x\n", HEAP_START);
-    printf("Heap size  : %u bytes\n",
-           HEAP_PAGES * PAGE_SIZE);
+
 }
 
 

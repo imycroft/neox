@@ -140,9 +140,6 @@ void paging_init(void)
 
     memset(kernel_directory, 0, sizeof(*kernel_directory));
 
-    printf("Paging: kernel directory physical=%x virtual=%x\n",
-           (uint32_t)phys,
-           (uint32_t)kernel_directory);
 
     /*
      * Copy the bootstrap page directory into the new kernel directory.

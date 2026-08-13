@@ -5,7 +5,11 @@ QEMU := qemu-system-x86_64
 # Object files
 BUILD := build
 
-C_SOURCES := $(shell find kernel -name '*.c')
+
+C_SOURCES := $(shell find kernel/test -name '*.c')
+C_SOURCES += $(shell find kernel -name '*.c' ! -path 'kernel/test/*')
+
+
 ASM_SOURCES := $(shell find kernel -name '*.asm')
 
 
@@ -72,7 +76,7 @@ $(IMAGE): $(ISO_KERNEL) $(GRUB_CFG)
 # ------------------------------------------------------------
 
 run: $(IMAGE)
-	$(QEMU) -m 256M -drive format=raw,file=$(BUILD)/neox.iso -display curses -no-reboot -no-shutdown
+	$(QEMU) -m 256M -drive format=raw,file=$(IMAGE) -display curses -no-reboot -no-shutdown
 
 # ------------------------------------------------------------
 # Clean

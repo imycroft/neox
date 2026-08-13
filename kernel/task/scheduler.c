@@ -46,26 +46,12 @@ static struct thread idle_thread;
 
 static void scheduler_idle_loop(void)
 {
-    printf("idle running ...\n");
     while (true)
         interrupt_enable_and_halt();
 }
 void get_ready_list(void)
 {
-    struct list_node *node;
-    struct thread *thread;
-
-    for (node = ready_list.head.next;
-         node != &ready_list.head;
-    node = node->next)
-         {
-             thread = container_of(node, struct thread, sched_node);
-
-             printf("thread=%x tid=%d state=%d\n",
-                    (uint32_t)thread,
-                    thread->tid,
-                    thread->state);
-         }
+return;
 }
 void scheduler_init(void)
 {
@@ -88,7 +74,7 @@ void scheduler_add(struct thread *thread)
 
     list_push_back(&ready_list,
                    &thread->sched_node);
-    printf("=== scheduler_add END ===\n");
+
     get_ready_list();
 
 }
@@ -108,7 +94,7 @@ void scheduler_remove(struct thread *thread)
         return;
 
     list_remove(&thread->sched_node);
-    printf("=== scheduler_remove END ===\n");
+
     get_ready_list();
 }
 

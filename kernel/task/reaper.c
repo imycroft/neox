@@ -54,7 +54,7 @@ static void reaper_entry(void)
 
         while ((zombie = scheduler_next_zombie()) != NULL)
         {
-            printf("zombie on destruction = %s\n", zombie->process->name);
+
             /* Reaper must never reap itself. */
             ASSERT(zombie != reaper_thread);
 

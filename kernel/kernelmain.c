@@ -16,21 +16,17 @@ static void init_entry(void)
 {
 
 
-    printf("INIT: before kernel_tests\n");
 
 
 
-    printf("INIT: A\n");
+
 
     kernel_tests();
-    kernel_tests();
-    kernel_tests();
-
-    printf("INIT: B\n");
 
 
 
-    printf("INIT: C\n");
+
+
 
     for (;;)
         thread_yield();

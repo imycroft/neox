@@ -71,8 +71,8 @@ SECTIONS
 
         KEEP(*(.text.start))
 
-        *(SORT_BY_NAME(.text))
-        *(SORT_BY_NAME(.text.*))
+       *(.text)
+       *(.text.*)
 
         kernel_text_end = .;
     } :seg_kern

@@ -248,9 +248,6 @@ void vam_init(void)
      */
     vam_reserve_region(KERNEL_STACKS_START, KERNEL_STACKS_END);
 
-    printf("VAM: stack region reserved %x - %x\n",
-           (uint32_t)KERNEL_STACKS_START,
-           (uint32_t)KERNEL_STACKS_END);
 
     /*
      * The recursive paging window (0xFFC00000-0xFFFFFFFF) is not part
@@ -258,8 +255,6 @@ void vam_init(void)
      * no explicit reservation here.
      */
 
-    printf("VAM: initialized (%u kernel pages, %u bytes bitmap)\n",
-           VAM_TOTAL_PAGES, VAM_BITMAP_BYTES);
 }
 
 

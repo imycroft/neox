@@ -9,4 +9,5 @@ void kernel_tests(void)
       test_paging();
 
       printf("KERNEL_TESTS: B\n");
+
 }
