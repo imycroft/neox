@@ -1,6 +1,8 @@
 #include "types.h"
 #include "list.h"
 #include "assert.h"
+
+#include "printf.h"
 struct list_node *list_front(struct list *list)
 {
     if (list == NULL)
@@ -45,8 +47,10 @@ void list_init(struct list *list)
 {
     ASSERT(list != NULL);
 
+
     list->head.next = &list->head;
     list->head.prev = &list->head;
+
 }
 
 bool list_empty(const struct list *list)

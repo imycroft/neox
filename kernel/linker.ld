@@ -69,9 +69,10 @@ SECTIONS
     {
         kernel_virtual_start = .;
 
-        *(.text.start)
-        *(.text)
-        *(.text.*)
+        KEEP(*(.text.start))
+
+        *(SORT_BY_NAME(.text))
+        *(SORT_BY_NAME(.text.*))
 
         kernel_text_end = .;
     } :seg_kern
@@ -84,8 +85,8 @@ SECTIONS
 
     .rodata ALIGN(0x1000) :
     {
-        *(.rodata)
-        *(.rodata.*)
+    *(SORT_BY_NAME(.rodata))
+    *(SORT_BY_NAME(.rodata.*))
 
         kernel_rodata_end = .;
     } :seg_kern
@@ -99,8 +100,8 @@ SECTIONS
 
     .data ALIGN(0x1000) :
     {
-        *(.data)
-        *(.data.*)
+    *(SORT_BY_NAME(.data))
+    *(SORT_BY_NAME(.data.*))
 
         kernel_data_end = .;
     } :seg_kern
@@ -119,9 +120,9 @@ SECTIONS
     {
         kernel_bss_start = .;
 
+        *(SORT_BY_NAME(.bss))
+        *(SORT_BY_NAME(.bss.*))
         *(COMMON)
-        *(.bss)
-        *(.bss.*)
 
         . = ALIGN(0x1000);
         kernel_bss_end = .;

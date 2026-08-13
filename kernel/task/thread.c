@@ -21,6 +21,7 @@ static void thread_exit(void)
 
     thread = scheduler_current();
 
+    //printf("exit thread name = %s\n", thread->process->name);
     ASSERT(thread != NULL);
 
     scheduler_terminate(thread);
@@ -62,6 +63,12 @@ void thread_add(struct thread *thread)
 
     list_push_back(&thread->process->threads,
                    &thread->group_node);
+
+    printf("CREATED: ptr=%x tid=%d name=%s entry=%x\n",
+           (uint32_t)thread,
+           thread->tid,
+           thread->process->name,
+           (uint32_t)thread->entry);
 
     scheduler_add(thread);
 }

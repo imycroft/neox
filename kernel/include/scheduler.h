@@ -54,5 +54,8 @@ bool scheduler_idle(void);
  * Interrupts must be disabled by the caller.
  */
 struct thread *scheduler_next_zombie(void);
+void scheduler_enter_idle(uintptr_t idle_sp);
+uintptr_t scheduler_idle_stack_pointer(void);
+
 
 #endif

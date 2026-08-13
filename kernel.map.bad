@@ -1,0 +1,1078 @@
+
+Merging program properties
+
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x0) and build/test/test.o (0x1)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/process_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/scheduler_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/thread_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/semaphore_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/heap_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/thread_integration_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/wait_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/condvar_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/test/pmm_tests.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/mm/paging.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/mm/vam.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/mm/pmm.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/mm/vmm.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/mm/heap.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/mm/mm.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/keymaps/azerty.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/keymaps/qwerty.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/arch.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/gdt.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/io.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/pic.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/tss.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/irq.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/syscall.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/usermode.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/idt.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/isr.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/arch/x86/pit.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/boot/boot.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/boot/multiboot2.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/console/console.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/kernel/panic.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/kernel/kernel.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/lib/string.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/lib/debug.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/lib/list.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/lib/assert.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/lib/printf.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/kernelmain.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/mutex.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/thread.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/reaper.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/semaphore.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/process.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/wait.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/condvar.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/task/scheduler.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/drivers/drivers.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/drivers/vga.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/drivers/keyboard.o (0x0)
+Updated property 0xc0010002 (0x1) to merge build/test/mutex_tests.o (0x1) and build/drivers/keymap.o (0x0)
+Removed property 0xc0010001 to merge build/test/mutex_tests.o (0x1) and build/kernel.o (not found)
+Removed property 0xc0010002 to merge build/test/mutex_tests.o (0x1) and build/kernel.o (not found)
+
+Discarded input sections
+
+ .comment       0x00000000       0x1d build/test/mutex_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/mutex_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/mutex_tests.o
+ .eh_frame      0x00000000       0x38 build/test/mutex_tests.o
+ .comment       0x00000000       0x1d build/test/u_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/u_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/u_tests.o
+ .eh_frame      0x00000000       0x38 build/test/u_tests.o
+ .comment       0x00000000       0x1d build/test/thread_preemption_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/thread_preemption_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/thread_preemption_tests.o
+ .eh_frame      0x00000000      0x27c build/test/thread_preemption_tests.o
+ .comment       0x00000000       0x1d build/test/list_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/list_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/list_tests.o
+ .eh_frame      0x00000000      0x3a8 build/test/list_tests.o
+ .comment       0x00000000       0x1d build/test/paging_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/paging_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/paging_tests.o
+ .eh_frame      0x00000000       0x38 build/test/paging_tests.o
+ .comment       0x00000000       0x1d build/test/vmm_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/vmm_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/vmm_tests.o
+ .eh_frame      0x00000000      0x230 build/test/vmm_tests.o
+ .comment       0x00000000       0x1d build/test/string_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/string_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/string_tests.o
+ .eh_frame      0x00000000       0x58 build/test/string_tests.o
+ .comment       0x00000000       0x1d build/test/test.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/test.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/test.o
+ .eh_frame      0x00000000      0x118 build/test/test.o
+ .comment       0x00000000       0x1d build/test/process_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/process_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/process_tests.o
+ .eh_frame      0x00000000      0x138 build/test/process_tests.o
+ .comment       0x00000000       0x1d build/test/scheduler_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/scheduler_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/scheduler_tests.o
+ .eh_frame      0x00000000      0x178 build/test/scheduler_tests.o
+ .comment       0x00000000       0x1d build/test/thread_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/thread_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/thread_tests.o
+ .eh_frame      0x00000000      0x138 build/test/thread_tests.o
+ .comment       0x00000000       0x1d build/test/semaphore_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/semaphore_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/semaphore_tests.o
+ .eh_frame      0x00000000       0xd8 build/test/semaphore_tests.o
+ .comment       0x00000000       0x1d build/test/heap_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/heap_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/heap_tests.o
+ .eh_frame      0x00000000      0x1d8 build/test/heap_tests.o
+ .comment       0x00000000       0x1d build/test/tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/tests.o
+ .eh_frame      0x00000000       0x38 build/test/tests.o
+ .comment       0x00000000       0x1d build/test/thread_integration_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/thread_integration_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/thread_integration_tests.o
+ .eh_frame      0x00000000      0x1f8 build/test/thread_integration_tests.o
+ .comment       0x00000000       0x1d build/test/wait_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/wait_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/wait_tests.o
+ .eh_frame      0x00000000       0xd4 build/test/wait_tests.o
+ .comment       0x00000000       0x1d build/test/condvar_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/condvar_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/condvar_tests.o
+ .eh_frame      0x00000000       0xf8 build/test/condvar_tests.o
+ .comment       0x00000000       0x1d build/test/pmm_tests.o
+ .note.GNU-stack
+                0x00000000        0x0 build/test/pmm_tests.o
+ .note.gnu.property
+                0x00000000       0x28 build/test/pmm_tests.o
+ .eh_frame      0x00000000      0x1d8 build/test/pmm_tests.o
+ .comment       0x00000000       0x1d build/mm/paging.o
+ .note.GNU-stack
+                0x00000000        0x0 build/mm/paging.o
+ .note.gnu.property
+                0x00000000       0x28 build/mm/paging.o
+ .eh_frame      0x00000000      0x138 build/mm/paging.o
+ .comment       0x00000000       0x1d build/mm/vam.o
+ .note.GNU-stack
+                0x00000000        0x0 build/mm/vam.o
+ .note.gnu.property
+                0x00000000       0x28 build/mm/vam.o
+ .eh_frame      0x00000000      0x1c8 build/mm/vam.o
+ .comment       0x00000000       0x1d build/mm/pmm.o
+ .note.GNU-stack
+                0x00000000        0x0 build/mm/pmm.o
+ .note.gnu.property
+                0x00000000       0x28 build/mm/pmm.o
+ .eh_frame      0x00000000      0x18c build/mm/pmm.o
+ .comment       0x00000000       0x1d build/mm/vmm.o
+ .note.GNU-stack
+                0x00000000        0x0 build/mm/vmm.o
+ .note.gnu.property
+                0x00000000       0x28 build/mm/vmm.o
+ .eh_frame      0x00000000       0xf8 build/mm/vmm.o
+ .comment       0x00000000       0x1d build/mm/heap.o
+ .note.GNU-stack
+                0x00000000        0x0 build/mm/heap.o
+ .note.gnu.property
+                0x00000000       0x28 build/mm/heap.o
+ .eh_frame      0x00000000      0x158 build/mm/heap.o
+ .comment       0x00000000       0x1d build/mm/mm.o
+ .note.GNU-stack
+                0x00000000        0x0 build/mm/mm.o
+ .note.gnu.property
+                0x00000000       0x28 build/mm/mm.o
+ .comment       0x00000000       0x1d build/keymaps/azerty.o
+ .note.GNU-stack
+                0x00000000        0x0 build/keymaps/azerty.o
+ .note.gnu.property
+                0x00000000       0x28 build/keymaps/azerty.o
+ .eh_frame      0x00000000       0x38 build/keymaps/azerty.o
+ .comment       0x00000000       0x1d build/keymaps/qwerty.o
+ .note.GNU-stack
+                0x00000000        0x0 build/keymaps/qwerty.o
+ .note.gnu.property
+                0x00000000       0x28 build/keymaps/qwerty.o
+ .eh_frame      0x00000000       0x38 build/keymaps/qwerty.o
+ .comment       0x00000000       0x1d build/arch/x86/arch.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/arch.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/arch.o
+ .eh_frame      0x00000000       0xf8 build/arch/x86/arch.o
+ .comment       0x00000000       0x1d build/arch/x86/gdt.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/gdt.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/gdt.o
+ .eh_frame      0x00000000       0x78 build/arch/x86/gdt.o
+ .comment       0x00000000       0x1d build/arch/x86/io.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/io.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/io.o
+ .eh_frame      0x00000000       0x58 build/arch/x86/io.o
+ .comment       0x00000000       0x1d build/arch/x86/pic.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/pic.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/pic.o
+ .eh_frame      0x00000000       0x58 build/arch/x86/pic.o
+ .comment       0x00000000       0x1d build/arch/x86/tss.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/tss.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/tss.o
+ .eh_frame      0x00000000       0x58 build/arch/x86/tss.o
+ .comment       0x00000000       0x1d build/arch/x86/irq.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/irq.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/irq.o
+ .eh_frame      0x00000000       0x38 build/arch/x86/irq.o
+ .comment       0x00000000       0x1d build/arch/x86/syscall.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/syscall.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/syscall.o
+ .eh_frame      0x00000000       0x98 build/arch/x86/syscall.o
+ .comment       0x00000000       0x1d build/arch/x86/usermode.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/usermode.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/usermode.o
+ .eh_frame      0x00000000       0x5c build/arch/x86/usermode.o
+ .comment       0x00000000       0x1d build/arch/x86/idt.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/idt.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/idt.o
+ .eh_frame      0x00000000       0x78 build/arch/x86/idt.o
+ .comment       0x00000000       0x1d build/arch/x86/isr.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/isr.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/isr.o
+ .eh_frame      0x00000000       0x34 build/arch/x86/isr.o
+ .comment       0x00000000       0x1d build/arch/x86/pit.o
+ .note.GNU-stack
+                0x00000000        0x0 build/arch/x86/pit.o
+ .note.gnu.property
+                0x00000000       0x28 build/arch/x86/pit.o
+ .eh_frame      0x00000000       0x98 build/arch/x86/pit.o
+ .comment       0x00000000       0x1d build/boot/boot.o
+ .note.GNU-stack
+                0x00000000        0x0 build/boot/boot.o
+ .note.gnu.property
+                0x00000000       0x28 build/boot/boot.o
+ .eh_frame      0x00000000       0x38 build/boot/boot.o
+ .comment       0x00000000       0x1d build/boot/multiboot2.o
+ .note.GNU-stack
+                0x00000000        0x0 build/boot/multiboot2.o
+ .note.gnu.property
+                0x00000000       0x28 build/boot/multiboot2.o
+ .eh_frame      0x00000000      0x13c build/boot/multiboot2.o
+ .comment       0x00000000       0x1d build/console/console.o
+ .note.GNU-stack
+                0x00000000        0x0 build/console/console.o
+ .note.gnu.property
+                0x00000000       0x28 build/console/console.o
+ .eh_frame      0x00000000       0x98 build/console/console.o
+ .comment       0x00000000       0x1d build/kernel/panic.o
+ .note.GNU-stack
+                0x00000000        0x0 build/kernel/panic.o
+ .note.gnu.property
+                0x00000000       0x28 build/kernel/panic.o
+ .eh_frame      0x00000000       0x34 build/kernel/panic.o
+ .comment       0x00000000       0x1d build/kernel/kernel.o
+ .note.GNU-stack
+                0x00000000        0x0 build/kernel/kernel.o
+ .note.gnu.property
+                0x00000000       0x28 build/kernel/kernel.o
+ .eh_frame      0x00000000       0x54 build/kernel/kernel.o
+ .comment       0x00000000       0x1d build/lib/string.o
+ .note.GNU-stack
+                0x00000000        0x0 build/lib/string.o
+ .note.gnu.property
+                0x00000000       0x28 build/lib/string.o
+ .eh_frame      0x00000000       0xf8 build/lib/string.o
+ .comment       0x00000000       0x1d build/lib/debug.o
+ .note.GNU-stack
+                0x00000000        0x0 build/lib/debug.o
+ .note.gnu.property
+                0x00000000       0x28 build/lib/debug.o
+ .eh_frame      0x00000000       0x58 build/lib/debug.o
+ .comment       0x00000000       0x1d build/lib/list.o
+ .note.GNU-stack
+                0x00000000        0x0 build/lib/list.o
+ .note.gnu.property
+                0x00000000       0x28 build/lib/list.o
+ .eh_frame      0x00000000      0x198 build/lib/list.o
+ .comment       0x00000000       0x1d build/lib/assert.o
+ .note.GNU-stack
+                0x00000000        0x0 build/lib/assert.o
+ .note.gnu.property
+                0x00000000       0x28 build/lib/assert.o
+ .eh_frame      0x00000000       0x34 build/lib/assert.o
+ .comment       0x00000000       0x1d build/lib/printf.o
+ .note.GNU-stack
+                0x00000000        0x0 build/lib/printf.o
+ .note.gnu.property
+                0x00000000       0x28 build/lib/printf.o
+ .eh_frame      0x00000000       0x98 build/lib/printf.o
+ .comment       0x00000000       0x1d build/kernelmain.o
+ .note.GNU-stack
+                0x00000000        0x0 build/kernelmain.o
+ .note.gnu.property
+                0x00000000       0x28 build/kernelmain.o
+ .eh_frame      0x00000000       0x54 build/kernelmain.o
+ .comment       0x00000000       0x1d build/task/mutex.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/mutex.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/mutex.o
+ .eh_frame      0x00000000       0x7c build/task/mutex.o
+ .comment       0x00000000       0x1d build/task/thread.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/thread.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/thread.o
+ .eh_frame      0x00000000      0x15c build/task/thread.o
+ .comment       0x00000000       0x1d build/task/reaper.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/reaper.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/reaper.o
+ .eh_frame      0x00000000       0x94 build/task/reaper.o
+ .comment       0x00000000       0x1d build/task/semaphore.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/semaphore.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/semaphore.o
+ .eh_frame      0x00000000       0x78 build/task/semaphore.o
+ .comment       0x00000000       0x1d build/task/process.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/process.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/process.o
+ .eh_frame      0x00000000       0xd8 build/task/process.o
+ .comment       0x00000000       0x1d build/task/wait.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/wait.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/wait.o
+ .eh_frame      0x00000000       0xd8 build/task/wait.o
+ .comment       0x00000000       0x1d build/task/condvar.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/condvar.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/condvar.o
+ .eh_frame      0x00000000       0x98 build/task/condvar.o
+ .comment       0x00000000       0x1d build/task/scheduler.o
+ .note.GNU-stack
+                0x00000000        0x0 build/task/scheduler.o
+ .note.gnu.property
+                0x00000000       0x28 build/task/scheduler.o
+ .eh_frame      0x00000000      0x254 build/task/scheduler.o
+ .comment       0x00000000       0x1d build/drivers/drivers.o
+ .note.GNU-stack
+                0x00000000        0x0 build/drivers/drivers.o
+ .note.gnu.property
+                0x00000000       0x28 build/drivers/drivers.o
+ .eh_frame      0x00000000       0x38 build/drivers/drivers.o
+ .comment       0x00000000       0x1d build/drivers/vga.o
+ .note.GNU-stack
+                0x00000000        0x0 build/drivers/vga.o
+ .note.gnu.property
+                0x00000000       0x28 build/drivers/vga.o
+ .eh_frame      0x00000000      0x10c build/drivers/vga.o
+ .comment       0x00000000       0x1d build/drivers/keyboard.o
+ .note.GNU-stack
+                0x00000000        0x0 build/drivers/keyboard.o
+ .note.gnu.property
+                0x00000000       0x28 build/drivers/keyboard.o
+ .eh_frame      0x00000000       0x58 build/drivers/keyboard.o
+ .comment       0x00000000       0x1d build/drivers/keymap.o
+ .note.GNU-stack
+                0x00000000        0x0 build/drivers/keymap.o
+ .note.gnu.property
+                0x00000000       0x28 build/drivers/keymap.o
+ .eh_frame      0x00000000       0x58 build/drivers/keymap.o
+ .note.GNU-stack
+                0x00000000        0x0 build/kernel.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x00100000                        KERNEL_PHYS_BASE = 0x100000
+                0xc0000000                        KERNEL_VIRT_BASE = 0xc0000000
+                0xc0101000                        KERNEL_VIRT_START = 0xc0101000
+                0x00100000                        . = KERNEL_PHYS_BASE
+
+.multiboot      0x00100000       0x18
+ *(.multiboot)
+ .multiboot     0x00100000       0x18 build/kernel.o
+                0xc0101000                        . = KERNEL_VIRT_START
+
+.text           0xc0101000     0xcbdc load address 0x00101000
+                0xc0101000                        kernel_virtual_start = .
+ *(.text.start)
+ .text.start    0xc0101000      0x11b build/kernel.o
+                0xc0101000                start
+ *(SORT_BY_NAME(.text))
+ .text          0xc010111b        0x6 build/test/mutex_tests.o
+                0xc010111b                test_mutex
+ .text          0xc0101121        0x6 build/test/u_tests.o
+                0xc0101121                test_paging
+ .text          0xc0101127      0xbf8 build/test/thread_preemption_tests.o
+                0xc0101d00                test_thread_preemption
+ .text          0xc0101d1f     0x2b1b build/test/list_tests.o
+                0xc01047e7                test_list
+ .text          0xc010483a        0x6 build/test/paging_tests.o
+                0xc010483a                test_usermode
+ .text          0xc0104840      0xafc build/test/vmm_tests.o
+                0xc01052e9                test_vmm
+ .text          0xc010533c       0xa5 build/test/string_tests.o
+                0xc010538e                test_string
+ .text          0xc01053e1      0x267 build/test/test.o
+                0xc01053e1                test_begin
+                0xc0105405                test_end
+                0xc010541e                test_pass
+                0xc010544a                test_fail
+                0xc01054ea                test_case
+                0xc01054f8                test_assertion
+                0xc0105506                test_summary
+                0xc0105622                test_wait_ticks
+ .text          0xc0105648      0x3c8 build/test/process_tests.o
+                0xc01059bd                test_process
+ .text          0xc0105a10      0xac0 build/test/scheduler_tests.o
+                0xc0106451                test_scheduler
+ .text          0xc01064d0      0x527 build/test/thread_tests.o
+                0xc01069a4                test_thread
+ .text          0xc01069f7      0x2b8 build/test/semaphore_tests.o
+                0xc0106c5c                test_semaphore
+ .text          0xc0106caf      0x72f build/test/heap_tests.o
+                0xc010738b                test_heap
+ .text          0xc01073de       0x2e build/test/tests.o
+                0xc01073de                kernel_tests
+ .text          0xc010740c      0x991 build/test/thread_integration_tests.o
+                0xc0107d4a                test_thread_integration
+ .text          0xc0107d9d      0x6e5 build/test/wait_tests.o
+                0xc010842f                test_wait
+ .text          0xc0108482      0x53d build/test/condvar_tests.o
+                0xc010896c                test_condvar
+ .text          0xc01089bf      0x7ba build/test/pmm_tests.o
+                0xc0109126                test_memory
+ .text          0xc0109179      0x391 build/mm/paging.o
+                0xc01091f1                paging_init
+                0xc01092d5                paging_get_kernel_directory
+                0xc01092df                paging_map
+                0xc010937b                paging_unmap
+                0xc01093cf                paging_translate
+                0xc0109443                paging_create_directory
+                0xc0109491                paging_copy_kernel_mappings
+ .text          0xc010950a      0x4e6 build/mm/vam.o
+                0xc0109682                vam_init
+                0xc0109729                vam_alloc_pages
+                0xc010978a                vam_free_pages
+                0xc01097b7                vam_dump
+ .text          0xc01099f0      0x53d build/mm/pmm.o
+                0xc0109b6d                pmm_init
+                0xc0109e74                pmm_alloc_page
+                0xc0109ec7                pmm_free_page
+                0xc0109f0f                pmm_total_memory
+                0xc0109f19                pmm_usable_memory
+                0xc0109f23                pmm_free_pages
+ .text          0xc0109f2d      0x273 build/mm/vmm.o
+                0xc010a088                vmm_alloc_page
+                0xc010a0a0                vmm_free_page
+                0xc010a0b9                vmm_alloc_pages
+                0xc010a100                vmm_free_pages
+                0xc010a11a                vmm_alloc_pages_any
+ .text          0xc010a1a0      0x467 build/mm/heap.o
+                0xc010a38c                heap_init
+                0xc010a434                kmalloc
+                0xc010a4d1                kfree
+                0xc010a4f7                heap_dump
+ .text          0xc010a607        0x0 build/mm/mm.o
+ .text          0xc010a607       0x28 build/keymaps/azerty.o
+                0xc010a607                keymap_azerty
+ .text          0xc010a62f       0x28 build/keymaps/qwerty.o
+                0xc010a62f                keymap_qwerty
+ .text          0xc010a657       0x81 build/arch/x86/arch.o
+                0xc010a657                interrupt_save
+                0xc010a668                interrupt_restore
+                0xc010a673                interrupt_disable
+                0xc010a67a                interrupt_enable
+                0xc010a681                interrupt_enable_and_halt
+                0xc010a689                interrupt_enabled
+                0xc010a6a4                arch_init
+ .text          0xc010a6d8      0x15a build/arch/x86/gdt.o
+                0xc010a765                gdt_set_tss
+                0xc010a782                gdt_init
+ .text          0xc010a832       0x3c build/arch/x86/io.o
+                0xc010a832                inb
+                0xc010a84f                outb
+ .text          0xc010a86e      0x10d build/arch/x86/pic.o
+                0xc010a86e                pic_init
+                0xc010a945                pic_send_eoi
+ .text          0xc010a97b       0x68 build/arch/x86/tss.o
+                0xc010a97b                tss_init
+                0xc010a9d5                tss_set_kernel_stack
+ .text          0xc010a9e3       0x5a build/arch/x86/irq.o
+                0xc010a9e3                irq_handler
+ .text          0xc010aa3d       0xfd build/arch/x86/syscall.o
+                0xc010aa3d                syscall_init
+                0xc010aacf                syscall_handler
+ .text          0xc010ab3a      0x1c5 build/arch/x86/usermode.o
+                0xc010abc8                usermode_thread_create
+ .text          0xc010acff      0x13b build/arch/x86/idt.o
+                0xc010ad69                idt_init
+                0xc010ae04                idt_set_syscall_gate
+ .text          0xc010ae3a       0xab build/arch/x86/isr.o
+                0xc010ae3a                isr_handler
+ .text          0xc010aee5       0x86 build/arch/x86/pit.o
+                0xc010aee5                pit_handler
+                0xc010aef8                pit_get_ticks
+                0xc010af02                pit_init
+                0xc010af61                pit_get_frequency
+ .text          0xc010af6b       0x1a build/boot/boot.o
+                0xc010af6b                boot_init
+ .text          0xc010af85      0x19d build/boot/multiboot2.o
+                0xc010af85                multiboot2_init
+                0xc010afb4                multiboot2_info
+                0xc010afbe                multiboot2_total_size
+                0xc010aff6                multiboot2_find_tag
+                0xc010b033                multiboot2_memory_map
+                0xc010b042                multiboot2_dump_memory_map
+                0xc010b0d7                multiboot2_dump_tags
+ .text          0xc010b122       0x66 build/console/console.o
+                0xc010b122                console_init
+                0xc010b13a                console_putchar
+                0xc010b159                console_write
+                0xc010b170                console_clear
+ .text          0xc010b188       0x38 build/kernel/panic.o
+                0xc010b188                panic
+ .text          0xc010b1c0       0x60 build/kernel/kernel.o
+                0xc010b1c0                kernel_init
+                0xc010b207                kernel_loop
+ .text          0xc010b220      0x1b0 build/lib/string.o
+                0xc010b220                strlen
+                0xc010b248                memset
+                0xc010b276                memcpy
+                0xc010b2b3                memcmp
+                0xc010b30b                strcpy
+                0xc010b33b                strncpy
+                0xc010b391                strcmp
+ .text          0xc010b3d0      0x181 build/lib/debug.o
+                0xc010b434                debug_backtrace
+ .text          0xc010b551      0x397 build/lib/list.o
+                0xc010b551                list_front
+                0xc010b569                list_back
+                0xc010b580                list_next
+                0xc010b598                list_prev
+                0xc010b5af                list_node_init
+                0xc010b5e9                list_init
+                0xc010b621                list_empty
+                0xc010b641                list_insert_before
+                0xc010b6ef                list_insert_after
+                0xc010b79f                list_push_front
+                0xc010b7f6                list_push_back
+                0xc010b84d                list_remove
+ .text          0xc010b8e8       0xc7 build/lib/assert.o
+                0xc010b8e8                assert_fail
+ .text          0xc010b9af      0x2ed build/lib/printf.o
+                0xc010baa9                vprintf
+                0xc010bc76                printf
+ .text          0xc010bc9c      0x11f build/kernelmain.o
+                0xc010bd04                kernel_main
+ .text          0xc010bdbb      0x163 build/task/mutex.o
+                0xc010bdbb                mutex_init
+                0xc010bdfd                mutex_lock
+                0xc010be6e                mutex_unlock
+ .text          0xc010bf1e      0x59d build/task/thread.o
+                0xc010bf98                thread_add
+                0xc010c01a                thread_block
+                0xc010c07f                thread_unblock
+                0xc010c0f7                thread_create
+                0xc010c279                thread_destroy
+                0xc010c342                thread_join
+                0xc010c406                thread_detach
+                0xc010c48c                thread_yield
+ .text          0xc010c4bb      0x1b8 build/task/reaper.o
+                0xc010c4bb                reaper_wait_queue
+                0xc010c4d7                reaper_thread_get
+                0xc010c5b9                reaper_init
+ .text          0xc010c673      0x129 build/task/semaphore.o
+                0xc010c673                semaphore_init
+                0xc010c6b4                semaphore_acquire
+                0xc010c728                semaphore_release
+ .text          0xc010c79c      0x26e build/task/process.o
+                0xc010c79c                process_add
+                0xc010c7c4                process_remove
+                0xc010c7e7                process_find
+                0xc010c83b                process_find_by_name
+                0xc010c8ab                process_create
+                0xc010c975                process_destroy
+ .text          0xc010ca0a      0x28b build/task/wait.o
+                0xc010ca0a                wait_queue_init
+                0xc010ca40                wait_queue_add
+                0xc010caa4                wait_queue_remove
+                0xc010cb1a                wait_queue_wake
+                0xc010cb89                wait_queue_wake_all
+                0xc010cbf9                wait_queue_sleep
+ .text          0xc010cc95      0x154 build/task/condvar.o
+                0xc010cc95                condvar_init
+                0xc010cccb                condvar_wait
+                0xc010cd51                condvar_signal
+                0xc010cd9d                condvar_broadcast
+ .text          0xc010cde9      0x707 build/task/scheduler.o
+                0xc010ce06                get_ready_list
+                0xc010ce53                scheduler_init
+                0xc010ce90                scheduler_add
+                0xc010ceee                scheduler_remove
+                0xc010cf73                scheduler_current
+                0xc010cf7d                scheduler_next
+                0xc010d118                scheduler_start
+                0xc010d1e9                scheduler_restore
+                0xc010d28e                scheduler_tick
+                0xc010d2c0                scheduler_yield
+                0xc010d2fd                scheduler_next_zombie
+                0xc010d36b                scheduler_push_zombie
+                0xc010d414                scheduler_terminate
+                0xc010d4ca                scheduler_idle
+                0xc010d4dc                scheduler_get_quantum_remaining
+                0xc010d4e6                scheduler_idle_stack_pointer
+ .text          0xc010d4f0       0x19 build/drivers/drivers.o
+                0xc010d4f0                drivers_init
+ .text          0xc010d509      0x390 build/drivers/vga.o
+                0xc010d509                vga_write_cell
+                0xc010d583                vga_clear
+                0xc010d617                vga_putchar
+                0xc010d6f3                vga_scroll
+                0xc010d7b7                vga_write
+                0xc010d7e8                vga_update_cursor
+                0xc010d869                vga_set_cursor
+ .text          0xc010d899       0x63 build/drivers/keyboard.o
+                0xc010d899                keyboard_handler
+                0xc010d8e5                keyboard_init
+ .text          0xc010d8fc       0x3e build/drivers/keymap.o
+                0xc010d8fc                keymap_set
+                0xc010d90a                keymap_translate
+ *fill*         0xc010d93a        0x6 
+ .text          0xc010d940       0x1e build/arch/x86/context.o
+                0xc010d940                context_switch
+                0xc010d955                scheduler_enter_idle
+ *fill*         0xc010d95e        0x2 
+ .text          0xc010d960       0x1d build/arch/x86/gdt_flush.o
+                0xc010d960                gdt_load
+ *fill*         0xc010d97d        0x3 
+ .text          0xc010d980       0x2f build/arch/x86/syscall_stub.o
+                0xc010d980                syscall_stub
+ *fill*         0xc010d9af        0x1 
+ .text          0xc010d9b0        0x9 build/arch/x86/tss_load.o
+                0xc010d9b0                tss_load
+ *fill*         0xc010d9b9        0x7 
+ .text          0xc010d9c0        0x8 build/arch/x86/idt_load.o
+                0xc010d9c0                idt_load
+ *fill*         0xc010d9c8        0x8 
+ .text          0xc010d9d0       0x23 build/arch/x86/usermode_jump.o
+                0xc010d9d0                jump_usermode
+ *fill*         0xc010d9f3        0xd 
+ .text          0xc010da00      0x11d build/arch/x86/isr_stubs.o
+                0xc010da00                isr0
+                0xc010da0a                isr1
+                0xc010da14                isr2
+                0xc010da1e                isr3
+                0xc010da28                isr4
+                0xc010da32                isr5
+                0xc010da3c                isr6
+                0xc010da46                isr7
+                0xc010da50                isr8
+                0xc010da58                isr9
+                0xc010da62                isr10
+                0xc010da6a                isr11
+                0xc010da72                isr12
+                0xc010da77                isr13
+                0xc010da7c                isr14
+                0xc010da81                isr15
+                0xc010da88                isr16
+                0xc010da8f                isr17
+                0xc010da94                isr18
+                0xc010da9b                isr19
+                0xc010daa2                isr20
+                0xc010daa9                isr21
+                0xc010dab0                isr22
+                0xc010dab7                isr23
+                0xc010dabe                isr24
+                0xc010dac5                isr25
+                0xc010dacc                isr26
+                0xc010dad3                isr27
+                0xc010dada                isr28
+                0xc010dae1                isr29
+                0xc010dae8                isr30
+                0xc010daef                isr31
+                0xc010daf6                common_isr_stub
+ *fill*         0xc010db1d        0x3 
+ .text          0xc010db20       0x97 build/arch/x86/irq_stubs.o
+                0xc010db20                irq0
+                0xc010db27                irq1
+                0xc010db2e                irq2
+                0xc010db35                irq3
+                0xc010db3c                irq4
+                0xc010db43                irq5
+                0xc010db4a                irq6
+                0xc010db51                irq7
+                0xc010db58                irq8
+                0xc010db5f                irq9
+                0xc010db66                irq10
+                0xc010db6d                irq11
+                0xc010db74                irq12
+                0xc010db7b                irq13
+                0xc010db82                irq14
+                0xc010db89                irq15
+                0xc010db90                common_irq_stub
+ *fill*         0xc010dbb7        0x9 
+ .text          0xc010dbc0       0x1c build/arch/x86/paging_asm.o
+                0xc010dbc0                paging_load_directory
+                0xc010dbc8                paging_enable
+                0xc010dbd4                paging_invalidate
+ *(SORT_BY_NAME(.text.*))
+                0xc010dbdc                        kernel_text_end = .
+
+.iplt           0xc010dbdc        0x0 load address 0x0010dbdc
+ .iplt          0xc010dbdc        0x0 build/test/mutex_tests.o
+
+.rodata         0xc010e000     0x32c9 load address 0x0010e000
+ *(SORT_BY_NAME(.rodata))
+ .rodata        0xc010e000      0x2e2 build/test/thread_preemption_tests.o
+ *fill*         0xc010e2e2        0x2 
+ .rodata        0xc010e2e4      0x935 build/test/list_tests.o
+ *fill*         0xc010ec19        0x3 
+ .rodata        0xc010ec1c      0x475 build/test/vmm_tests.o
+ *fill*         0xc010f091        0x3 
+ .rodata        0xc010f094       0x3b build/test/string_tests.o
+ *fill*         0xc010f0cf        0x1 
+ .rodata        0xc010f0d0      0x128 build/test/test.o
+ .rodata        0xc010f1f8      0x241 build/test/process_tests.o
+ *fill*         0xc010f439        0x3 
+ .rodata        0xc010f43c      0x2bd build/test/scheduler_tests.o
+ *fill*         0xc010f6f9        0x3 
+ .rodata        0xc010f6fc      0x1d9 build/test/thread_tests.o
+ *fill*         0xc010f8d5        0x3 
+ .rodata        0xc010f8d8      0x14b build/test/semaphore_tests.o
+ .rodata        0xc010fa23      0x1ec build/test/heap_tests.o
+ .rodata        0xc010fc0f       0x22 build/test/tests.o
+ *fill*         0xc010fc31        0x3 
+ .rodata        0xc010fc34      0x2c8 build/test/thread_integration_tests.o
+ .rodata        0xc010fefc      0x22d build/test/wait_tests.o
+ *fill*         0xc0110129        0x3 
+ .rodata        0xc011012c       0xe8 build/test/condvar_tests.o
+ .rodata        0xc0110214      0x299 build/test/pmm_tests.o
+ *fill*         0xc01104ad        0x3 
+ .rodata        0xc01104b0      0x118 build/mm/paging.o
+ .rodata        0xc01105c8       0xe3 build/mm/vam.o
+ .rodata        0xc01106ab       0x40 build/mm/pmm.o
+ *fill*         0xc01106eb        0x1 
+ .rodata        0xc01106ec       0x94 build/mm/vmm.o
+ .rodata        0xc0110780      0x110 build/mm/heap.o
+ *fill*         0xc0110890       0x10 
+ .rodata        0xc01108a0       0x80 build/keymaps/azerty.o
+ .rodata        0xc0110920       0x80 build/keymaps/qwerty.o
+ .rodata        0xc01109a0       0x21 build/arch/x86/syscall.o
+ *fill*         0xc01109c1        0x3 
+ .rodata        0xc01109c4       0x99 build/arch/x86/usermode.o
+ .rodata        0xc0110a5d      0x1f2 build/arch/x86/isr.o
+ .rodata        0xc0110c4f       0x57 build/boot/multiboot2.o
+ .rodata        0xc0110ca6       0x1a build/kernel/panic.o
+ .rodata        0xc0110cc0        0xd build/kernel/kernel.o
+ *fill*         0xc0110ccd        0x3 
+ .rodata        0xc0110cd0       0x79 build/lib/debug.o
+ .rodata        0xc0110d49       0x84 build/lib/list.o
+ *fill*         0xc0110dcd        0x3 
+ .rodata        0xc0110dd0       0xa8 build/lib/assert.o
+ .rodata        0xc0110e78        0x7 build/lib/printf.o
+ .rodata        0xc0110e7f       0x8c build/kernelmain.o
+ *fill*         0xc0110f0b        0x1 
+ .rodata        0xc0110f0c       0x48 build/task/mutex.o
+ .rodata        0xc0110f54      0x105 build/task/thread.o
+ .rodata        0xc0111059       0x76 build/task/reaper.o
+ .rodata        0xc01110cf       0x24 build/task/semaphore.o
+ .rodata        0xc01110f3       0x59 build/task/process.o
+ .rodata        0xc011114c       0x45 build/task/wait.o
+ .rodata        0xc0111191       0x2f build/task/condvar.o
+ .rodata        0xc01111c0      0x109 build/task/scheduler.o
+ *(SORT_BY_NAME(.rodata.*))
+                0xc01112c9                        kernel_rodata_end = .
+
+.rel.dyn        0xc01112cc        0x0 load address 0x001112cc
+ .rel.got       0xc01112cc        0x0 build/test/mutex_tests.o
+ .rel.iplt      0xc01112cc        0x0 build/test/mutex_tests.o
+ .rel.text      0xc01112cc        0x0 build/test/mutex_tests.o
+
+.data           0xc0112000      0x571 load address 0x00112000
+ *(SORT_BY_NAME(.data))
+ .data          0xc0112000        0x0 build/test/mutex_tests.o
+ .data          0xc0112000        0x0 build/test/u_tests.o
+ .data          0xc0112000       0x48 build/test/thread_preemption_tests.o
+ *fill*         0xc0112048       0x18 
+ .data          0xc0112060       0xc8 build/test/list_tests.o
+ .data          0xc0112128        0x0 build/test/paging_tests.o
+ *fill*         0xc0112128       0x18 
+ .data          0xc0112140       0x78 build/test/vmm_tests.o
+ .data          0xc01121b8        0x8 build/test/string_tests.o
+ .data          0xc01121c0        0x0 build/test/test.o
+ .data          0xc01121c0       0x40 build/test/process_tests.o
+ .data          0xc0112200       0x48 build/test/scheduler_tests.o
+ *fill*         0xc0112248       0x18 
+ .data          0xc0112260       0x38 build/test/thread_tests.o
+ *fill*         0xc0112298        0x8 
+ .data          0xc01122a0       0x20 build/test/semaphore_tests.o
+ .data          0xc01122c0       0x68 build/test/heap_tests.o
+ .data          0xc0112328        0x0 build/test/tests.o
+ *fill*         0xc0112328       0x18 
+ .data          0xc0112340       0x38 build/test/thread_integration_tests.o
+ *fill*         0xc0112378        0x8 
+ .data          0xc0112380       0x20 build/test/wait_tests.o
+ .data          0xc01123a0       0x18 build/test/condvar_tests.o
+ *fill*         0xc01123b8        0x8 
+ .data          0xc01123c0       0x60 build/test/pmm_tests.o
+ .data          0xc0112420        0x0 build/mm/paging.o
+ .data          0xc0112420        0x0 build/mm/vam.o
+ .data          0xc0112420        0x0 build/mm/pmm.o
+ .data          0xc0112420        0x0 build/mm/vmm.o
+ .data          0xc0112420        0x0 build/mm/heap.o
+ .data          0xc0112420        0x0 build/mm/mm.o
+ .data          0xc0112420        0x0 build/keymaps/azerty.o
+ .data          0xc0112420        0x0 build/keymaps/qwerty.o
+ .data          0xc0112420        0x0 build/arch/x86/arch.o
+ .data          0xc0112420        0x0 build/arch/x86/gdt.o
+ .data          0xc0112420        0x0 build/arch/x86/io.o
+ .data          0xc0112420        0x0 build/arch/x86/pic.o
+ .data          0xc0112420        0x0 build/arch/x86/tss.o
+ .data          0xc0112420        0x0 build/arch/x86/irq.o
+ .data          0xc0112420        0x0 build/arch/x86/syscall.o
+ .data          0xc0112420        0x0 build/arch/x86/usermode.o
+ .data          0xc0112420       0xc0 build/arch/x86/idt.o
+ .data          0xc01124e0       0x80 build/arch/x86/isr.o
+ .data          0xc0112560        0x0 build/arch/x86/pit.o
+ .data          0xc0112560        0x0 build/boot/boot.o
+ .data          0xc0112560        0x0 build/boot/multiboot2.o
+ .data          0xc0112560        0x0 build/console/console.o
+ .data          0xc0112560        0x0 build/kernel/panic.o
+ .data          0xc0112560        0x0 build/kernel/kernel.o
+ .data          0xc0112560        0x0 build/lib/string.o
+ .data          0xc0112560        0x0 build/lib/debug.o
+ .data          0xc0112560        0x0 build/lib/list.o
+ .data          0xc0112560        0x0 build/lib/assert.o
+ .data          0xc0112560        0x0 build/lib/printf.o
+ .data          0xc0112560        0x0 build/kernelmain.o
+ .data          0xc0112560        0x0 build/task/mutex.o
+ .data          0xc0112560        0x4 build/task/thread.o
+ .data          0xc0112564        0x0 build/task/reaper.o
+ .data          0xc0112564        0x0 build/task/semaphore.o
+ .data          0xc0112564        0xc build/task/process.o
+ .data          0xc0112570        0x0 build/task/wait.o
+ .data          0xc0112570        0x0 build/task/condvar.o
+ .data          0xc0112570        0x0 build/task/scheduler.o
+ .data          0xc0112570        0x0 build/drivers/drivers.o
+ .data          0xc0112570        0x1 build/drivers/vga.o
+ .data          0xc0112571        0x0 build/drivers/keyboard.o
+ .data          0xc0112571        0x0 build/drivers/keymap.o
+ *(SORT_BY_NAME(.data.*))
+                0xc0112571                        kernel_data_end = .
+
+.got            0xc0112574        0x0 load address 0x00112574
+ .got           0xc0112574        0x0 build/test/mutex_tests.o
+
+.got.plt        0xc0112574        0x0 load address 0x00112574
+ .got.plt       0xc0112574        0x0 build/test/mutex_tests.o
+
+.igot.plt       0xc0112574        0x0 load address 0x00112574
+ .igot.plt      0xc0112574        0x0 build/test/mutex_tests.o
+
+.bss            0xc0113000    0x2f000 load address 0x00113000
+                0xc0113000                        kernel_bss_start = .
+ *(SORT_BY_NAME(.bss))
+ .bss           0xc0113000        0x0 build/test/mutex_tests.o
+ .bss           0xc0113000        0x0 build/test/u_tests.o
+ .bss           0xc0113000      0x140 build/test/thread_preemption_tests.o
+ .bss           0xc0113140        0x0 build/test/list_tests.o
+ .bss           0xc0113140        0x0 build/test/paging_tests.o
+ .bss           0xc0113140        0x0 build/test/vmm_tests.o
+ .bss           0xc0113140        0x0 build/test/string_tests.o
+ .bss           0xc0113140      0x320 build/test/test.o
+                0xc0113140                test_ticks
+ .bss           0xc0113460        0x0 build/test/process_tests.o
+ .bss           0xc0113460        0x0 build/test/scheduler_tests.o
+ .bss           0xc0113460        0x0 build/test/thread_tests.o
+ .bss           0xc0113460        0x0 build/test/semaphore_tests.o
+ .bss           0xc0113460     0x4000 build/test/heap_tests.o
+ .bss           0xc0117460        0x0 build/test/tests.o
+ .bss           0xc0117460        0xe build/test/thread_integration_tests.o
+ .bss           0xc011746e        0x0 build/test/wait_tests.o
+ *fill*         0xc011746e        0x2 
+ .bss           0xc0117470       0x1e build/test/condvar_tests.o
+ *fill*         0xc011748e       0x12 
+ .bss           0xc01174a0    0x13880 build/test/pmm_tests.o
+ .bss           0xc012ad20        0x4 build/mm/paging.o
+ *fill*         0xc012ad24       0x1c 
+ .bss           0xc012ad40     0x7f80 build/mm/vam.o
+ .bss           0xc0132cc0       0x28 build/mm/pmm.o
+ .bss           0xc0132ce8        0x0 build/mm/vmm.o
+ .bss           0xc0132ce8        0xc build/mm/heap.o
+ .bss           0xc0132cf4        0x0 build/mm/mm.o
+ .bss           0xc0132cf4        0x0 build/keymaps/azerty.o
+ .bss           0xc0132cf4        0x0 build/keymaps/qwerty.o
+ .bss           0xc0132cf4        0x0 build/arch/x86/arch.o
+ *fill*         0xc0132cf4        0xc 
+ .bss           0xc0132d00       0x36 build/arch/x86/gdt.o
+ .bss           0xc0132d36        0x0 build/arch/x86/io.o
+ .bss           0xc0132d36        0x0 build/arch/x86/pic.o
+ *fill*         0xc0132d36        0xa 
+ .bss           0xc0132d40       0x68 build/arch/x86/tss.o
+ .bss           0xc0132da8        0x0 build/arch/x86/irq.o
+ .bss           0xc0132da8        0x0 build/arch/x86/syscall.o
+ .bss           0xc0132da8        0x0 build/arch/x86/usermode.o
+ *fill*         0xc0132da8       0x18 
+ .bss           0xc0132dc0      0x806 build/arch/x86/idt.o
+ .bss           0xc01335c6        0x0 build/arch/x86/isr.o
+ *fill*         0xc01335c6        0x2 
+ .bss           0xc01335c8        0x8 build/arch/x86/pit.o
+ .bss           0xc01335d0        0x0 build/boot/boot.o
+ .bss           0xc01335d0        0x4 build/boot/multiboot2.o
+ .bss           0xc01335d4        0x0 build/console/console.o
+ .bss           0xc01335d4        0x0 build/kernel/panic.o
+ .bss           0xc01335d4        0x0 build/kernel/kernel.o
+ .bss           0xc01335d4        0x0 build/lib/string.o
+ .bss           0xc01335d4        0x0 build/lib/debug.o
+ .bss           0xc01335d4        0x0 build/lib/list.o
+ .bss           0xc01335d4        0x0 build/lib/assert.o
+ .bss           0xc01335d4        0x0 build/lib/printf.o
+ .bss           0xc01335d4        0x0 build/kernelmain.o
+ .bss           0xc01335d4        0x0 build/task/mutex.o
+ .bss           0xc01335d4        0x0 build/task/thread.o
+ .bss           0xc01335d4        0xd build/task/reaper.o
+ .bss           0xc01335e1        0x0 build/task/semaphore.o
+ .bss           0xc01335e1        0x0 build/task/process.o
+ .bss           0xc01335e1        0x0 build/task/wait.o
+ .bss           0xc01335e1        0x0 build/task/condvar.o
+ *fill*         0xc01335e1       0x1f 
+ .bss           0xc0133600       0x6c build/task/scheduler.o
+ .bss           0xc013366c        0x0 build/drivers/drivers.o
+ .bss           0xc013366c        0x5 build/drivers/vga.o
+ .bss           0xc0133671        0x0 build/drivers/keyboard.o
+ *fill*         0xc0133671        0x3 
+ .bss           0xc0133674        0x4 build/drivers/keymap.o
+ *fill*         0xc0133678      0x988 
+ .bss           0xc0134000     0xe000 build/kernel.o
+ *(SORT_BY_NAME(.bss.*))
+ *(COMMON)
+                0xc0142000                        . = ALIGN (0x1000)
+                0xc0142000                        kernel_bss_end = .
+                0xc0101000                        kernel_virtual_start = ADDR (.text)
+                0xc0142000                        kernel_virtual_end = kernel_bss_end
+                0x00101000                        kernel_physical_start = LOADADDR (.text)
+                0x00142000                        kernel_physical_end = (LOADADDR (.text) + (kernel_virtual_end - kernel_virtual_start))
+                0x00101000                        kernel_start = kernel_physical_start
+                0x00142000                        kernel_end = kernel_physical_end
+
+/DISCARD/
+ *(.comment)
+ *(.eh_frame)
+ *(.note*)
+LOAD build/test/mutex_tests.o
+LOAD build/test/u_tests.o
+LOAD build/test/thread_preemption_tests.o
+LOAD build/test/list_tests.o
+LOAD build/test/paging_tests.o
+LOAD build/test/vmm_tests.o
+LOAD build/test/string_tests.o
+LOAD build/test/test.o
+LOAD build/test/process_tests.o
+LOAD build/test/scheduler_tests.o
+LOAD build/test/thread_tests.o
+LOAD build/test/semaphore_tests.o
+LOAD build/test/heap_tests.o
+LOAD build/test/tests.o
+LOAD build/test/thread_integration_tests.o
+LOAD build/test/wait_tests.o
+LOAD build/test/condvar_tests.o
+LOAD build/test/pmm_tests.o
+LOAD build/mm/paging.o
+LOAD build/mm/vam.o
+LOAD build/mm/pmm.o
+LOAD build/mm/vmm.o
+LOAD build/mm/heap.o
+LOAD build/mm/mm.o
+LOAD build/keymaps/azerty.o
+LOAD build/keymaps/qwerty.o
+LOAD build/arch/x86/arch.o
+LOAD build/arch/x86/gdt.o
+LOAD build/arch/x86/io.o
+LOAD build/arch/x86/pic.o
+LOAD build/arch/x86/tss.o
+LOAD build/arch/x86/irq.o
+LOAD build/arch/x86/syscall.o
+LOAD build/arch/x86/usermode.o
+LOAD build/arch/x86/idt.o
+LOAD build/arch/x86/isr.o
+LOAD build/arch/x86/pit.o
+LOAD build/boot/boot.o
+LOAD build/boot/multiboot2.o
+LOAD build/console/console.o
+LOAD build/kernel/panic.o
+LOAD build/kernel/kernel.o
+LOAD build/lib/string.o
+LOAD build/lib/debug.o
+LOAD build/lib/list.o
+LOAD build/lib/assert.o
+LOAD build/lib/printf.o
+LOAD build/kernelmain.o
+LOAD build/task/mutex.o
+LOAD build/task/thread.o
+LOAD build/task/reaper.o
+LOAD build/task/semaphore.o
+LOAD build/task/process.o
+LOAD build/task/wait.o
+LOAD build/task/condvar.o
+LOAD build/task/scheduler.o
+LOAD build/drivers/drivers.o
+LOAD build/drivers/vga.o
+LOAD build/drivers/keyboard.o
+LOAD build/drivers/keymap.o
+LOAD build/kernel.o
+LOAD build/arch/x86/context.o
+LOAD build/arch/x86/gdt_flush.o
+LOAD build/arch/x86/syscall_stub.o
+LOAD build/arch/x86/tss_load.o
+LOAD build/arch/x86/idt_load.o
+LOAD build/arch/x86/usermode_jump.o
+LOAD build/arch/x86/isr_stubs.o
+LOAD build/arch/x86/irq_stubs.o
+LOAD build/arch/x86/paging_asm.o
+OUTPUT(iso/boot/kernel.elf elf32-i386)

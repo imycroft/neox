@@ -346,14 +346,12 @@ start:
     push dword [bootstrap_mb_info]
     push dword [bootstrap_mb_magic]
 
-    ;mov eax, kernel_main ; temp
-
-    call kernel_main
+    mov eax, kernel_main
+    call eax
 
     add esp, 8
 
     jmp hang
-
 
 ; ============================================================================
 ; Bootstrap page-table helper
@@ -482,6 +480,8 @@ bootstrap_page_table2:
 bootstrap_page_table3:
     resb PAGE_SIZE
 
+alignb PAGE_SIZE
+; leave this page unmapped/unused as a guard, or at minimum:
 
 ; ---------------------------------------------------------------------------
 ; Normal higher-half kernel stack

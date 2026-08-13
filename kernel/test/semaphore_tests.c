@@ -7,7 +7,7 @@
 #include "scheduler.h"
 #include "semaphore.h"
 #include "util.h"
-
+#include "printf.h"
 static void dummy_entry(void)
 {
 }

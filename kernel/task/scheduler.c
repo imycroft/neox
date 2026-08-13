@@ -44,14 +44,39 @@ static struct thread idle_thread;
  * a real thread if one has become ready.
  */
 
+static void scheduler_idle_loop(void)
+{
+    printf("idle running ...\n");
+    while (true)
+        interrupt_enable_and_halt();
+}
+void get_ready_list(void)
+{
+    struct list_node *node;
+    struct thread *thread;
+
+    for (node = ready_list.head.next;
+         node != &ready_list.head;
+    node = node->next)
+         {
+             thread = container_of(node, struct thread, sched_node);
+
+             printf("thread=%x tid=%d state=%d\n",
+                    (uint32_t)thread,
+                    thread->tid,
+                    thread->state);
+         }
+}
 void scheduler_init(void)
 {
+
     list_init(&ready_list);
     list_init(&zombie_list);
 
     current = NULL;
 
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
+
 }
 
 void scheduler_add(struct thread *thread)
@@ -63,6 +88,9 @@ void scheduler_add(struct thread *thread)
 
     list_push_back(&ready_list,
                    &thread->sched_node);
+    printf("=== scheduler_add END ===\n");
+    get_ready_list();
+
 }
 
 void scheduler_remove(struct thread *thread)
@@ -80,6 +108,8 @@ void scheduler_remove(struct thread *thread)
         return;
 
     list_remove(&thread->sched_node);
+    printf("=== scheduler_remove END ===\n");
+    get_ready_list();
 }
 
 struct thread *scheduler_current(void)
@@ -89,6 +119,7 @@ struct thread *scheduler_current(void)
 
 struct thread *scheduler_next(void)
 {
+
     struct list_node *node;
 
     /*
@@ -96,6 +127,7 @@ struct thread *scheduler_next(void)
      * idle_thread always has a valid kernel stack, so
      * context_switch() is safe.
      */
+
     if (list_empty(&ready_list))
     {
         current        = &idle_thread;
@@ -173,9 +205,6 @@ static void scheduler_switch(void)
 
     next = scheduler_next();
 
-    printf("inside scheduler switch: next tid=%u\n", next->tid);
-    printf("inside scheduler switch: next name=%s\n", next->process->name);
-
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
 
     if (next == old)
@@ -192,7 +221,9 @@ static void scheduler_switch(void)
         (uintptr_t)next->kernel_stack + THREAD_STACK_SIZE
     );
 
+
     context_switch(&old->kernel_sp, next->kernel_sp);
+
 }
 
 /*
@@ -206,20 +237,77 @@ static void scheduler_switch(void)
  */
 void scheduler_start(void)
 {
-    interrupt_state_t state;
+    uintptr_t *stack;
+    struct cpu_context *context;
 
-    state = interrupt_save();
+    /*
+     * The scheduler must remain protected until the bootstrap
+     * context has handed control to the idle thread.
+     */
+    interrupt_disable();
 
     memset(&idle_thread, 0, sizeof(idle_thread));
+
     list_node_init(&idle_thread.sched_node);
 
-    idle_thread.tid   = 0;
+    idle_thread.tid = 0;
     idle_thread.state = THREAD_RUNNING;
 
-    current           = &idle_thread;
+    /*
+     * Allocate the idle thread's dedicated kernel stack.
+     */
+    idle_thread.kernel_stack = kmalloc(THREAD_STACK_SIZE);
+
+    ASSERT(idle_thread.kernel_stack != NULL);
+
+    /*
+     * Build the initial stack expected by context_switch()
+     * and scheduler_enter_idle().
+     *
+     * Stack layout:
+     *
+     *     EDI
+     *     ESI
+     *     EBX
+     *     EBP
+     *     return address
+     */
+    stack = (uintptr_t *)(
+        (uint8_t *)idle_thread.kernel_stack + THREAD_STACK_SIZE
+    );
+
+    /*
+     * RET will enter scheduler_idle_loop().
+     */
+    *--stack = (uintptr_t)scheduler_idle_loop;
+
+    /*
+     * Reserve the four callee-saved registers.
+     */
+    context = (struct cpu_context *)(stack - 4);
+
+    memset(context, 0, sizeof(*context));
+
+    /*
+     * context_switch() expects kernel_sp to point at EDI.
+     */
+    idle_thread.kernel_sp = (uintptr_t)context;
+
+    /*
+     * The scheduler considers idle_thread to be running.
+     */
+    current = &idle_thread;
+
     quantum_remaining = SCHEDULER_QUANTUM_TICKS;
 
-    interrupt_restore(state);
+    /*
+     * IMPORTANT:
+     *
+     * Interrupts intentionally remain disabled.
+     *
+     * kernel_main() will create the initial threads and then perform
+     * the final bootstrap -> idle handoff.
+     */
 }
 
 void scheduler_restore(struct thread *thread)
@@ -273,7 +361,6 @@ void scheduler_yield(void)
     if (current == NULL)
         return;
 
-    printf("current->state = %u\n", current->state);
     scheduler_switch();
 }
 
@@ -356,3 +443,10 @@ uint32_t scheduler_get_quantum_remaining(void)
 {
     return quantum_remaining;
 }
+
+uintptr_t scheduler_idle_stack_pointer(void)
+{
+    return idle_thread.kernel_sp;
+}
+
+

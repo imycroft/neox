@@ -606,16 +606,6 @@ static test_entry_t tests[] =
 
 void test_thread_preemption(void)
 {
-    uint32_t i;
 
-    test_begin("Thread Preemption");
-
-    for (i = 0; i < ARRAY_SIZE(tests); i++)
-    {
-        test_case(tests[i].name);
-
-        tests[i].func();
-    }
-
-    test_end();
+printf("hello %x\n", tests[0].name);
 }

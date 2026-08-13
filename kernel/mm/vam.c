@@ -230,18 +230,18 @@ void vam_init(void)
 
     vam_reserve_region(KERNEL_IMAGE_BASE, image_end - 1u);
 
-    printf("VAM: kernel image reserved %x - %x\n",
-           (uint32_t)KERNEL_IMAGE_BASE,
-           (uint32_t)(image_end - 1u));
+    // printf("VAM: kernel image reserved %x - %x\n",
+    //        (uint32_t)KERNEL_IMAGE_BASE,
+    //        (uint32_t)(image_end - 1u));
 
     /*
      * 2. Reserve the kernel heap region.
      */
     vam_reserve_region(KERNEL_HEAP_START, KERNEL_HEAP_END);
 
-    printf("VAM: heap region reserved  %x - %x\n",
-           (uint32_t)KERNEL_HEAP_START,
-           (uint32_t)KERNEL_HEAP_END);
+    // printf("VAM: heap region reserved  %x - %x\n",
+    //        (uint32_t)KERNEL_HEAP_START,
+    //        (uint32_t)KERNEL_HEAP_END);
 
     /*
      * 3. Reserve the kernel stacks region.

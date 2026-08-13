@@ -120,8 +120,6 @@ void pmm_init(void)
     ((uintptr_t)&kernel_end + PAGE_SIZE - 1)
     & ~(PAGE_SIZE - 1);
 
-    printf("kernel physical end = %x\n", (uint32_t)kernel_physical_end);
-
     reserved_end = kernel_physical_end;
 
     if ((uintptr_t)mb_info + mb_info->total_size > reserved_end)
