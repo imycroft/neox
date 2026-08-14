@@ -68,6 +68,7 @@ void pmm_init(void)
     const struct multiboot_info *mb_info;
     uintptr_t reserved_end;
     uintptr_t kernel_physical_end;
+    uintptr_t mb_info_physical;
 
     uint32_t count;
     uint32_t i;
@@ -116,16 +117,19 @@ void pmm_init(void)
 
     bitmap_size = (total_pages + 7) / 8;
 
-    kernel_physical_end =
-    ((uintptr_t)&kernel_end + PAGE_SIZE - 1)
-    & ~(PAGE_SIZE - 1);
+    kernel_physical_end = (uintptr_t)&kernel_end;
 
     printf("kernel physical end = %x\n", (uint32_t)kernel_physical_end);
 
     reserved_end = kernel_physical_end;
 
-    if ((uintptr_t)mb_info + mb_info->total_size > reserved_end)
-        reserved_end = (uintptr_t)mb_info + mb_info->total_size;
+    /* switching to high kernel made the mb_info virtual high-half as well (0xC), we need to convert it back
+     * to physical before testing its position
+    */
+    mb_info_physical = VIRT_TO_PHYS(mb_info);
+
+    if ((uintptr_t)mb_info_physical + mb_info->total_size > reserved_end)
+        reserved_end = (uintptr_t)mb_info_physical + mb_info->total_size;
 
     bitmap_address = (reserved_end + PAGE_SIZE - 1)
     & ~(PAGE_SIZE - 1);
