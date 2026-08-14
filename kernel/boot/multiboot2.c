@@ -2,6 +2,9 @@
 #include "memory_layout.h"
 #include "panic.h"
 #include "printf.h"
+#include "paging.h"
+#include "elf_loader.h"
+#include "process.h"
 
 static struct multiboot_info *boot_info;
 
@@ -92,6 +95,12 @@ const struct multiboot_tag_mmap *multiboot2_memory_map(void)
     multiboot2_find_tag(MULTIBOOT_TAG_TYPE_MMAP);
 }
 
+const struct multiboot_tag_module *
+multiboot2_module(void)
+{
+    return (const struct multiboot_tag_module *)
+    multiboot2_find_tag(MULTIBOOT_TAG_TYPE_MODULE);
+}
 
 // for debug purposes
 
@@ -143,4 +152,80 @@ void multiboot2_dump_tags(void)
 
         tag = multiboot2_next_tag(tag);
     }
+}
+
+void multiboot2_dump_module(void)
+{
+    const struct multiboot_tag_module *module;
+    const void *image;
+    uint32_t size;
+
+    module = multiboot2_module();
+
+    if (module == NULL)
+    {
+        printf("Multiboot: no module found\n");
+        return;
+    }
+
+    printf("Multiboot module:\n");
+    printf("  start = %x\n", module->mod_start);
+    printf("  end   = %x\n", module->mod_end);
+    printf("  size  = %u\n", module->mod_end - module->mod_start);
+    printf("  name  = %s\n", module->cmdline);
+
+    image = (const void *)PHYS_TO_VIRT(module->mod_start);
+    size = module->mod_end - module->mod_start;
+
+
+    const uint8_t *bytes;
+
+    uintptr_t translated;
+
+    translated = paging_translate(
+        paging_get_kernel_directory(),
+                                  (uintptr_t)image
+    );
+
+    printf("ELF virtual  = %x\n", (uint32_t)image);
+    printf("ELF physical = %x\n", (uint32_t)translated);
+
+    bytes = (const uint8_t *)PHYS_TO_VIRT(module->mod_start);
+
+    printf("ELF address = %x\n", (uint32_t)bytes);
+
+    printf("ELF bytes = %x %x %x %x\n",
+           bytes[0],
+           bytes[1],
+           bytes[2],
+           bytes[3]);
+
+    printf("ELF validation: %s\n",
+            elf_validate(image, size) ? "OK" : "FAILED");
+
+    if (elf_validate(image, size))
+        elf_dump_load_segments(image);
+
+    struct process *init_process;
+    uintptr_t init_entry;
+
+    init_process = process_create("init");
+
+    if (init_process == NULL)
+    {
+        printf("ELF: failed to create init process\n");
+        return;
+    }
+
+    if (!elf_load(init_process,
+        image,
+        size,
+        &init_entry))
+    {
+        printf("ELF: failed to load init\n");
+        return;
+    }
+
+    printf("ELF init loaded successfully\n");
+    printf("ELF entry = %x\n", (uint32_t)init_entry);
 }

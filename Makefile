@@ -2,8 +2,18 @@ NASM := nasm
 GRUB := grub-mkrescue
 QEMU := qemu-system-x86_64
 
-# Object files
+# ------------------------------------------------------------
+# General
+# ------------------------------------------------------------
+
 BUILD := build
+
+CC = gcc
+AS = nasm
+
+# ------------------------------------------------------------
+# Kernel sources
+# ------------------------------------------------------------
 
 C_SOURCES := $(shell find kernel -name '*.c')
 ASM_SOURCES := $(shell find kernel -name '*.asm')
@@ -12,55 +22,111 @@ OBJECTS := \
     $(patsubst kernel/%.c,$(BUILD)/%.o,$(C_SOURCES)) \
     $(patsubst kernel/%.asm,$(BUILD)/%.o,$(ASM_SOURCES))
 
-KERNEL_LD  := kernel/linker.ld
-IMAGE := $(BUILD)/neox.iso
+KERNEL_LD := kernel/linker.ld
 
-CC = gcc
-CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -nostartfiles -nodefaultlibs -ffreestanding -Wall -Wextra -std=c23 -Werror -Ikernel/include -c
+CFLAGS = -m32 \
+         -nostdlib \
+         -nostdinc \
+         -fno-builtin \
+         -fno-stack-protector \
+         -fno-omit-frame-pointer \
+         -nostartfiles \
+         -nodefaultlibs \
+         -ffreestanding \
+         -Wall \
+         -Wextra \
+         -std=c23 \
+         -Werror \
+         -Ikernel/include \
+         -c
 
 LDFLAGS = -T$(KERNEL_LD) -m elf_i386
 
-AS = nasm
 ASFLAGS = -f elf32
+
+# ------------------------------------------------------------
+# User program
+# ------------------------------------------------------------
+
+USER_SOURCE := user/init.c
+USER_LD := user/user.ld
+
+USER_BUILD := $(BUILD)/user
+USER_OBJECT := $(USER_BUILD)/init.o
+USER_ELF := $(USER_BUILD)/init.elf
+
+# ------------------------------------------------------------
+# ISO
+# ------------------------------------------------------------
 
 ISO_BOOT := iso/boot
 ISO_KERNEL := $(ISO_BOOT)/kernel.elf
-
-# GRUB config
+ISO_INIT := $(ISO_BOOT)/init.elf
 
 GRUB_CFG := iso/boot/grub/grub.cfg
 
+IMAGE := $(BUILD)/neox.iso
 
+# ------------------------------------------------------------
+# Targets
+# ------------------------------------------------------------
 
 .PHONY: all run clean
 
 all: $(IMAGE)
 
 # ------------------------------------------------------------
-# Create build directory
+# Kernel
 # ------------------------------------------------------------
 
-$(BUILD):
-	mkdir -p $(BUILD)
-
-
-# Kernel
-
 $(ISO_KERNEL): $(OBJECTS) $(KERNEL_LD)
+	@mkdir -p $(dir $@)
 	ld $(LDFLAGS) -o $@ $(OBJECTS)
 
 $(BUILD)/%.o: kernel/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/%.o: kernel/%.asm
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) $< -o $@
+
 # ------------------------------------------------------------
-# Create boot iso
+# User program
 # ------------------------------------------------------------
 
-$(IMAGE): $(ISO_KERNEL) $(GRUB_CFG)
+$(USER_OBJECT): $(USER_SOURCE)
+	@mkdir -p $(dir $@)
+	$(CC) \
+		-m32 \
+		-ffreestanding \
+		-fno-stack-protector \
+		-fno-pie \
+		-fno-pic \
+		-nostdlib \
+		-nostdinc \
+		-Wall \
+		-Wextra \
+		-std=c23 \
+		-Werror \
+		-c $< -o $@
+
+$(USER_ELF): $(USER_OBJECT) $(USER_LD)
+	@mkdir -p $(dir $@)
+	ld -m elf_i386 -T$(USER_LD) -o $@ $(USER_OBJECT)
+
+# Copy user ELF into ISO
+
+$(ISO_INIT): $(USER_ELF)
+	@mkdir -p $(dir $@)
+	cp $< $@
+
+# ------------------------------------------------------------
+# Create boot ISO
+# ------------------------------------------------------------
+
+$(IMAGE): $(ISO_KERNEL) $(ISO_INIT) $(GRUB_CFG)
+	@mkdir -p $(dir $@)
 	$(GRUB) -o $@ iso -d /usr/lib/grub/i386-pc
 
 # ------------------------------------------------------------
@@ -68,7 +134,11 @@ $(IMAGE): $(ISO_KERNEL) $(GRUB_CFG)
 # ------------------------------------------------------------
 
 run: $(IMAGE)
-	$(QEMU) -m 256M -drive format=raw,file=$(IMAGE) -display curses -no-reboot -no-shutdown
+	$(QEMU) -m 256M \
+		-drive format=raw,file=$(IMAGE) \
+		-display curses \
+		-no-reboot \
+		-no-shutdown
 
 # ------------------------------------------------------------
 # Clean
@@ -77,3 +147,4 @@ run: $(IMAGE)
 clean:
 	rm -rf $(BUILD)
 	rm -f $(ISO_BOOT)/kernel.elf
+	rm -f $(ISO_BOOT)/init.elf

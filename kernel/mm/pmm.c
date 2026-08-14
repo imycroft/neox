@@ -66,6 +66,7 @@ void pmm_init(void)
     const struct multiboot_mmap_entry *entry;
 
     const struct multiboot_info *mb_info;
+    const struct multiboot_tag_module *module;
     uintptr_t reserved_end;
     uintptr_t kernel_physical_end;
     uintptr_t mb_info_physical;
@@ -79,6 +80,7 @@ void pmm_init(void)
 
     mmap = multiboot2_memory_map();
     mb_info = multiboot2_info();
+    module = multiboot2_module();
 
     if (mmap == NULL)
     {
@@ -173,8 +175,17 @@ void pmm_init(void)
         KERNEL_LOAD_ADDRESS,
         kernel_physical_end - KERNEL_LOAD_ADDRESS
     );
-    bitmap_set_range((uintptr_t)mb_info,
+    bitmap_set_range((uintptr_t)mb_info_physical,
                      mb_info->total_size);
+
+    if (module != NULL)
+    {
+        bitmap_set_range(
+            module->mod_start,
+            module->mod_end - module->mod_start
+        );
+    }
+
     bitmap_set_range(bitmap_address,
                      bitmap_pages * PAGE_SIZE);
 

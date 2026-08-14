@@ -38,7 +38,14 @@ struct multiboot_tag_mmap
     struct multiboot_mmap_entry entries[];
 }__attribute__((packed));
 
-
+struct multiboot_tag_module
+{
+    uint32_t type;
+    uint32_t size;
+    uint32_t mod_start;
+    uint32_t mod_end;
+    char     cmdline[];
+} __attribute__((packed));
 
 #define MULTIBOOT_TAG_TYPE_END          0
 #define MULTIBOOT_TAG_TYPE_CMDLINE      1
@@ -64,7 +71,11 @@ multiboot2_find_tag(uint32_t type);
 
 const struct multiboot_tag_mmap *multiboot2_memory_map(void);
 
+const struct multiboot_tag_module *
+multiboot2_module(void);
+
 // temporary debug functions
 
 void multiboot2_dump_tags(void);
 void multiboot2_dump_memory_map(void);
+void multiboot2_dump_module(void);

@@ -14,7 +14,9 @@
 
 static void init_entry(void)
 {
-    kernel_tests();
+
+    multiboot2_dump_module();
+   // kernel_tests();
 }
 
 int kernel_main(uint32_t magic,
