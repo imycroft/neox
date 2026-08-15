@@ -14,6 +14,7 @@
 #include "heap.h"
 #include "reaper.h"
 #include "process.h"
+#include "paging.h"
 #include "printf.h"
 static struct list ready_list;
 static struct thread *current;
@@ -207,9 +208,47 @@ static void scheduler_switch(void)
         (uintptr_t)next->kernel_stack + THREAD_STACK_SIZE
     );
 
+    /*
+     * Switch to the address space belonging to the next process.
+     *
+     * page_directory is a higher-half virtual address, but CR3 must
+     * receive the physical address of the page directory.
+     *
+     * Kernel threads and user threads both belong to a process, so
+     * every scheduled thread gets its process address space loaded.
+     */
+    printf("SCHED: before CR3\n");
 
-    context_switch(&old->kernel_sp, next->kernel_sp);
+    uintptr_t current_stack;
 
+    current_stack = (uintptr_t)&current_stack;
+
+    printf("SCHED: current stack addr=%x\n",
+           (uint32_t)current_stack);
+
+    printf("SCHED: translated in next PD=%x\n",
+           (uint32_t)paging_translate(
+               next->process->page_directory,
+               current_stack
+           ));
+
+    paging_load_directory(
+        VIRT_TO_PHYS(
+            (uintptr_t)next->process->page_directory
+        )
+    );
+
+    printf("SCHED: after CR3\n");
+
+    printf("SCHED: next_sp=%x\n",
+           (uint32_t)next->kernel_sp);
+
+    context_switch(
+        &old->kernel_sp,
+        next->kernel_sp
+    );
+
+    printf("SCHED: after context_switch\n");
 }
 
 /*
