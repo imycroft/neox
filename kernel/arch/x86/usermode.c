@@ -129,3 +129,126 @@ struct thread *usermode_thread_create(struct process *process,
 
     return thread;
 }
+
+/*
+ * Create a Ring-3 thread for an already-loaded ELF image.
+ *
+ * The ELF loader is responsible for creating the process's user
+ * address space and loading the program at its requested virtual
+ * addresses.
+ *
+ * This function only provides:
+ *
+ *     1. A user-mode stack.
+ *     2. A small kernel-side descriptor containing the ELF entry.
+ *     3. A kernel thread whose trampoline performs the Ring-0
+ *        -> Ring-3 transition.
+ *
+ * The existing usermode_thread_create() is intentionally left
+ * untouched. It remains available for the original Ring-3 smoke
+ * tests using kernel functions.
+ */
+struct thread *
+usermode_elf_thread_create(struct process *process,
+                           uintptr_t entry)
+{
+    struct thread        *thread;
+    struct usermode_desc *desc;
+    void                 *phys;
+
+    ASSERT(process != NULL);
+
+    /*
+     * The ELF loader should give us a valid user-space entry point.
+     *
+     * We deliberately do not interpret the address as a C function
+     * pointer. It is simply the virtual EIP at which the CPU will
+     * begin executing the loaded ELF image.
+     */
+    if (entry == 0)
+        return NULL;
+
+    /*
+     * Allocate the descriptor used by usermode_trampoline().
+     */
+    desc = kmalloc(sizeof(*desc));
+
+    if (desc == NULL)
+        return NULL;
+
+    /*
+     * Allocate one physical page for the user stack.
+     *
+     * This page will be mapped into the process at
+     * USER_STACK_VIRT with PAGE_USER, allowing Ring 3 to access it.
+     */
+    phys = pmm_alloc_page();
+
+    if (phys == NULL)
+    {
+        kfree(desc);
+        return NULL;
+    }
+
+    /*
+     * Map the physical page into the process address space.
+     *
+     * IMPORTANT:
+     *
+     * Unlike the old usermode_thread_create(), the ELF program
+     * already lives in process->page_directory. The stack belongs
+     * to that same address space.
+     */
+    paging_map(
+        process->page_directory,
+        USER_STACK_VIRT,
+        (uintptr_t)phys,
+               PAGE_PRESENT |
+               PAGE_WRITABLE |
+               PAGE_USER
+    );
+
+    /*
+     * Store the ELF entry point and the initial user stack pointer.
+     */
+    desc->user_entry = entry;
+    desc->user_esp   = USER_STACK_VIRT + USER_STACK_SIZE;
+
+    /*
+     * Create the kernel-side thread.
+     *
+     * The thread initially executes usermode_trampoline() in Ring 0.
+     * The trampoline then calls jump_usermode(), which performs the
+     * actual IRET transition to Ring 3.
+     */
+    thread = thread_create(
+        process,
+        usermode_trampoline
+    );
+
+    if (thread == NULL)
+    {
+        paging_unmap(
+            process->page_directory,
+            USER_STACK_VIRT
+        );
+
+        pmm_free_page(phys);
+        kfree(desc);
+
+        return NULL;
+    }
+
+    /*
+     * Give the trampoline access to the descriptor.
+     */
+    thread->usermode_desc = desc;
+
+    printf(
+        "[usermode ELF] thread created: entry=%x user_esp=%x\n",
+        (uint32_t)desc->user_entry,
+           (uint32_t)desc->user_esp
+    );
+
+    return thread;
+}

@@ -26,3 +26,16 @@ struct process;
 
 struct thread *usermode_thread_create(struct process *process,
                                       void (*user_fn)(void));
+
+/*
+ * Create a Ring-3 thread whose entry point is an ELF virtual address.
+ *
+ * Unlike usermode_thread_create(), this does not accept a kernel
+ * function pointer. The entry address must already belong to the
+ * process's user address space and must have been loaded by the ELF
+ * loader.
+ */
+struct thread *usermode_elf_thread_create(
+    struct process *process,
+    uintptr_t entry
+);
