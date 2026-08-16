@@ -9,6 +9,9 @@
 
 #define THREAD_STACK_SIZE PAGE_SIZE
 
+#define THREAD_STACK_PAGES \
+((THREAD_STACK_SIZE + PAGE_SIZE - 1) / PAGE_SIZE)
+
 enum thread_state
 {
     THREAD_READY,
@@ -26,7 +29,7 @@ struct thread
     /* Top of the kernel stack */
     uintptr_t kernel_sp;
 
-    /* Base of the allocated kernel stack */
+    /* Base virtual address of the kernel stack. */
     void *kernel_stack;
 
     /* Thread entry point */

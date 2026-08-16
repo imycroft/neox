@@ -8,6 +8,8 @@
 #include "list.h"
 #include "paging.h"
 
+#include "printf.h"
+
 static uint32_t next_pid = 1;
 
 static struct list process_list =
@@ -95,6 +97,7 @@ struct process *process_create(const char *name)
     list_node_init(&process->process_node);
 
     list_init(&process->threads);
+
 
 
     process->page_directory = paging_create_directory();

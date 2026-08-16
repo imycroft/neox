@@ -3,7 +3,7 @@
 #include "paging.h"
 #include "printf.h"
 
-#define HEAP_START 0x01000000
+#define HEAP_START KERNEL_HEAP_START
 #define HEAP_PAGES 1
 
 struct heap_block
@@ -145,16 +145,11 @@ static void heap_split_block(struct heap_block *block,
 
 void heap_init(void)
 {
-    if (vmm_alloc_pages(HEAP_START, HEAP_PAGES) == NULL)
-    {
-        printf("Heap: allocation failed\n");
-        return;
-    }
     // for Debugging
     heap_expansions = 0;
     //
-    heap_head = (struct heap_block *)HEAP_START;
-    heap_end = HEAP_START + HEAP_PAGES * PAGE_SIZE;
+    heap_head = (struct heap_block *)KERNEL_HEAP_START;
+    heap_end  = KERNEL_HEAP_START + HEAP_PAGES * PAGE_SIZE;
 
     heap_head->size =
     HEAP_PAGES * PAGE_SIZE -

@@ -4,6 +4,8 @@
 #include "assert.h"
 #include "list.h"
 #include "thread.h"
+#include "vam.h"
+#include "pmm.h"
 #include "string.h"
 #include "tss.h"
 
@@ -183,6 +185,7 @@ struct thread *scheduler_next(void)
  */
 static void scheduler_switch(void)
 {
+
     ASSERT(!interrupt_enabled());
 
     struct thread *old;
@@ -204,6 +207,7 @@ static void scheduler_switch(void)
      * For pure kernel threads this is a no-op in practice (they never
      * enter Ring 3), but it must always be correct.
      */
+
     tss_set_kernel_stack(
         (uintptr_t)next->kernel_stack + THREAD_STACK_SIZE
     );
@@ -217,38 +221,21 @@ static void scheduler_switch(void)
      * Kernel threads and user threads both belong to a process, so
      * every scheduled thread gets its process address space loaded.
      */
-    printf("SCHED: before CR3\n");
 
-    uintptr_t current_stack;
-
-    current_stack = (uintptr_t)&current_stack;
-
-    printf("SCHED: current stack addr=%x\n",
-           (uint32_t)current_stack);
-
-    printf("SCHED: translated in next PD=%x\n",
-           (uint32_t)paging_translate(
-               next->process->page_directory,
-               current_stack
-           ));
-
-    paging_load_directory(
-        VIRT_TO_PHYS(
-            (uintptr_t)next->process->page_directory
-        )
-    );
-
-    printf("SCHED: after CR3\n");
-
-    printf("SCHED: next_sp=%x\n",
-           (uint32_t)next->kernel_sp);
+    if (next->process != NULL)
+    {
+        paging_load_directory(
+            VIRT_TO_PHYS(
+                (uintptr_t)next->process->page_directory
+            )
+        );
+    }
 
     context_switch(
         &old->kernel_sp,
         next->kernel_sp
     );
 
-    printf("SCHED: after context_switch\n");
 }
 
 /*
@@ -279,11 +266,34 @@ void scheduler_start(void)
     idle_thread.state = THREAD_RUNNING;
 
     /*
-     * Allocate the idle thread's dedicated kernel stack.
+     * Allocate a virtual stack slot from the kernel stack region.
      */
-    idle_thread.kernel_stack = kmalloc(THREAD_STACK_SIZE);
+    idle_thread.kernel_stack = vam_alloc_stack();
 
     ASSERT(idle_thread.kernel_stack != NULL);
+
+    uint32_t i;
+    uint32_t stack_pages;
+    void *phys;
+    uintptr_t virt;
+
+    stack_pages = KERNEL_STACK_SIZE / PAGE_SIZE;
+
+    for (i = 0; i < stack_pages; i++)
+    {
+        phys = pmm_alloc_page();
+
+        ASSERT(phys != NULL);
+
+        virt = (uintptr_t)idle_thread.kernel_stack +
+        (uintptr_t)i * PAGE_SIZE;
+
+        paging_map_kernel(
+            virt,
+            (uintptr_t)phys,
+                          PAGE_PRESENT | PAGE_WRITABLE
+        );
+    }
 
     /*
      * Build the initial stack expected by context_switch()

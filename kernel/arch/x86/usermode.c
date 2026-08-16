@@ -245,9 +245,13 @@ usermode_elf_thread_create(struct process *process,
     thread->usermode_desc = desc;
 
     printf(
-        "[usermode ELF] thread created: entry=%x user_esp=%x\n",
+        "[usermode ELF] entry=%x esp=%x stack phys=%x\n",
         (uint32_t)desc->user_entry,
-           (uint32_t)desc->user_esp
+           (uint32_t)desc->user_esp,
+           (uint32_t)paging_translate(
+               process->page_directory,
+               USER_STACK_VIRT
+           )
     );
 
     return thread;

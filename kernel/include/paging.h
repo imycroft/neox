@@ -7,6 +7,8 @@
 
 #define PAGE_ENTRIES 1024
 
+#define PAGE_FRAME_MASK      0xFFFFF000u
+
 /* Page table / directory entry flags */
 
 #define PAGE_PRESENT   (1 << 0)
@@ -59,3 +61,9 @@ uintptr_t paging_translate(struct page_directory *directory,
                            uintptr_t virt);
 
 void paging_copy_kernel_mappings(struct page_directory *directory);
+
+void paging_map_kernel(
+    uintptr_t virt,
+    uintptr_t phys,
+    uint32_t flags
+);

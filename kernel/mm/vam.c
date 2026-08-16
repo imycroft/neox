@@ -62,6 +62,14 @@
 #define VAM_TOTAL_PAGES  (KERNEL_VIRT_SIZE / PAGE_SIZE)
 #define VAM_BITMAP_BYTES ((VAM_TOTAL_PAGES + 7u) / 8u)
 
+/*
+ * Kernel stacks must occupy a whole number of pages.
+ */
+_Static_assert(
+    KERNEL_STACK_SIZE % PAGE_SIZE == 0,
+    "KERNEL_STACK_SIZE must be page aligned"
+);
+
 
 /*
  * ============================================================================
@@ -72,7 +80,16 @@
  */
 
 static uint8_t bitmap[VAM_BITMAP_BYTES];
-
+/*
+ * ============================================================================
+ * Kernel stack slot bitmap
+ * ============================================================================
+ *
+ * The entire kernel stack virtual region is reserved from the generic VAM
+ * allocator. This bitmap tracks which fixed-size stack slots are currently
+ * assigned to threads.
+ */
+static uint8_t kernel_stack_bitmap[KERNEL_STACK_BITMAP_BYTES];
 
 /*
  * ============================================================================
@@ -98,7 +115,23 @@ static inline uintptr_t vam_index_to_addr(uint32_t index)
     return KERNEL_VIRT_BASE + (uintptr_t)index * PAGE_SIZE;
 }
 
+static bool kernel_stack_slot_test(uint32_t slot)
+{
+    return (kernel_stack_bitmap[slot / 8u] &
+    (1u << (slot % 8u))) != 0;
+}
 
+static void kernel_stack_slot_set(uint32_t slot)
+{
+    kernel_stack_bitmap[slot / 8u] |=
+    (1u << (slot % 8u));
+}
+
+static void kernel_stack_slot_clear(uint32_t slot)
+{
+    kernel_stack_bitmap[slot / 8u] &=
+    ~(1u << (slot % 8u));
+}
 /*
  * ============================================================================
  * Bitmap primitives
@@ -171,6 +204,73 @@ static void vam_reserve_region(uintptr_t start, uintptr_t end)
     bitmap_range_set(first, count);
 }
 
+/*
+ * ============================================================================
+ * vam_alloc_stack()
+ * ============================================================================
+ *
+ * Allocates one fixed-size virtual address slot from the kernel stack
+ * region.
+ *
+ * The returned address is the BASE of the stack slot.
+ *
+ * The physical pages backing the stack are allocated separately by the
+ * caller through the PMM and mapped into this virtual range.
+ */
+void *vam_alloc_stack(void)
+{
+    uint32_t slot;
+    uintptr_t address;
+
+    for (slot = 0; slot < KERNEL_STACK_COUNT; slot++)
+    {
+        if (!kernel_stack_slot_test(slot))
+        {
+            kernel_stack_slot_set(slot);
+
+            address = KERNEL_STACKS_START +
+            (uintptr_t)slot * KERNEL_STACK_SIZE;
+
+            return (void *)address;
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ * ============================================================================
+ * vam_free_stack()
+ * ============================================================================
+ *
+ * Releases a previously allocated kernel stack virtual-address slot.
+ */
+void vam_free_stack(void *address)
+{
+    uintptr_t virt;
+    uint32_t slot;
+
+    if (address == NULL)
+        return;
+
+    virt = (uintptr_t)address;
+
+    if (virt < KERNEL_STACKS_START ||
+        virt > KERNEL_STACKS_END)
+        return;
+
+    if ((virt - KERNEL_STACKS_START) % KERNEL_STACK_SIZE != 0)
+        return;
+
+    slot = (uint32_t)(
+        (virt - KERNEL_STACKS_START) / KERNEL_STACK_SIZE
+    );
+
+    if (slot >= KERNEL_STACK_COUNT)
+        return;
+
+    kernel_stack_slot_clear(slot);
+}
 
 /*
  * ============================================================================
@@ -216,6 +316,9 @@ void vam_init(void)
      */
     memset(bitmap, 0, sizeof(bitmap));
 
+    memset(kernel_stack_bitmap,
+           0,
+           sizeof(kernel_stack_bitmap));
     /*
      * 1. Reserve the kernel image.
      *

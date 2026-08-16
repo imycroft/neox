@@ -1,10 +1,14 @@
 #include "multiboot2.h"
+#include "arch.h"
 #include "memory_layout.h"
 #include "panic.h"
 #include "printf.h"
 #include "paging.h"
 #include "elf_loader.h"
 #include "process.h"
+
+#include "scheduler.h"
+#include "usermode.h"
 
 static struct multiboot_info *boot_info;
 
@@ -206,10 +210,13 @@ void multiboot2_dump_module(void)
     if (elf_validate(image, size))
         elf_dump_load_segments(image);
 
+
+
     struct process *init_process;
     uintptr_t init_entry;
 
     init_process = process_create("init");
+
 
     if (init_process == NULL)
     {
@@ -226,6 +233,51 @@ void multiboot2_dump_module(void)
         return;
     }
 
-    printf("ELF init loaded successfully\n");
+    ///
+
     printf("ELF entry = %x\n", (uint32_t)init_entry);
+
+    printf("loaded bytes:\n");
+
+    uint32_t phys;
+
+    for (uint32_t i = 0; i < 16; i++)
+    {
+        phys = paging_translate(
+            init_process->page_directory,
+            init_entry + i
+        );
+
+        printf("%x ", *(uint8_t *)PHYS_TO_VIRT(phys));
+    }
+
+    printf("\n");
+
+    ///
+
+    struct thread *init_thread;
+
+    printf("ELF loaded: entry=%x\n", (uint32_t)init_entry);
+
+    interrupt_disable();
+
+    init_thread = usermode_elf_thread_create(
+        init_process,
+        init_entry
+    );
+
+    if (init_thread == NULL)
+    {
+        printf("ELF: failed to create user thread\n");
+        return;
+    }
+
+
+    scheduler_add(init_thread);
+
+    interrupt_enable();
+
+    printf("ELF init thread scheduled\n");
+
+
 }

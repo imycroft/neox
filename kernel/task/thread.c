@@ -1,9 +1,12 @@
 #include "thread.h"
 #include "assert.h"
 #include "panic.h"
+#include "paging.h"
 #include "scheduler.h"
 #include "scheduler_internal.h"
 #include "process.h"
+#include "pmm.h"
+#include "vam.h"
 
 #include "arch/x86/context.h"
 #include "arch.h"
@@ -104,6 +107,12 @@ struct thread *thread_create(
 )
 {
     struct thread *thread;
+    uintptr_t      virt;
+    void           *phys;
+    uint32_t        stack_pages;
+    uint32_t        i;
+    uintptr_t      *stack;
+    struct cpu_context *context;
 
     ASSERT(process != NULL);
 
@@ -127,33 +136,156 @@ struct thread *thread_create(
 
     thread->entry = entry;
 
-    thread->kernel_stack = kmalloc(THREAD_STACK_SIZE);
+    /*
+     * Allocate a virtual address slot from the dedicated kernel-stack
+     * region.
+     *
+     * The virtual slot itself does not allocate physical memory.
+     * Physical pages are allocated and mapped below.
+     */
+    thread->kernel_stack = vam_alloc_stack();
 
     if (thread->kernel_stack == NULL)
     {
         kfree(thread);
         return NULL;
     }
-    uintptr_t *stack;
-    struct cpu_context *context;
+
+    /*
+     * Allocate physical pages and map them into the kernel-stack slot.
+     */
+    stack_pages = KERNEL_STACK_SIZE / PAGE_SIZE;
+
+    for (i = 0; i < stack_pages; i++)
+    {
+        phys = pmm_alloc_page();
+
+        if (phys == NULL)
+        {
+            /*
+             * Roll back all pages that were successfully allocated
+             * before the failure.
+             */
+            while (i != 0)
+            {
+                i--;
+
+                virt = (uintptr_t)thread->kernel_stack +
+                (uintptr_t)i * PAGE_SIZE;
+
+                /*
+                 * Recover the physical address before removing
+                 * the mapping.
+                 */
+                phys = (void *)paging_translate(
+                    process->page_directory,
+                    virt
+                );
+
+                paging_unmap(
+                    process->page_directory,
+                    virt
+                );
+
+                if (phys != NULL)
+                    pmm_free_page(phys);
+            }
+
+            vam_free_stack(thread->kernel_stack);
+            thread->kernel_stack = NULL;
+
+            kfree(thread);
+            return NULL;
+        }
+
+        virt = (uintptr_t)thread->kernel_stack +
+        (uintptr_t)i * PAGE_SIZE;
+
+        paging_map(
+            process->page_directory,
+            virt,
+            (uintptr_t)phys,
+                   PAGE_PRESENT | PAGE_WRITABLE
+        );
+    }
+    /*
+     * Start at the top of the virtual kernel stack.
+     *
+     * The stack grows downward.
+     */
+
+
+    uintptr_t stack_virt;
+    uintptr_t stack_phys;
+    uintptr_t stack_top;
+
+    /*
+     * Get the physical address of the last byte of the stack.
+     *
+     * The stack grows downward, so we initialize from the top page.
+     */
+    stack_top =
+    (uintptr_t)thread->kernel_stack +
+    KERNEL_STACK_SIZE;
+
+    /*
+     * Translate the virtual stack top to physical memory.
+     *
+     * Subtract one because stack_top is the first byte AFTER the stack.
+     */
+    stack_phys =
+    paging_translate(
+        process->page_directory,
+        stack_top - sizeof(uintptr_t)
+    );
+
+    if (stack_phys == 0)
+    {
+        /*
+         * This should never happen because the stack was mapped above.
+         */
+        vam_free_stack(thread->kernel_stack);
+        kfree(thread);
+        return NULL;
+    }
+
+    /*
+     * Access through the kernel's physical mapping.
+     */
+    stack_virt =
+    (uintptr_t)PHYS_TO_VIRT(
+        stack_phys & PAGE_FRAME_MASK
+    );
 
     stack =
     (uintptr_t *)
     (
-        (uint8_t *)thread->kernel_stack +
-        THREAD_STACK_SIZE
+        stack_virt +
+        ((stack_top - sizeof(uintptr_t)) & (PAGE_SIZE - 1))
+        + sizeof(uintptr_t)
     );
 
-    /* Return address if the thread entry function exits. */
+    /*
+     * Build the initial stack frame.
+     */
     *--stack = (uintptr_t)thread_exit;
-
-    /* Initial instruction pointer. */
     *--stack = (uintptr_t)thread_bootstrap;
 
-    /* Reserve space for saved registers. */
+
+
+    /*
+     * Reserve space for the callee-saved registers restored by
+     * context_switch():
+     *
+     *     pop edi
+     *     pop esi
+     *     pop ebx
+     *     pop ebp
+     */
     context = (struct cpu_context *)(stack - 4);
 
     memset(context, 0, sizeof(*context));
+
 
     thread->kernel_sp = (uintptr_t)context;
 
@@ -161,22 +293,29 @@ struct thread *thread_create(
 
     thread->tid = next_tid++;
     thread->process = process;
+     printf("thread %u created\n", thread->tid);
+     printf("tid = %u \tinitial stack physical=%x\n",thread->tid, stack_phys);
+     printf("initial stack kernel virtual=%x\n", (uint32_t)stack);
 
     return thread;
 }
 
 void thread_destroy(struct thread *thread)
 {
-    void *stack;
+    uint32_t   stack_pages;
+    uint32_t   i;
+    uintptr_t  virt;
+    void      *phys;
 
     ASSERT(thread != NULL);
     ASSERT(!interrupt_enabled());
     ASSERT(thread->state == THREAD_TERMINATED);
 
     /*
-     * Remove from process->threads if still linked.
+     * Remove the thread from its owning process.
+     *
      * Stack-allocated test stubs may never have been added via
-     * thread_add(), so guard with the NULL/NULL sentinel.
+     * thread_add(), so only remove the node when it is linked.
      */
     if (thread->group_node.prev != NULL &&
         thread->group_node.next != NULL)
@@ -185,13 +324,45 @@ void thread_destroy(struct thread *thread)
     }
 
     /*
-     * Null the stack pointer before freeing to catch any
-     * use-after-free that tries to dereference it.
+     * Release the physical pages backing the kernel stack.
+     *
+     * kernel_stack is now a virtual address returned by vam_alloc_stack(),
+     * not a heap allocation.
      */
-    stack = thread->kernel_stack;
-    thread->kernel_stack = NULL;
+    if (thread->kernel_stack != NULL)
+    {
+        stack_pages = KERNEL_STACK_SIZE / PAGE_SIZE;
 
-    kfree(stack);
+        for (i = 0; i < stack_pages; i++)
+        {
+            virt = (uintptr_t)thread->kernel_stack +
+            (uintptr_t)i * PAGE_SIZE;
+
+            /*
+             * Get the physical frame before removing the mapping.
+             */
+            phys = (void *)paging_translate(
+                thread->process->page_directory,
+                virt
+            );
+
+            paging_unmap(
+                thread->process->page_directory,
+                virt
+            );
+
+            if (phys != NULL)
+                pmm_free_page(phys);
+        }
+
+        /*
+         * The virtual stack slot can now be reused by another thread.
+         */
+        vam_free_stack(thread->kernel_stack);
+
+        thread->kernel_stack = NULL;
+    }
+
     kfree(thread);
 }
 

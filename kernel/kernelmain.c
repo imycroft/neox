@@ -14,6 +14,7 @@
 
 static void init_entry(void)
 {
+    printf("multiboot2_dump_module()\n");
 
     multiboot2_dump_module();
    // kernel_tests();

@@ -12,7 +12,7 @@
  * ============================================================================
  */
 
-#define PAGE_FRAME_MASK      0xFFFFF000u
+
 
 /*
  * ============================================================================
@@ -287,6 +287,20 @@ void paging_unmap(struct page_directory *directory,
     paging_invalidate(virt);
 }
 
+void paging_map_kernel(
+    uintptr_t virt,
+    uintptr_t phys,
+    uint32_t flags
+)
+{
+    paging_map(
+        kernel_directory,
+        virt,
+        phys,
+        flags
+    );
+}
+
 uintptr_t paging_translate(struct page_directory *directory,
                            uintptr_t              virt)
 {
@@ -318,12 +332,17 @@ struct page_directory *paging_create_directory(void)
     struct page_directory *directory;
     uintptr_t              phys;
 
+
     phys = (uintptr_t)pmm_alloc_page();
 
     if (phys == 0)
         return NULL;
 
+
+
     directory = (struct page_directory *)PHYS_TO_VIRT(phys);
+
+
 
     memset(directory, 0, sizeof(*directory));
 

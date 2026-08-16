@@ -307,6 +307,30 @@
 
 /*
  * ============================================================================
+ * Kernel stack virtual-address region
+ * ============================================================================
+ */
+
+
+#define KERNEL_STACK_SIZE    0x4000u   /* 16 KiB per kernel stack */
+
+/*
+ * PDE containing the kernel stack virtual-address region.
+ *
+ * KERNEL_STACKS_START = 0xD0000000
+ * Therefore this is PDE 832.
+ */
+#define KERNEL_STACK_PDE (KERNEL_STACKS_START >> 22)
+
+#define KERNEL_STACK_COUNT \
+((KERNEL_STACKS_END - KERNEL_STACKS_START + 1u) / \
+KERNEL_STACK_SIZE)
+
+#define KERNEL_STACK_BITMAP_BYTES \
+((KERNEL_STACK_COUNT + 7u) / 8u)
+
+/*
+ * ============================================================================
  * Compile-time layout validation
  * ============================================================================
  *

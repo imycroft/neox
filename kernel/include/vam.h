@@ -21,6 +21,10 @@ void *vam_alloc_pages(uint32_t count);
 
 void  vam_free_pages(uintptr_t addr, uint32_t count);
 
+void *vam_alloc_stack(void);
+
+void vam_free_stack(void *address);
+
 void  vam_dump(void);
 
 #endif

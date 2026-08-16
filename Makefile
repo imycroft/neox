@@ -107,6 +107,8 @@ $(USER_OBJECT): $(USER_SOURCE)
 		-nostdinc \
 		-Wall \
 		-Wextra \
+		-mno-sse \
+		-mno-sse2 \
 		-std=c23 \
 		-Werror \
 		-c $< -o $@
