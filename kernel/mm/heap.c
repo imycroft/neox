@@ -87,6 +87,7 @@ static bool heap_expand(void)
     if (vmm_alloc_pages(heap_end, 1) == NULL)
         return false;
 
+
     block = heap_last_block();
 
     if (block == NULL)
@@ -145,15 +146,25 @@ static void heap_split_block(struct heap_block *block,
 
 void heap_init(void)
 {
+    if (vmm_alloc_pages(KERNEL_HEAP_START, HEAP_PAGES) == NULL)
+    {
+        printf("Heap: allocation failed\n");
+        return;
+    }
     // for Debugging
     heap_expansions = 0;
     //
     heap_head = (struct heap_block *)KERNEL_HEAP_START;
     heap_end  = KERNEL_HEAP_START + HEAP_PAGES * PAGE_SIZE;
 
+    printf("heap head %x\n", heap_head);
+    printf("heap end %x\n", heap_end);
+    printf("heap size before %x\n", heap_head->size );
     heap_head->size =
     HEAP_PAGES * PAGE_SIZE -
     sizeof(struct heap_block);
+
+    printf("heap size %x\n", heap_head->size );
 
     heap_head->free = true;
     heap_head->next = NULL;

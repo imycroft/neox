@@ -45,6 +45,11 @@ static bool vmm_map_pages(uintptr_t virt,
     {
         if (paging_translate(directory, virt + i * PAGE_SIZE) != 0)
         {
+            printf("VMM: already mapped virt=%x phys=%x\n",
+                   (uint32_t)(virt + i * PAGE_SIZE),
+                   (uint32_t)paging_translate(
+                       directory,
+                       virt + i * PAGE_SIZE));
             printf("VMM: virtual page %x already mapped\n",
                    virt + i * PAGE_SIZE);
             return false;

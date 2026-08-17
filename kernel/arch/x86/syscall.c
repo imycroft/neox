@@ -1,11 +1,13 @@
 #include "syscall.h"
 #include "idt.h"
 #include "gdt.h"
+#include "paging.h"
 #include "printf.h"
 #include "scheduler.h"
 #include "scheduler_internal.h"
 #include "arch.h"
 #include "thread.h"
+#include "process.h"
 
 /* ------------------------------------------------------------------ */
 /* Syscall dispatch                                                     */
@@ -36,6 +38,7 @@ void syscall_init(void)
                          0xEE);   /* DPL=3 interrupt gate */
 }
 
+
 /* ------------------------------------------------------------------ */
 /* Handlers                                                             */
 /* ------------------------------------------------------------------ */
@@ -59,7 +62,24 @@ static void sys_exit(int code)
 
 static void sys_write(const char *buf, uint32_t len)
 {
+    struct thread *thread;
+    struct process *process;
     uint32_t i;
+
+    thread = scheduler_current();
+
+    if (thread == NULL)
+        return;
+
+    process = thread->process;
+
+    if (!paging_user_range_valid(
+        process->page_directory,
+        (uintptr_t)buf,
+                                 len))
+    {
+        return;
+    }
 
     for (i = 0; i < len; i++)
         printf("%c", buf[i]);

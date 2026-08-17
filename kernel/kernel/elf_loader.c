@@ -33,32 +33,27 @@ int elf_validate(const void *image, uint32_t size)
         header->e_ident[3] != ELF_MAGIC3)
 
         {
-            printf("e_ident error\n");
             return 0;
         }
 
 
     if (header->e_ident[4] != ELFCLASS32)
     {
-        printf("e_ident4 error\n");
         return 0;
     }
 
     if (header->e_ident[5] != ELFDATA2LSB)
     {
-        printf("e_ident5 error\n");
         return 0;
     }
 
     if (header->e_type != ET_EXEC)
     {
-        printf("e_type error\n");
         return 0;
     }
 
     if (header->e_machine != EM_386)
     {
-        printf("e_machine error\n");
         return 0;
     }
 
@@ -316,9 +311,6 @@ void elf_dump_load_segments(const void *image)
     uint16_t i;
 
     header = (const struct elf32_header *)image;
-
-    printf("ELF entry = %x\n", header->e_entry);
-    printf("ELF program headers = %u\n", header->e_phnum);
 
     for (i = 0; i < header->e_phnum; i++)
     {

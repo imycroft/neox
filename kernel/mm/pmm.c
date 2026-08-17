@@ -60,17 +60,6 @@ static void bitmap_set_range(uint64_t addr, uint64_t len)
         bitmap_set(first_page + i);
 }
 
-static void pmm_reserve_range(uintptr_t addr, uintptr_t size)
-{
-    uint32_t first;
-    uint32_t count;
-
-    first = addr / PAGE_SIZE;
-    count = (size + PAGE_SIZE - 1) / PAGE_SIZE;
-
-    bitmap_set_range(first, count);
-}
-
 void pmm_init(void)
 {
     const struct multiboot_tag_mmap *mmap;
@@ -177,15 +166,15 @@ void pmm_init(void)
 
     /* Reserve 0-1 MB */
 
-    pmm_reserve_range(0, 0x00100000);
+    bitmap_set_range(0, 0x00100000);
 
     /* Reserve pages occupied by the kernel and the bitmap. */
 
-    pmm_reserve_range(
+    bitmap_set_range(
         KERNEL_LOAD_ADDRESS,
         kernel_physical_end - KERNEL_LOAD_ADDRESS
     );
-    pmm_reserve_range((uintptr_t)mb_info_physical,
+    bitmap_set_range((uintptr_t)mb_info_physical,
                      mb_info->total_size);
 
     if (module != NULL)

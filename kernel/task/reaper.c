@@ -26,7 +26,6 @@ struct thread *reaper_thread_get(void)
 
 static void reaper_entry(void)
 {
-    printf("reaper_entry\n");
     struct thread    *zombie;
     struct process   *process;
     interrupt_state_t state;

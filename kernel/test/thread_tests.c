@@ -99,7 +99,7 @@ static void test_thread_stack_allocated(void)
     TEST_ASSERT_NOT_NULL(thread->kernel_stack);
 
     stack_start = (uintptr_t)thread->kernel_stack;
-    stack_end = stack_start + THREAD_STACK_SIZE;
+    stack_end = stack_start + KERNEL_STACK_SIZE;
 
     TEST_ASSERT_TRUE(thread->kernel_sp >= stack_start);
     TEST_ASSERT_TRUE(thread->kernel_sp < stack_end);

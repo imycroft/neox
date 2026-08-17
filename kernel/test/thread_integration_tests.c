@@ -25,6 +25,7 @@
 #include "test.h"
 #include "util.h"
 #include "string.h"
+#include "printf.h"
 
 static volatile bool thread_started;
 static volatile bool thread_executed;
@@ -167,6 +168,7 @@ static void test_thread_execution(void)
      * thread_join() waits then destroys; thread is invalid
      * after this point.
      */
+
     thread_join(thread);
 
     TEST_ASSERT_TRUE(thread_executed);

@@ -214,8 +214,6 @@ struct thread *thread_create(
      * The stack grows downward.
      */
 
-
-    uintptr_t stack_virt;
     uintptr_t stack_phys;
     uintptr_t stack_top;
 
@@ -249,21 +247,8 @@ struct thread *thread_create(
         return NULL;
     }
 
-    /*
-     * Access through the kernel's physical mapping.
-     */
-    stack_virt =
-    (uintptr_t)PHYS_TO_VIRT(
-        stack_phys & PAGE_FRAME_MASK
-    );
 
-    stack =
-    (uintptr_t *)
-    (
-        stack_virt +
-        ((stack_top - sizeof(uintptr_t)) & (PAGE_SIZE - 1))
-        + sizeof(uintptr_t)
-    );
+    stack = (uintptr_t *)stack_top;
 
     /*
      * Build the initial stack frame.
@@ -293,10 +278,7 @@ struct thread *thread_create(
 
     thread->tid = next_tid++;
     thread->process = process;
-     printf("thread %u created\n", thread->tid);
-     printf("tid = %u \tinitial stack physical=%x\n",thread->tid, stack_phys);
-     printf("initial stack kernel virtual=%x\n", (uint32_t)stack);
-
+    // printf("thread %u created\n", thread->tid);
     return thread;
 }
 

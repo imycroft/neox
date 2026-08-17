@@ -198,12 +198,6 @@ void multiboot2_dump_module(void)
 
     printf("ELF address = %x\n", (uint32_t)bytes);
 
-    printf("ELF bytes = %x %x %x %x\n",
-           bytes[0],
-           bytes[1],
-           bytes[2],
-           bytes[3]);
-
     printf("ELF validation: %s\n",
             elf_validate(image, size) ? "OK" : "FAILED");
 
@@ -276,8 +270,4 @@ void multiboot2_dump_module(void)
     scheduler_add(init_thread);
 
     interrupt_enable();
-
-    printf("ELF init thread scheduled\n");
-
-
 }

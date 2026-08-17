@@ -67,3 +67,8 @@ void paging_map_kernel(
     uintptr_t phys,
     uint32_t flags
 );
+
+bool paging_user_range_valid(
+    struct page_directory *directory,
+    uintptr_t              addr,
+    uint32_t               len);

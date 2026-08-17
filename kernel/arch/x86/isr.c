@@ -1,4 +1,6 @@
 #include "isr.h"
+
+#include "scheduler.h"
 #include "printf.h"
 
 static const char *exception_messages[32] =
@@ -39,6 +41,10 @@ static const char *exception_messages[32] =
 
 void isr_handler(struct registers *regs)
 {
+    uint32_t privilege;
+
+    privilege = regs->cs & 0x3;
+
     printf("\n=== CPU EXCEPTION ===\n");
 
     if (regs->int_no < 32)
@@ -47,6 +53,8 @@ void isr_handler(struct registers *regs)
     printf("Vector : %u\n", regs->int_no);
     printf("Error  : %x\n", regs->err_code);
     printf("EIP    : %x\n", regs->eip);
+    printf("CS     : %x\n", regs->cs);
+    printf("CPL    : %u\n", privilege);
 
     if (regs->int_no == 14)
     {
@@ -57,6 +65,23 @@ void isr_handler(struct registers *regs)
 
         printf("CR2    : %x\n", cr2);
     }
+
+    if (privilege == 3)
+    {
+        /*
+         * User-mode exception.
+         *
+         * For now, don't kill the process yet. We first want to
+         * verify that the exception is correctly classified as
+         * Ring 3.
+         */
+        printf("USER MODE EXCEPTION\n");
+
+        while (1)
+            __asm__ volatile ("hlt");
+    }
+
+    printf("KERNEL MODE EXCEPTION\n");
 
     while (1)
         __asm__ volatile ("hlt");

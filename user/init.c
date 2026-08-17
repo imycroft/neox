@@ -13,6 +13,14 @@ void _start(void)
         : "eax", "ebx", "ecx"
     );
 
+    /*
+     * Deliberately generate #UD (Invalid Opcode).
+     */
+    __asm__ volatile ("ud2");
+
+    /*
+     * We should never reach this.
+     */
     __asm__ volatile (
         "mov $1, %%eax\n\t"
         "xor %%ebx, %%ebx\n\t"

@@ -105,6 +105,10 @@
 #define KERNEL_VIRT_END              0xFFBFFFFFu
 #define KERNEL_VIRT_SIZE             0x3FC00000u
 
+#define BOOTSTRAP_MAP_SIZE           0x01000000u
+
+#define KERNEL_BOOTSTRAP_END         \
+(KERNEL_VIRT_BASE + BOOTSTRAP_MAP_SIZE)
 
 /*
  * ============================================================================
@@ -214,10 +218,10 @@
  * are managed separately by the physical memory manager.
  */
 
-#define KERNEL_HEAP_START            0xC0800000u
-#define KERNEL_HEAP_END              0xCFFFFFFFu
-#define KERNEL_HEAP_SIZE             0x0F800000u
-
+#define KERNEL_HEAP_START            KERNEL_BOOTSTRAP_END
+#define KERNEL_HEAP_END        0xCFFFFFFFu
+#define KERNEL_HEAP_SIZE       \
+(KERNEL_HEAP_END - KERNEL_HEAP_START + 1u)
 
 /*
  * ============================================================================
@@ -497,6 +501,16 @@ _Static_assert(
     USER_PDE_COUNT + (KERNEL_PDE_END - KERNEL_PDE_START + 1) + RECURSIVE_PDE_COUNT
     == PAGE_DIRECTORY_ENTRIES,
     "PDE region counts do not sum to full page directory"
+);
+
+_Static_assert(
+    KERNEL_HEAP_START >= KERNEL_BOOTSTRAP_END,
+    "kernel heap overlaps bootstrap mapping"
+);
+
+_Static_assert(
+    KERNEL_HEAP_END < KERNEL_STACKS_START,
+    "kernel heap overlaps kernel stack region"
 );
 
 #endif /* MEMORY_LAYOUT_H */

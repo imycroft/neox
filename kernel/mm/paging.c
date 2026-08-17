@@ -255,6 +255,7 @@ void paging_map(struct page_directory *directory,
          */
         table_phys = VIRT_TO_PHYS((uintptr_t)table);
 
+
         directory->entries[directory_index] =
             (uint32_t)table_phys |
             PAGE_PRESENT |
@@ -370,4 +371,61 @@ void paging_copy_kernel_mappings(struct page_directory *directory)
     {
         directory->entries[i] = kernel_directory->entries[i];
     }
+}
+
+bool paging_user_range_valid(
+    struct page_directory *directory,
+    uintptr_t              addr,
+    uint32_t               len)
+{
+    uintptr_t start;
+    uintptr_t end;
+    uintptr_t page;
+
+    if (directory == NULL)
+        return false;
+
+    if (len == 0)
+        return true;
+
+    if (addr + len < addr)
+        return false;
+
+    start = addr & ~(PAGE_SIZE - 1);
+    end = (addr + len - 1) & ~(PAGE_SIZE - 1);
+
+    for (page = start; page <= end; page += PAGE_SIZE)
+    {
+        uint32_t directory_index;
+        uint32_t table_index;
+        struct page_table *table;
+        page_entry_t entry;
+
+        directory_index = page >> 22;
+        table_index = (page >> 12) & 0x3FF;
+
+        table = paging_get_table(
+            directory,
+            directory_index
+        );
+
+        if (table == NULL)
+            return false;
+
+        entry = table->entries[table_index];
+
+        if (!(entry & PAGE_PRESENT))
+            return false;
+
+        if (!(entry & PAGE_USER))
+            return false;
+
+        /*
+         * Prevent wraparound at the end of the address space.
+         */
+        if (page == end)
+            break;
+    }
+
+    return true;
 }
