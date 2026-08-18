@@ -1,11 +1,20 @@
 #include "elf_loader.h"
 #include "elf.h"
+#include "heap.h"
 #include "process.h"
 #include "pmm.h"
 #include "paging.h"
 #include "memory.h"
 #include "string.h"
+#include "list.h"
+#include "util.h"
 #include "printf.h"
+
+struct elf_loaded_page
+{
+    uintptr_t    virt;
+    struct list_node node;
+};
 
 int elf_validate(const void *image, uint32_t size)
 {
@@ -80,6 +89,7 @@ int elf_load(struct process *process,
              uintptr_t *entry)
 {
     const struct elf32_header *header;
+    struct list loaded_pages;
     uint16_t i;
 
     if (process == NULL ||
@@ -91,6 +101,8 @@ int elf_load(struct process *process,
         return 0;
 
     header = (const struct elf32_header *)image;
+
+    list_init(&loaded_pages);
 
     for (i = 0; i < header->e_phnum; i++)
     {
@@ -114,7 +126,7 @@ int elf_load(struct process *process,
          * the segment will occupy in memory.
          */
         if (ph->p_memsz < ph->p_filesz)
-            return 0;
+            goto fail;
 
         /*
          * Make sure the file portion of the segment is
@@ -122,13 +134,13 @@ int elf_load(struct process *process,
          */
         if (ph->p_offset > size ||
             ph->p_filesz > size - ph->p_offset)
-            return 0;
+            goto fail;
 
         /*
          * Detect virtual-address overflow.
          */
         if (ph->p_vaddr + ph->p_memsz < ph->p_vaddr)
-            return 0;
+            goto fail;
 
         /*
          * Calculate the page-aligned virtual range.
@@ -165,8 +177,9 @@ int elf_load(struct process *process,
          */
         for (page = segment_start;
              page < segment_end;
-        page += PAGE_SIZE)
+             page += PAGE_SIZE)
              {
+                 struct elf_loaded_page *loaded;
                  void *phys;
                  uintptr_t translated;
                  uint32_t page_offset;
@@ -181,7 +194,7 @@ int elf_load(struct process *process,
                  if (phys == NULL)
                  {
                      printf("ELF: physical page allocation failed\n");
-                     return 0;
+                     goto fail;
                  }
 
                  /*
@@ -204,7 +217,7 @@ int elf_load(struct process *process,
                      process->page_directory,
                      page,
                      (uintptr_t)phys,
-                            flags
+                     flags
                  );
 
                  /*
@@ -223,9 +236,38 @@ int elf_load(struct process *process,
                          (uint32_t)page
                      );
 
+                     paging_unmap(
+                         process->page_directory,
+                         page
+                     );
+
                      pmm_free_page(phys);
-                     return 0;
+
+                     goto fail;
                  }
+
+                 loaded = kmalloc(sizeof(*loaded));
+
+                 if (loaded == NULL)
+                 {
+                     paging_unmap(
+                         process->page_directory,
+                         page
+                     );
+
+                     pmm_free_page(phys);
+
+                     goto fail;
+                 }
+
+                 loaded->virt = page;
+
+                 list_node_init(&loaded->node);
+
+                 list_push_back(
+                     &loaded_pages,
+                     &loaded->node
+                 );
 
                  /*
                   * Determine where the ELF file data starts
@@ -301,6 +343,42 @@ int elf_load(struct process *process,
     );
 
     return 1;
+
+    fail:
+    while (!list_empty(&loaded_pages))
+    {
+        struct list_node *node;
+        struct elf_loaded_page *loaded;
+        uintptr_t phys;
+
+        node = list_back(&loaded_pages);
+
+        loaded = container_of(
+            node,
+            struct elf_loaded_page,
+            node
+        );
+
+        phys = paging_translate(
+            process->page_directory,
+            loaded->virt
+        );
+
+        list_remove(node);
+
+        paging_unmap(
+            process->page_directory,
+            loaded->virt
+        );
+
+        if (phys != 0)
+            pmm_free_page((void *)phys);
+
+        kfree(loaded);
+    }
+
+    return 0;
+
 }
 
 // dumpers

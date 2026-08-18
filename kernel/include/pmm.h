@@ -14,3 +14,5 @@ uint32_t pmm_total_memory(void);
 uint32_t pmm_usable_memory(void);
 
 uint32_t pmm_free_pages(void);
+
+void pmm_fail_next_allocations(uint32_t count);

@@ -1,6 +1,9 @@
 #include "isr.h"
 
 #include "scheduler.h"
+#include "thread.h"
+
+#include "panic.h"
 #include "printf.h"
 
 static const char *exception_messages[32] =
@@ -68,17 +71,11 @@ void isr_handler(struct registers *regs)
 
     if (privilege == 3)
     {
-        /*
-         * User-mode exception.
-         *
-         * For now, don't kill the process yet. We first want to
-         * verify that the exception is correctly classified as
-         * Ring 3.
-         */
         printf("USER MODE EXCEPTION\n");
 
-        while (1)
-            __asm__ volatile ("hlt");
+        thread_kill_current();
+
+        panic("user exception returned");
     }
 
     printf("KERNEL MODE EXCEPTION\n");

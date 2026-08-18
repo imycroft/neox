@@ -19,6 +19,8 @@ static uint32_t bitmap_pages;
 
 static uint32_t free_pages;
 
+static uint32_t fail_allocations;
+
 static void bitmap_set(uint32_t page)
 {
     bitmap[page / 8] |= (1 << (page % 8));
@@ -204,6 +206,11 @@ void *pmm_alloc_page(void)
 
     interrupt_state_t state;
 
+    if (fail_allocations != 0)
+    {
+        fail_allocations--;
+        return NULL;
+    }
     state = interrupt_save();
 
     for (page = 0; page < total_pages; page++)
@@ -263,4 +270,9 @@ uint32_t pmm_usable_memory(void)
 uint32_t pmm_free_pages(void)
 {
     return free_pages;
+}
+
+void pmm_fail_next_allocations(uint32_t count)
+{
+    fail_allocations = count;
 }

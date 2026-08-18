@@ -41,6 +41,8 @@ static void test_usermode_elf(void)
     uintptr_t stack_phys;
     uintptr_t kernel_stack_phys;
 
+    interrupt_state_t state;
+
     module = multiboot2_module();
 
     TEST_ASSERT_NOT_NULL(module);
@@ -153,11 +155,11 @@ static void test_usermode_elf(void)
      *
      * scheduler_add() requires interrupts to be disabled.
      */
-    interrupt_disable();
+    state = interrupt_save();
 
     scheduler_add(thread);
 
-    interrupt_enable();
+    interrupt_restore(state);
 
     /*
      * At this point the test has successfully:
@@ -186,6 +188,8 @@ static void test_usermode_stack_isolation(void)
 
     uintptr_t translated_a;
     uintptr_t translated_b;
+
+    interrupt_state_t state;
 
     process_a = process_create("usermode_a");
     TEST_ASSERT_NOT_NULL(process_a);
@@ -278,12 +282,12 @@ static void test_usermode_stack_isolation(void)
     pmm_free_page(phys_b);
 
 
-    interrupt_disable();
+    state = interrupt_save();
 
     process_destroy(process_a);
     process_destroy(process_b);
 
-    interrupt_enable();
+    interrupt_restore(state);
 
     test_pass();
 }
@@ -369,9 +373,6 @@ static void test_usermode_elf_stack_isolation(void)
 
     TEST_ASSERT_NOT_NULL(thread_b);
 
-    thread_a->detached = true;
-    thread_b->detached = true;
-
     /*
      * Both processes use the same user virtual stack address.
      */
@@ -421,28 +422,223 @@ static void test_usermode_elf_stack_isolation(void)
      *
      * Cleanup is therefore performed directly.
      */
+    interrupt_state_t state = interrupt_save();
+
+    thread_add(thread_a);
+    thread_add(thread_b);
+
+    interrupt_restore(state);
+
+    thread_join(thread_a);
+    thread_join(thread_b);
+
+    test_pass();
+}
+
+static void test_usermode_process_reclamation(void)
+{
+    const struct multiboot_tag_module *module;
+    const void *image;
+    uint32_t size;
+    uint32_t before;
+    uint32_t after;
+    uint32_t i;
+
+    module = multiboot2_module();
+
+    TEST_ASSERT_NOT_NULL(module);
+
+    image = (const void *)PHYS_TO_VIRT(module->mod_start);
+    size = module->mod_end - module->mod_start;
+
+    TEST_ASSERT_TRUE(
+        elf_validate(image, size)
+    );
+
+    before = pmm_free_pages();
+
+    for (i = 0; i < 100; i++)
+    {
+        struct process *process;
+        struct thread  *thread;
+        uintptr_t       entry;
+        interrupt_state_t state;
+
+        process = process_create("usermode_reclaim");
+
+        TEST_ASSERT_NOT_NULL(process);
+
+        TEST_ASSERT_TRUE(
+            elf_load(
+                process,
+                image,
+                size,
+                &entry
+            )
+        );
+
+        thread = usermode_elf_thread_create(
+            process,
+            entry
+        );
+
+        TEST_ASSERT_NOT_NULL(thread);
+
+        state = interrupt_save();
+
+        scheduler_add(thread);
+
+        interrupt_restore(state);
+
+        thread_join(thread);
+    }
+
+    after = pmm_free_pages();
+
+    TEST_ASSERT_EQ(after, before);
+
+    test_pass();
+}
+
+static void test_usermode_detached_reclamation(void)
+{
+    const struct multiboot_tag_module *module;
+    struct process *process;
+    struct thread  *thread;
+    const void     *image;
+    uint32_t        size;
+    uintptr_t       entry;
+    interrupt_state_t state;
+
+    module = multiboot2_module();
+
+    TEST_ASSERT_NOT_NULL(module);
+
+    image = (const void *)PHYS_TO_VIRT(module->mod_start);
+    size = module->mod_end - module->mod_start;
+
+    TEST_ASSERT_TRUE(
+        elf_validate(image, size)
+    );
+
+    process = process_create("usermode_detached");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    TEST_ASSERT_TRUE(
+        elf_load(
+            process,
+            image,
+            size,
+            &entry
+        )
+    );
+
+    TEST_ASSERT_NE(entry, 0);
+
+    thread = usermode_elf_thread_create(
+        process,
+        entry
+    );
+
+    TEST_ASSERT_NOT_NULL(thread);
+
+    /*
+     * Detached threads are not joined by their creator.
+     *
+     * Once the thread terminates, the reaper owns its destruction.
+     */
+    thread->detached = true;
+
+    state = interrupt_save();
+
+    scheduler_add(thread);
+
+    interrupt_restore(state);
+
+    /*
+     * Give the user thread time to execute and terminate.
+     * The reaper will subsequently destroy the detached thread
+     * and, once its process has no remaining threads, destroy
+     * the process as well.
+     */
+    test_wait_ticks(20);
+
+    /*
+     * We deliberately do NOT call thread_join().
+     *
+     * The thread and process must have been reclaimed by the reaper.
+     */
+    test_pass();
+}
+
+static void test_elf_load_rollback(void)
+{
+    const struct multiboot_tag_module *module;
+    struct process *process;
+    const void *image;
+    uint32_t size;
+    uintptr_t entry;
+    uint32_t before;
+    uint32_t after;
+
+    module = multiboot2_module();
+
+    TEST_ASSERT_NOT_NULL(module);
+
+    image = (const void *)PHYS_TO_VIRT(module->mod_start);
+    size = module->mod_end - module->mod_start;
+
+    TEST_ASSERT_TRUE(
+        elf_validate(image, size)
+    );
+
+    process = process_create("elf_rollback");
+
+    TEST_ASSERT_NOT_NULL(process);
+
+    before = pmm_free_pages();
+
+    /*
+     * Allow the first ELF page allocation to succeed,
+     * then force the next allocation to fail.
+     */
+    pmm_fail_next_allocations(1);
+
+    TEST_ASSERT_FALSE(
+        elf_load(
+            process,
+            image,
+            size,
+            &entry
+        )
+    );
+
+    after = pmm_free_pages();
+
+    TEST_ASSERT_EQ(after, before);
+
     interrupt_disable();
 
-    thread_destroy(thread_a);
-    thread_destroy(thread_b);
-
-    process_destroy(process_a);
-    process_destroy(process_b);
+    process_destroy(process);
 
     interrupt_enable();
 
     test_pass();
 }
+
 /*
  * User-mode test suite.
  */
-
 
 static test_entry_t tests[] =
 {
     { "usermode_elf",             test_usermode_elf },
     { "usermode_stack_isolation", test_usermode_stack_isolation },
     { "usermode_elf_stack_isolation", test_usermode_elf_stack_isolation },
+    { "usermode_process_reclamation", test_usermode_process_reclamation },
+    { "usermode_detached_reclamation", test_usermode_detached_reclamation },
+    { "elf_load_rollback", test_elf_load_rollback },
 };
 void test_usermode(void)
 {

@@ -20,18 +20,7 @@
 // Private functions
 static void thread_exit(void)
 {
-    struct thread *thread;
-
-    interrupt_disable();
-
-    thread = scheduler_current();
-
-    ASSERT(thread != NULL);
-
-    scheduler_terminate(thread);
-    scheduler_yield();
-
-    panic("terminated thread resumed");
+    thread_kill_current();
 }
 
 /*
@@ -305,6 +294,7 @@ void thread_destroy(struct thread *thread)
     uintptr_t  virt;
     void      *phys;
 
+    printf("destroying thread %s\n", thread->process->name);
     ASSERT(thread != NULL);
     ASSERT(!interrupt_enabled());
     ASSERT(thread->state == THREAD_TERMINATED);
@@ -401,7 +391,10 @@ void thread_join(struct thread *thread)
     state = interrupt_save();
 
     if (thread->state != THREAD_TERMINATED)
+    {
         wait_queue_sleep(&thread->termination_queue);
+    }
+
 
     /*
      * Thread is now THREAD_TERMINATED and off the scheduler.
@@ -452,4 +445,21 @@ void thread_yield(void)
     scheduler_yield();
 
     interrupt_restore(state);
+}
+
+void thread_kill_current(void)
+{
+    struct thread *thread;
+
+    interrupt_disable();
+
+    thread = scheduler_current();
+
+    ASSERT(thread != NULL);
+
+    scheduler_terminate(thread);
+    printf("destroying thread %s\n", thread->process->name); // __debug
+    scheduler_yield();
+
+    panic("terminated thread resumed");
 }

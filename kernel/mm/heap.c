@@ -225,22 +225,12 @@ void heap_init(void)
     heap_head = (struct heap_block *)KERNEL_HEAP_START;
     heap_end  = KERNEL_HEAP_START + HEAP_PAGES * PAGE_SIZE;
 
-    printf("heap head %x\n", heap_head);
-    printf("heap end %x\n", heap_end);
-    printf("heap size before %x\n", heap_head->size );
     heap_head->size =
     HEAP_PAGES * PAGE_SIZE -
     sizeof(struct heap_block);
 
-    printf("heap size %x\n", heap_head->size );
-
     heap_head->free = true;
     heap_head->next = NULL;
-
-    printf("Heap initialized\n");
-    printf("Heap start : %x\n", HEAP_START);
-    printf("Heap size  : %u bytes\n",
-           HEAP_PAGES * PAGE_SIZE);
 
     HEAP_VALIDATE();
 }

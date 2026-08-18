@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "gdt.h"
 #include "paging.h"
+#include "panic.h"
 #include "printf.h"
 #include "scheduler.h"
 #include "scheduler_internal.h"
@@ -9,6 +10,7 @@
 #include "thread.h"
 #include "process.h"
 
+#define SYSCALL_ERROR ((uint32_t)-1)
 /* ------------------------------------------------------------------ */
 /* Syscall dispatch                                                     */
 /* ------------------------------------------------------------------ */
@@ -43,24 +45,15 @@ void syscall_init(void)
 /* Handlers                                                             */
 /* ------------------------------------------------------------------ */
 
-static void sys_exit(int code)
+static void sys_exit(uint32_t code)
 {
     (void)code;
 
-    struct thread *thread = scheduler_current();
+    thread_kill_current();
 
-    if (thread == NULL)
-        return;
-
-    interrupt_disable();
-
-    scheduler_terminate(thread);
-    scheduler_yield();
-
-    /* unreachable */
+    panic("thread_kill_current returned");
 }
-
-static void sys_write(const char *buf, uint32_t len)
+static uint32_t sys_write(const char *buf, uint32_t len)
 {
     struct thread *thread;
     struct process *process;
@@ -69,7 +62,7 @@ static void sys_write(const char *buf, uint32_t len)
     thread = scheduler_current();
 
     if (thread == NULL)
-        return;
+        return SYSCALL_ERROR;
 
     process = thread->process;
 
@@ -78,11 +71,13 @@ static void sys_write(const char *buf, uint32_t len)
         (uintptr_t)buf,
                                  len))
     {
-        return;
+        return SYSCALL_ERROR;
     }
 
     for (i = 0; i < len; i++)
         printf("%c", buf[i]);
+
+    return len;
 }
 
 void syscall_handler(struct registers *regs)
@@ -101,15 +96,18 @@ void syscall_handler(struct registers *regs)
     switch (nr)
     {
         case SYS_EXIT:
-            sys_exit((int)arg1);
+            sys_exit(arg1);
             break;
 
         case SYS_WRITE:
-            sys_write((const char *)arg1, arg2);
+            regs->eax = sys_write(
+                (const char *)arg1,
+                arg2
+            );
             break;
 
         default:
-            printf("[syscall] unknown syscall %u\n", nr);
+            regs->eax = SYSCALL_ERROR;
             break;
     }
 }

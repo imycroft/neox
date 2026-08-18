@@ -1,3 +1,4 @@
+#include "arch.h"
 #include "test.h"
 #include "paging.h"
 #include "memory.h"
@@ -410,6 +411,210 @@ static void test_paging_kernel_mappings_copied(void)
          test_pass();
 }
 
+static void test_paging_destroy_directory_reclaims(void)
+{
+    uint32_t before;
+    uint32_t after;
+    struct page_directory *directory;
+    void *phys;
+
+    before = pmm_free_pages();
+
+    directory = paging_create_directory();
+    TEST_ASSERT_NOT_NULL(directory);
+
+    phys = pmm_alloc_page();
+    TEST_ASSERT_NOT_NULL(phys);
+
+    paging_map(
+        directory,
+        0x00400000,
+        (uintptr_t)phys,
+               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+    );
+
+    TEST_ASSERT_NE(
+        paging_translate(directory, 0x00400000),
+                   0
+    );
+
+    interrupt_disable();
+
+    paging_destroy_directory(directory);
+
+    interrupt_enable();
+
+    after = pmm_free_pages();
+
+    TEST_ASSERT_EQ(after, before);
+
+    test_pass();
+}
+
+static void test_paging_unmap_reclaims_empty_table(void)
+{
+    struct page_directory *directory;
+    void *phys;
+    uint32_t before;
+    uint32_t after;
+
+    before = pmm_free_pages();
+
+    directory = paging_create_directory();
+    TEST_ASSERT_NOT_NULL(directory);
+
+    phys = pmm_alloc_page();
+    TEST_ASSERT_NOT_NULL(phys);
+
+    paging_map(
+        directory,
+        0x00400000,
+        (uintptr_t)phys,
+               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+    );
+
+    TEST_ASSERT_NE(
+        paging_translate(directory, 0x00400000),
+                   0
+    );
+
+    /*
+     * Unmap the only page in the page table.
+     *
+     * paging_unmap() should therefore reclaim the page table.
+     */
+    paging_unmap(
+        directory,
+        0x00400000
+    );
+
+    TEST_ASSERT_EQ(
+        paging_translate(directory, 0x00400000),
+                   0
+    );
+
+    /*
+     * The physical page is owned by the caller, not paging_unmap().
+     */
+    pmm_free_page(phys);
+
+    /*
+     * The directory itself still exists.
+     */
+    interrupt_disable();
+
+    paging_destroy_directory(directory);
+
+    interrupt_enable();
+
+    after = pmm_free_pages();
+
+    TEST_ASSERT_EQ(after, before);
+
+    test_pass();
+}
+
+static void test_paging_unmap_keeps_nonempty_table(void)
+{
+    struct page_directory *directory;
+    void *phys_a;
+    void *phys_b;
+    uint32_t before;
+    uint32_t after;
+
+    before = pmm_free_pages();
+
+    directory = paging_create_directory();
+    TEST_ASSERT_NOT_NULL(directory);
+
+    phys_a = pmm_alloc_page();
+    TEST_ASSERT_NOT_NULL(phys_a);
+
+    phys_b = pmm_alloc_page();
+    TEST_ASSERT_NOT_NULL(phys_b);
+
+    /*
+     * Both pages use the same page table.
+     */
+    paging_map(
+        directory,
+        0x00400000,
+        (uintptr_t)phys_a,
+               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+    );
+
+    paging_map(
+        directory,
+        0x00401000,
+        (uintptr_t)phys_b,
+               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+    );
+
+    TEST_ASSERT_NE(
+        paging_translate(directory, 0x00400000),
+                   0
+    );
+
+    TEST_ASSERT_NE(
+        paging_translate(directory, 0x00401000),
+                   0
+    );
+
+    /*
+     * Remove the first mapping.
+     *
+     * The page table must NOT be reclaimed because the second
+     * mapping is still present.
+     */
+    paging_unmap(
+        directory,
+        0x00400000
+    );
+
+    TEST_ASSERT_EQ(
+        paging_translate(directory, 0x00400000),
+                   0
+    );
+
+    TEST_ASSERT_NE(
+        paging_translate(directory, 0x00401000),
+                   0
+    );
+
+    /*
+     * Remove the second mapping.
+     *
+     * The page table is now empty and must be reclaimed.
+     */
+    paging_unmap(
+        directory,
+        0x00401000
+    );
+
+    TEST_ASSERT_EQ(
+        paging_translate(directory, 0x00401000),
+                   0
+    );
+
+    /*
+     * paging_unmap() does not own the physical pages.
+     */
+    pmm_free_page(phys_a);
+    pmm_free_page(phys_b);
+
+    interrupt_disable();
+
+    paging_destroy_directory(directory);
+
+    interrupt_enable();
+
+    after = pmm_free_pages();
+
+    TEST_ASSERT_EQ(after, before);
+
+    test_pass();
+}
+
 /* ======== END OF TEST FUNCTIONS */
 
 
@@ -427,6 +632,9 @@ static test_entry_t tests[] =
     { "paging_many_page_tables", test_paging_many_page_tables },
     { "paging_map_thousands_of_pages",test_paging_map_thousands_of_pages},
     { "paging_kernel_mappings_copied", test_paging_kernel_mappings_copied },
+    { "paging_destroy_directory_reclaims", test_paging_destroy_directory_reclaims },
+    { "paging_unmap_reclaims_empty_table", test_paging_unmap_reclaims_empty_table },
+    { "paging_unmap_keeps_nonempty_table", test_paging_unmap_keeps_nonempty_table },
 };
 
 void test_paging(void)

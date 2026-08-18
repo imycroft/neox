@@ -1,14 +1,12 @@
 #include "multiboot2.h"
-#include "arch.h"
 #include "memory_layout.h"
 #include "panic.h"
 #include "printf.h"
 #include "paging.h"
 #include "elf_loader.h"
-#include "process.h"
 
-#include "scheduler.h"
-#include "usermode.h"
+
+
 
 static struct multiboot_info *boot_info;
 
@@ -161,8 +159,6 @@ void multiboot2_dump_tags(void)
 void multiboot2_dump_module(void)
 {
     const struct multiboot_tag_module *module;
-    const void *image;
-    uint32_t size;
 
     module = multiboot2_module();
 
@@ -177,96 +173,4 @@ void multiboot2_dump_module(void)
     printf("  end   = %x\n", module->mod_end);
     printf("  size  = %u\n", module->mod_end - module->mod_start);
     printf("  name  = %s\n", module->cmdline);
-
-    image = (const void *)PHYS_TO_VIRT(module->mod_start);
-    size = module->mod_end - module->mod_start;
-
-
-    const uint8_t *bytes;
-
-    uintptr_t translated;
-
-    translated = paging_translate(
-        paging_get_kernel_directory(),
-                                  (uintptr_t)image
-    );
-
-    printf("ELF virtual  = %x\n", (uint32_t)image);
-    printf("ELF physical = %x\n", (uint32_t)translated);
-
-    bytes = (const uint8_t *)PHYS_TO_VIRT(module->mod_start);
-
-    printf("ELF address = %x\n", (uint32_t)bytes);
-
-    printf("ELF validation: %s\n",
-            elf_validate(image, size) ? "OK" : "FAILED");
-
-    if (elf_validate(image, size))
-        elf_dump_load_segments(image);
-
-
-
-    struct process *init_process;
-    uintptr_t init_entry;
-
-    init_process = process_create("init");
-
-
-    if (init_process == NULL)
-    {
-        printf("ELF: failed to create init process\n");
-        return;
-    }
-
-    if (!elf_load(init_process,
-        image,
-        size,
-        &init_entry))
-    {
-        printf("ELF: failed to load init\n");
-        return;
-    }
-
-    ///
-
-    printf("ELF entry = %x\n", (uint32_t)init_entry);
-
-    printf("loaded bytes:\n");
-
-    uint32_t phys;
-
-    for (uint32_t i = 0; i < 16; i++)
-    {
-        phys = paging_translate(
-            init_process->page_directory,
-            init_entry + i
-        );
-
-        printf("%x ", *(uint8_t *)PHYS_TO_VIRT(phys));
-    }
-
-    printf("\n");
-
-    ///
-
-    struct thread *init_thread;
-
-    printf("ELF loaded: entry=%x\n", (uint32_t)init_entry);
-
-    init_thread = usermode_elf_thread_create(
-        init_process,
-        init_entry
-    );
-
-    if (init_thread == NULL)
-    {
-        printf("ELF: failed to create user thread\n");
-        return;
-    }
-
-    interrupt_disable();
-
-    scheduler_add(init_thread);
-
-    interrupt_enable();
 }

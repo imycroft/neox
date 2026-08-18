@@ -112,7 +112,7 @@ void thread_destroy(struct thread *thread);
 
 void thread_yield(void);
 
-
+void thread_kill_current(void);
 
 
 #endif

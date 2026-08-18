@@ -1,3 +1,4 @@
+#include "arch.h"
 #include "string.h"
 #include "pmm.h"
 #include "paging.h"
@@ -140,10 +141,6 @@ void paging_init(void)
 
     memset(kernel_directory, 0, sizeof(*kernel_directory));
 
-    printf("Paging: kernel directory physical=%x virtual=%x\n",
-           (uint32_t)phys,
-           (uint32_t)kernel_directory);
-
     /*
      * Copy the bootstrap page directory into the new kernel directory.
      *
@@ -198,9 +195,6 @@ void paging_init(void)
     kernel_directory->entries[RECURSIVE_PDE_INDEX] =
         phys | PAGE_PRESENT | PAGE_WRITABLE;
 
-    printf("Paging: recursive PDE installed at index %u\n",
-           RECURSIVE_PDE_INDEX);
-
     /*
      * Reload CR3 with the physical address of the new page directory.
      *
@@ -208,8 +202,6 @@ void paging_init(void)
      * page directory while keeping the same virtual mappings active.
      */
     paging_load_directory((uint32_t)phys);
-
-    printf("Paging: initialized\n");
 }
 
 
@@ -273,19 +265,56 @@ void paging_unmap(struct page_directory *directory,
 {
     uint32_t           directory_index;
     uint32_t           table_index;
+    uint32_t           i;
+    page_entry_t       pde;
     struct page_table *table;
+    uintptr_t           table_phys;
+
+    ASSERT(directory != NULL);
 
     directory_index = virt >> 22;
     table_index     = (virt >> 12) & 0x3FFu;
+
+    pde = directory->entries[directory_index];
+
+    if (!(pde & PAGE_PRESENT))
+        return;
 
     table = paging_get_table(directory, directory_index);
 
     if (table == NULL)
         return;
 
+    /*
+     * Remove the mapping.
+     */
     table->entries[table_index] = 0;
 
+    /*
+     * Invalidate the old virtual address in the TLB.
+     */
     paging_invalidate(virt);
+
+    /*
+     * Check whether the page table is now completely empty.
+     */
+    for (i = 0; i < 1024; i++)
+    {
+        if (table->entries[i] & PAGE_PRESENT)
+            return;
+    }
+
+    /*
+     * No mappings remain, so the page table itself can be reclaimed.
+     */
+    table_phys = pde & PAGE_FRAME_MASK;
+
+    pmm_free_page((void *)table_phys);
+
+    /*
+     * Remove the page-table mapping from the directory.
+     */
+    directory->entries[directory_index] = 0;
 }
 
 void paging_map_kernel(
@@ -349,13 +378,80 @@ struct page_directory *paging_create_directory(void)
 
 void paging_destroy_directory(struct page_directory *directory)
 {
-    uintptr_t phys;
+    uint32_t directory_index;
+    uint32_t table_index;
+    page_entry_t pde;
+    page_entry_t pte;
+    struct page_table *table;
+    uintptr_t table_phys;
+    uintptr_t page_phys;
 
     ASSERT(directory != NULL);
+    ASSERT(!interrupt_enabled());
 
-    phys = VIRT_TO_PHYS((uintptr_t)directory);
+    /*
+     * Destroy only the user-space portion of the address space.
+     *
+     * PDEs 0-767 cover the user-space region.
+     * PDEs 768-1022 contain the shared kernel mappings and must
+     * not be freed here.
+     */
+    for (directory_index = 0;
+         directory_index < 768;
+    directory_index++)
+         {
+             pde = directory->entries[directory_index];
 
-    pmm_free_page((void *)phys);
+             if (!(pde & PAGE_PRESENT))
+                 continue;
+
+             /*
+              * Convert the page-table physical address into its
+              * kernel virtual address.
+              */
+             table = (struct page_table *)
+             PHYS_TO_VIRT(
+                 pde & PAGE_FRAME_MASK
+             );
+
+             /*
+              * Free every physical page mapped by this page table.
+              */
+             for (table_index = 0;
+                  table_index < 1024;
+             table_index++)
+                  {
+                      pte = table->entries[table_index];
+
+                      if (!(pte & PAGE_PRESENT))
+                          continue;
+
+                      page_phys = pte & PAGE_FRAME_MASK;
+
+                      pmm_free_page((void *)page_phys);
+
+                      table->entries[table_index] = 0;
+                  }
+
+                  /*
+                   * The page table itself is no longer needed.
+                   */
+                  table_phys = pde & PAGE_FRAME_MASK;
+
+                  pmm_free_page((void *)table_phys);
+
+                  /*
+                   * Remove the page-table reference from the directory.
+                   */
+                  directory->entries[directory_index] = 0;
+         }
+
+         /*
+          * Finally free the physical page backing the page directory.
+          */
+         pmm_free_page(
+             (void *)VIRT_TO_PHYS((uintptr_t)directory)
+         );
 }
 
 void paging_copy_kernel_mappings(struct page_directory *directory)
