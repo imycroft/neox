@@ -387,40 +387,27 @@ static void test_paging_kernel_mappings_copied(void)
 {
     struct page_directory *kernel_directory;
     struct page_directory *directory;
-    uintptr_t virt;
-    uintptr_t kernel_phys;
-    uintptr_t process_phys;
+    uint32_t i;
 
     kernel_directory = paging_get_kernel_directory();
-
-    virt = 0x1000;
-
-    kernel_phys = paging_translate(
-        kernel_directory,
-        virt
-    );
-
-    TEST_ASSERT_EQ(kernel_phys, virt);
 
     directory = paging_create_directory();
 
     TEST_ASSERT_NE(directory, NULL);
 
-    process_phys = paging_translate(
-        directory,
-        virt
-    );
+    for (i = KERNEL_PDE_START;
+         i < PAGE_DIRECTORY_ENTRIES;
+    i++)
+         {
+             TEST_ASSERT_EQ(
+                 directory->entries[i],
+                 kernel_directory->entries[i]
+             );
+         }
 
-    TEST_ASSERT_EQ(process_phys, virt);
+         pmm_free_page(directory);
 
-    TEST_ASSERT_EQ(
-        directory->entries[0],
-        kernel_directory->entries[0]
-    );
-
-    pmm_free_page(directory);
-
-    test_pass();
+         test_pass();
 }
 
 /* ======== END OF TEST FUNCTIONS */

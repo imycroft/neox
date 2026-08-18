@@ -2,7 +2,7 @@
 #include "vmm.h"
 #include "paging.h"
 #include "printf.h"
-
+#include "assert.h"
 #define HEAP_START KERNEL_HEAP_START
 #define HEAP_PAGES 1
 
@@ -15,15 +15,74 @@ struct heap_block
 
 // Private Functions
 
-static uint32_t heap_align(uint32_t size)
-{
-    return (size + HEAP_ALIGNMENT - 1)
-    & ~(HEAP_ALIGNMENT - 1);
-}
+
 
 static struct heap_block *heap_head;
 static uintptr_t heap_end;
 static uint32_t heap_expansions;
+
+#ifdef KERNEL_DEBUG
+static void heap_validate(void)
+{
+    struct heap_block *block;
+    uintptr_t addr;
+    uintptr_t end;
+
+    block = heap_head;
+
+    while (block != NULL)
+    {
+        addr = (uintptr_t)block;
+
+        ASSERT(addr >= KERNEL_HEAP_START);
+        ASSERT(addr < heap_end);
+
+        ASSERT((addr % HEAP_ALIGNMENT) == 0);
+        ASSERT((block->size % HEAP_ALIGNMENT) == 0);
+
+        end = addr + sizeof(struct heap_block) + block->size;
+
+        ASSERT(end <= heap_end);
+
+        if (block->next != NULL)
+        {
+            ASSERT((uintptr_t)block->next == end);
+            ASSERT((uintptr_t)block->next > addr);
+        }
+
+        block = block->next;
+    }
+}
+#define HEAP_VALIDATE() heap_validate()
+#else
+#define HEAP_VALIDATE() ((void)0)
+#endif
+
+static uint32_t heap_align(uint32_t size)
+{
+    if (size > UINT32_MAX - (HEAP_ALIGNMENT - 1))
+        return 0;
+
+    return (size + HEAP_ALIGNMENT - 1)
+    & ~(HEAP_ALIGNMENT - 1);
+}
+
+static struct heap_block *heap_find_block(void *ptr)
+{
+    struct heap_block *block;
+
+    block = heap_head;
+
+    while (block != NULL)
+    {
+        if ((void *)(block + 1) == ptr)
+            return block;
+
+        block = block->next;
+    }
+
+    return NULL;
+}
 
 static struct heap_block *heap_find_free(uint32_t size)
 {
@@ -84,6 +143,9 @@ static bool heap_expand(void)
 {
     struct heap_block *block;
 
+    ASSERT(heap_head != NULL);
+    ASSERT(heap_end >= HEAP_START);
+
     if (vmm_alloc_pages(heap_end, 1) == NULL)
         return false;
 
@@ -112,6 +174,8 @@ static bool heap_expand(void)
     //
     heap_merge();
 
+    HEAP_VALIDATE();
+
     return true;
 }
 
@@ -120,18 +184,22 @@ static void heap_split_block(struct heap_block *block,
                              uint32_t size)
 {
     struct heap_block *new_block;
+    uint32_t remaining;
 
-    if (block->size <=
-        size + sizeof(struct heap_block))
-    {
+    ASSERT(block != NULL);
+    ASSERT(block->free);
+    ASSERT(size <= block->size);
+
+    remaining = block->size - size;
+
+    if (remaining <= sizeof(struct heap_block))
         return;
-    }
 
     new_block = (struct heap_block *)
     ((uint8_t *)(block + 1) + size);
 
     new_block->size =
-    block->size - size - sizeof(struct heap_block);
+    remaining - sizeof(struct heap_block);
 
     new_block->free = true;
     new_block->next = block->next;
@@ -173,6 +241,8 @@ void heap_init(void)
     printf("Heap start : %x\n", HEAP_START);
     printf("Heap size  : %u bytes\n",
            HEAP_PAGES * PAGE_SIZE);
+
+    HEAP_VALIDATE();
 }
 
 
@@ -184,6 +254,9 @@ void *kmalloc(uint32_t size)
         return NULL;
 
     size = heap_align(size);
+
+    if (size == 0)
+        return NULL;
 
     block = heap_find_free(size);
 
@@ -198,13 +271,11 @@ void *kmalloc(uint32_t size)
         block = heap_find_free(size);
     }
 
-    if (block->size >=
-        size + sizeof(struct heap_block) + 1)
-    {
-        heap_split_block(block, size);
-    }
+    heap_split_block(block, size);
 
     block->free = false;
+
+    HEAP_VALIDATE();
 
     return (void *)(block + 1);
 }
@@ -216,11 +287,17 @@ void kfree(void *ptr)
     if (ptr == NULL)
         return;
 
-    block = ((struct heap_block *)ptr) - 1;
+    block = heap_find_block(ptr);
+
+    ASSERT(block != NULL);
+
+    ASSERT(!block->free);
 
     block->free = true;
 
     heap_merge();
+
+    HEAP_VALIDATE();
 }
 
 

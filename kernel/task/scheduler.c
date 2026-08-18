@@ -209,7 +209,7 @@ static void scheduler_switch(void)
      */
 
     tss_set_kernel_stack(
-        (uintptr_t)next->kernel_stack + THREAD_STACK_SIZE
+        (uintptr_t)next->kernel_stack + KERNEL_STACK_SIZE
     );
 
     /*
@@ -308,7 +308,7 @@ void scheduler_start(void)
      *     return address
      */
     stack = (uintptr_t *)(
-        (uint8_t *)idle_thread.kernel_stack + THREAD_STACK_SIZE
+        (uint8_t *)idle_thread.kernel_stack + KERNEL_STACK_SIZE
     );
 
     /*

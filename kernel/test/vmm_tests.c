@@ -393,9 +393,8 @@ static void test_vmm_alloc_over_existing_fails(void)
                    phys
     );
 
-    test_pass();
-
     vmm_free_page(virt);
+    test_pass();
 }
 
 /*

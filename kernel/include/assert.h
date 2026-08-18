@@ -4,6 +4,7 @@
 /*
  * Halt the kernel if an assertion fails.
  */
+[[noreturn]]
 void assert_fail(const char *expr,
                  const char *file,
                  int line,

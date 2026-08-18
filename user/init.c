@@ -16,7 +16,7 @@ void _start(void)
     /*
      * Deliberately generate #UD (Invalid Opcode).
      */
-    __asm__ volatile ("ud2");
+   // __asm__ volatile ("ud2");
 
     /*
      * We should never reach this.

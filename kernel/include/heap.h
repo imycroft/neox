@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-#define HEAP_ALIGNMENT 8
+#define HEAP_ALIGNMENT 8u
 
 void heap_init(void);
 

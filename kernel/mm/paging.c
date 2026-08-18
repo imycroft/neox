@@ -333,23 +333,29 @@ struct page_directory *paging_create_directory(void)
     struct page_directory *directory;
     uintptr_t              phys;
 
-
     phys = (uintptr_t)pmm_alloc_page();
 
     if (phys == 0)
         return NULL;
 
-
-
     directory = (struct page_directory *)PHYS_TO_VIRT(phys);
-
-
 
     memset(directory, 0, sizeof(*directory));
 
     paging_copy_kernel_mappings(directory);
 
     return directory;
+}
+
+void paging_destroy_directory(struct page_directory *directory)
+{
+    uintptr_t phys;
+
+    ASSERT(directory != NULL);
+
+    phys = VIRT_TO_PHYS((uintptr_t)directory);
+
+    pmm_free_page((void *)phys);
 }
 
 void paging_copy_kernel_mappings(struct page_directory *directory)
@@ -426,6 +432,46 @@ bool paging_user_range_valid(
         if (page == end)
             break;
     }
+
+    return true;
+}
+
+bool paging_validate_mapping(
+    struct page_directory *directory,
+    uintptr_t              virt
+)
+{
+    uint32_t directory_index;
+    uint32_t table_index;
+    page_entry_t pde;
+    page_entry_t pte;
+    struct page_table *table;
+
+    ASSERT(directory != NULL);
+
+    directory_index = virt >> 22;
+    table_index = (virt >> 12) & 0x3FFu;
+
+    /* PDE must exist. */
+    pde = directory->entries[directory_index];
+
+    if (!(pde & PAGE_PRESENT))
+        return false;
+
+    /* Page table must be reachable. */
+    table = paging_get_table(
+        directory,
+        directory_index
+    );
+
+    if (table == NULL)
+        return false;
+
+    /* PTE must exist. */
+    pte = table->entries[table_index];
+
+    if (!(pte & PAGE_PRESENT))
+        return false;
 
     return true;
 }

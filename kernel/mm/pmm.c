@@ -3,7 +3,7 @@
 #include "multiboot2.h"
 #include "printf.h"
 #include "kernel.h"
-
+#include "arch.h"
 
 /* Physical memory statistics */
 static uint32_t total_memory;
@@ -26,7 +26,7 @@ static void bitmap_set(uint32_t page)
 
 static void bitmap_clear(uint32_t page)
 {
-    bitmap[page / 8] &= ~(1 << (page % 8));
+    bitmap[page / 8] &= (uint8_t)~(1 << (page % 8));
 }
 
 static int bitmap_test(uint32_t page)
@@ -202,6 +202,10 @@ void *pmm_alloc_page(void)
     uint32_t page;
     uintptr_t addr;
 
+    interrupt_state_t state;
+
+    state = interrupt_save();
+
     for (page = 0; page < total_pages; page++)
     {
         if (!bitmap_test(page))
@@ -211,27 +215,39 @@ void *pmm_alloc_page(void)
 
             addr = (uintptr_t)page * PAGE_SIZE;
 
+            interrupt_restore(state);
             return (void *)addr;
         }
     }
-
+    interrupt_restore(state);
     return NULL;
 }
 
 void pmm_free_page(void *page)
 {
     uint32_t page_number;
+    interrupt_state_t state;
+
+    state = interrupt_save();
 
     page_number = (uint32_t)page / PAGE_SIZE;
 
     if (page_number >= total_pages)
+    {
+        interrupt_restore(state);
         return;
+    }
 
     if (!bitmap_test(page_number))
+    {
+        interrupt_restore(state);
         return;
+    }
 
     bitmap_clear(page_number);
     free_pages++;
+
+    interrupt_restore(state);
 }
 
 uint32_t pmm_total_memory(void)

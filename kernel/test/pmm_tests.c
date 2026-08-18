@@ -5,7 +5,7 @@
 #include "util.h"
 
 #define PMM_TEST_PAGES 64
-#define PMM_MAX_TEST_PAGES 10000
+#define PMM_MAX_TEST_PAGES 16384
 
 // Definitions
 

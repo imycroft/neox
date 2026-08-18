@@ -49,6 +49,8 @@ struct page_directory *paging_get_kernel_directory(void);
 
 struct page_directory *paging_create_directory(void);
 
+void paging_destroy_directory(struct page_directory *directory);
+
 void paging_map(struct page_directory *directory,
                 uintptr_t virt,
                 uintptr_t phys,
@@ -72,3 +74,8 @@ bool paging_user_range_valid(
     struct page_directory *directory,
     uintptr_t              addr,
     uint32_t               len);
+
+bool paging_validate_mapping(
+    struct page_directory *directory,
+    uintptr_t              virt
+);

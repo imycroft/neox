@@ -10,21 +10,7 @@
 #include "printf.h"
 #include "assert.h"
 
-/*
- * Size of the user stack allocated for each user-mode thread.
- * One page is enough for our demo; a real OS would lazily grow it.
- */
-#define USER_STACK_PAGES 1
-#define USER_STACK_SIZE  (USER_STACK_PAGES * PAGE_SIZE)
 
-/*
- * Virtual base address for the user stack.
- * We place it just below 3 GiB, well away from the kernel.
- * A real OS would give each process its own address space; here
- * we keep the single shared page directory and just pick a
- * deterministic address that is not in use.
- */
-#define USER_STACK_VIRT  0xBFFFF000u   /* 3 GiB - 4 KiB */
 
 /* ------------------------------------------------------------------ */
 /* Internal trampoline                                                  */
@@ -60,7 +46,7 @@ static void usermode_trampoline(void)
      * land after a ring transition) is the base + size.
      */
     uintptr_t kstack_top =
-    (uintptr_t)thread->kernel_stack + THREAD_STACK_SIZE;
+    (uintptr_t)thread->kernel_stack + KERNEL_STACK_SIZE;
 
     tss_set_kernel_stack(kstack_top);
 
@@ -82,50 +68,112 @@ struct thread *usermode_thread_create(struct process *process,
 
     ASSERT(process != NULL);
     ASSERT(user_fn != NULL);
+    ASSERT(process->page_directory != NULL);
 
-    /* Allocate the descriptor */
+    /*
+     * Allocate the user-mode descriptor.
+     *
+     * The descriptor belongs to the thread and contains the information
+     * required by the user-mode trampoline.
+     */
     desc = kmalloc(sizeof(*desc));
+
     if (desc == NULL)
         return NULL;
 
     /*
-     * Allocate one physical page and identity-map it as user-accessible.
-     * PAGE_USER lets Ring-3 code read/write this page without a GPF.
+     * Allocate the physical page backing the user stack.
+     *
+     * This page is owned by this process/thread and must be released if
+     * any subsequent operation fails.
      */
     phys = pmm_alloc_page();
+
     if (phys == NULL)
     {
         kfree(desc);
         return NULL;
     }
 
-    paging_map(paging_get_kernel_directory(),
-               USER_STACK_VIRT,
-               (uintptr_t)phys,
-               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+    /*
+     * Map the user stack into THIS PROCESS'S page directory.
+     *
+     * USER_STACK_VIRT is a user-space virtual address. It is therefore
+     * not mapped through the shared kernel directory.
+     *
+     * Different processes may use the same virtual address because each
+     * process has its own page directory:
+     *
+     *     process A: USER_STACK_VIRT -> physical page A
+     *     process B: USER_STACK_VIRT -> physical page B
+     *
+     * PAGE_USER is required for Ring-3 access.
+     */
+    paging_map(
+        process->page_directory,
+        USER_STACK_VIRT,
+        (uintptr_t)phys,
+               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+    );
 
     /*
-     * The stack grows downward; start the user ESP at the very top of
-     * the page (one byte past the last valid address so that the first
-     * `push` lands on the last dword of the page).
+     * Verify that the mapping was actually installed.
+     *
+     * paging_map() currently returns void, so explicitly verify the
+     * resulting mapping before continuing.
+     */
+    ASSERT(
+        paging_validate_mapping(
+            process->page_directory,
+            USER_STACK_VIRT
+        )
+    );
+
+    /*
+     * The user stack grows downward.
+     *
+     * USER_STACK_VIRT is the bottom of the stack page, so ESP starts
+     * immediately after the mapped page.
      */
     desc->user_entry = (uintptr_t)user_fn;
     desc->user_esp   = USER_STACK_VIRT + USER_STACK_SIZE;
 
-    /* Create the kernel thread that will run the trampoline */
+    /*
+     * Create the kernel-side thread.
+     *
+     * The thread starts in usermode_trampoline(), which will eventually
+     * transition the CPU from Ring 0 to Ring 3.
+     */
     thread = thread_create(process, usermode_trampoline);
+
     if (thread == NULL)
     {
-        paging_unmap(paging_get_kernel_directory(), USER_STACK_VIRT);
+        /*
+         * thread_create() failed, so release everything allocated by
+         * this function.
+         *
+         * Recover the mapping before releasing the physical page.
+         */
+        paging_unmap(
+            process->page_directory,
+            USER_STACK_VIRT
+        );
+
         pmm_free_page(phys);
+
         kfree(desc);
+
         return NULL;
     }
 
+    /*
+     * Attach the user-mode descriptor to the newly created thread.
+     */
     thread->usermode_desc = desc;
 
     printf("[usermode] thread created: entry=%x user_esp=%x\n",
-           desc->user_entry, desc->user_esp);
+           desc->user_entry,
+           desc->user_esp);
 
     return thread;
 }

@@ -35,10 +35,18 @@ CFLAGS = -m32 \
          -ffreestanding \
          -Wall \
          -Wextra \
+         -Wpedantic \
+         -Wshadow \
+	 -Wconversion \
+	 -Wsign-conversion \
+	 -Wcast-align \
+	 -Wundef \
+	 -Werror \
          -std=c23 \
-         -Werror \
          -Ikernel/include \
          -c
+
+CFLAGS += -DKERNEL_DEBUG
 
 LDFLAGS = -T$(KERNEL_LD) -m elf_i386
 

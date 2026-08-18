@@ -57,7 +57,7 @@ static void gdt_set_entry(uint32_t index,
     gdt[index].limit_low   = limit & 0xFFFF;
     gdt[index].base_low    = base  & 0xFFFF;
     gdt[index].base_middle = (base >> 16) & 0xFF;
-    gdt[index].base_high   = (base >> 24) & 0xFF;
+    gdt[index].base_high   = (uint8_t)(base >> 24) & 0xFF;
     gdt[index].access      = access;
     gdt[index].granularity = ((limit >> 16) & 0x0F) | ((flags & 0x0F) << 4);
 }

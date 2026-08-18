@@ -37,7 +37,7 @@ void irq_handler(struct registers *regs)
      * scheduler_tick() may switch away from this thread and never return,
      * so the PIC must already consider the IRQ serviced.
      */
-    pic_send_eoi(irq);
+    pic_send_eoi((uint8_t)irq);
 
     /* Only the timer IRQ should drive preemption and scheduling decisions. */
     if (irq == 0)

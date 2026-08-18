@@ -82,7 +82,7 @@ static void idt_set_gate(uint8_t vector,
     idt[vector].selector    = selector;
     idt[vector].zero        = 0;
     idt[vector].flags       = flags;
-    idt[vector].offset_high = (handler >> 16) & 0xFFFF;
+    idt[vector].offset_high = (uint16_t)(handler >> 16) & 0xFFFF;
 }
 
 static void (*isr_table[32])(void) =
@@ -116,7 +116,7 @@ void idt_init(void)
     for (i = 0; i < 32; i++)
     {
         idt_set_gate(
-            i,
+            (uint8_t)i,
             (uint32_t)isr_table[i],
                      GDT_CODE_SELECTOR,
                      IDT_FLAG_INTERRUPT_GATE
@@ -127,7 +127,7 @@ void idt_init(void)
     for (i = 0; i < 16; i++)
     {
         idt_set_gate(
-            32 + i,
+            (uint8_t)(32 + i),
             (uint32_t)irq_table[i],
                      GDT_CODE_SELECTOR,
                      IDT_FLAG_INTERRUPT_GATE

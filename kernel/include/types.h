@@ -1,5 +1,7 @@
 #pragma once
 
+#define UINT32_MAX 0xFFFFFFFFu
+
 typedef signed char         int8_t;
 typedef unsigned char       uint8_t;
 

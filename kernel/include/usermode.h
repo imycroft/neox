@@ -3,6 +3,22 @@
 #include "types.h"
 
 /*
+ * Size of the user stack allocated for each user-mode thread.
+ * One page is enough for our demo; a real OS would lazily grow it.
+ */
+#define USER_STACK_PAGES 1
+#define USER_STACK_SIZE  (USER_STACK_PAGES * PAGE_SIZE)
+
+/*
+ * Virtual base address for the user stack.
+ * We place it just below 3 GiB, well away from the kernel.
+ * A real OS would give each process its own address space; here
+ * we keep the single shared page directory and just pick a
+ * deterministic address that is not in use.
+ */
+#define USER_STACK_VIRT  0xBFFFF000u   /* 3 GiB - 4 KiB */
+
+/*
  * jump_usermode() — switch the current thread to Ring 3.
  *
  * @user_esp  : top of the user stack (virtual, Ring-3 accessible)

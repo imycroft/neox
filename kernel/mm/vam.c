@@ -129,8 +129,7 @@ static void kernel_stack_slot_set(uint32_t slot)
 
 static void kernel_stack_slot_clear(uint32_t slot)
 {
-    kernel_stack_bitmap[slot / 8u] &=
-    ~(1u << (slot % 8u));
+    kernel_stack_bitmap[slot / 8u] &= (uint8_t)~(1u << (slot % 8u));
 }
 /*
  * ============================================================================
@@ -145,7 +144,7 @@ static void bitmap_set(uint32_t index)
 
 static void bitmap_clear(uint32_t index)
 {
-    bitmap[index / 8u] &= ~(1u << (index % 8u));
+    bitmap[index / 8u] &= (uint8_t)~(1u << (index % 8u));
 }
 
 static bool bitmap_test(uint32_t index)

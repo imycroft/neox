@@ -1166,7 +1166,7 @@ static void test_list_backward_traversal(void)
 
     for (i = 0; i < (int32_t)ARRAY_SIZE(nodes); i++)
     {
-        nodes[i].value = i;
+        nodes[i].value = (uint32_t)i;
 
         list_insert_before(&list.head,
                            &nodes[i].node);

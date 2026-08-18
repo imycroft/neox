@@ -129,5 +129,8 @@ void process_destroy(struct process *process)
 
     process_remove(process);
 
+    if (process->page_directory != NULL)
+        paging_destroy_directory(process->page_directory);
+
     kfree(process);
 }

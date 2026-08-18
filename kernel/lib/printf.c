@@ -19,9 +19,9 @@ static int print_unsigned(unsigned int value, uint32_t base)
         uint32_t digit = value % base;
 
         if (digit < 10)
-            buffer[i++] = '0' + digit;
+            buffer[i++] = (char)('0' + digit);
         else
-            buffer[i++] = 'A' + (digit - 10);
+            buffer[i++] = (char)('A' + (digit - 10));
 
         value /= base;
     }

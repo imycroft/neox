@@ -15,6 +15,8 @@
 #include "string.h"
 #include "wait.h"
 #include "printf.h"
+#include "usermode.h"
+
 // Private functions
 static void thread_exit(void)
 {
@@ -178,13 +180,13 @@ struct thread *thread_create(
                  * the mapping.
                  */
                 phys = (void *)paging_translate(
-                    process->page_directory,
-                    virt
+                    paging_get_kernel_directory(),
+                                                virt
                 );
 
                 paging_unmap(
-                    process->page_directory,
-                    virt
+                    paging_get_kernel_directory(),
+                             virt
                 );
 
                 if (phys != NULL)
@@ -201,11 +203,25 @@ struct thread *thread_create(
         virt = (uintptr_t)thread->kernel_stack +
         (uintptr_t)i * PAGE_SIZE;
 
-        paging_map(
-            process->page_directory,
+        paging_map_kernel(
             virt,
             (uintptr_t)phys,
-                   PAGE_PRESENT | PAGE_WRITABLE
+                          PAGE_PRESENT | PAGE_WRITABLE
+        );
+
+        ASSERT(
+            paging_validate_mapping(
+                paging_get_kernel_directory(),
+                                    virt
+            )
+        );
+
+
+        ASSERT(
+            paging_validate_mapping(
+                process->page_directory,
+                virt
+            )
         );
     }
     /*
@@ -233,8 +249,8 @@ struct thread *thread_create(
      */
     stack_phys =
     paging_translate(
-        process->page_directory,
-        stack_top - sizeof(uintptr_t)
+        paging_get_kernel_directory(),
+                     stack_top - sizeof(uintptr_t)
     );
 
     if (stack_phys == 0)
@@ -324,13 +340,13 @@ void thread_destroy(struct thread *thread)
              * Get the physical frame before removing the mapping.
              */
             phys = (void *)paging_translate(
-                thread->process->page_directory,
-                virt
+                paging_get_kernel_directory(),
+                                            virt
             );
 
             paging_unmap(
-                thread->process->page_directory,
-                virt
+                paging_get_kernel_directory(),
+                         virt
             );
 
             if (phys != NULL)
@@ -343,6 +359,32 @@ void thread_destroy(struct thread *thread)
         vam_free_stack(thread->kernel_stack);
 
         thread->kernel_stack = NULL;
+    }
+
+    /*
+     * Release the physical page backing the user-mode stack.
+     *
+     * The user stack belongs to the process address space, so its mapping
+     * must be removed from the process page directory, not the kernel
+     * directory.
+     */
+    if (thread->usermode_desc != NULL)
+    {
+        phys = (void *)paging_translate(
+            thread->process->page_directory,
+            USER_STACK_VIRT
+        );
+
+        paging_unmap(
+            thread->process->page_directory,
+            USER_STACK_VIRT
+        );
+
+        if (phys != NULL)
+            pmm_free_page(phys);
+
+        kfree(thread->usermode_desc);
+        thread->usermode_desc = NULL;
     }
 
     kfree(thread);

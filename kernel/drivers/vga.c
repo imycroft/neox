@@ -33,7 +33,7 @@ void vga_write_cell(uint16_t row,
                     uint8_t fg,
                     uint8_t bg)
 {
-    uint16_t index = row * VGA_WIDTH + col;
+    uint16_t index = (uint16_t)(row * VGA_WIDTH + col);
     uint16_t attribute = ((uint16_t)bg << 12) | ((uint16_t)fg << 8);
 
     FRAMEBUFFER[index] = attribute | (uint8_t)c;
@@ -131,7 +131,7 @@ void vga_write(const char *str)
 
 void vga_update_cursor(void)
 {
-    uint16_t position = cursor_row * VGA_WIDTH + cursor_col;
+    uint16_t position = (uint16_t)(cursor_row * VGA_WIDTH + cursor_col);
 
     outb(0x3D4, 0x0F);
     outb(0x3D5, (uint8_t)(position & 0xFF));

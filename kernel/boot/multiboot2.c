@@ -69,7 +69,7 @@ multiboot2_next_tag(const struct multiboot_tag *tag)
 {
     uint32_t size;
 
-    size = (tag->size + 7) & ~7;
+    size = (tag->size + 7) & ~7u;
 
     return (const struct multiboot_tag *)
     ((const uint8_t *)tag + size);
@@ -253,8 +253,6 @@ void multiboot2_dump_module(void)
 
     printf("ELF loaded: entry=%x\n", (uint32_t)init_entry);
 
-    interrupt_disable();
-
     init_thread = usermode_elf_thread_create(
         init_process,
         init_entry
@@ -266,6 +264,7 @@ void multiboot2_dump_module(void)
         return;
     }
 
+    interrupt_disable();
 
     scheduler_add(init_thread);
 

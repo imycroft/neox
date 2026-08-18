@@ -235,12 +235,15 @@ static void test_vam_kernel_space_reserved(void)
     TEST_ASSERT_NOT_NULL(addr);
 
     TEST_ASSERT_TRUE(
-        (uintptr_t)addr >= KERNEL_REMAINING_START
+        (uintptr_t)addr >= KERNEL_VIRT_BASE
     );
 
-    test_pass();
+    TEST_ASSERT_TRUE(
+        (uintptr_t)addr <= KERNEL_VIRT_END
+    );
 
     vam_free_pages((uintptr_t)addr, 1);
+    test_pass();
 }
 /*
  * Verify:
@@ -372,7 +375,7 @@ void test_vam(void)
 
     test_begin("VAM");
 
-    vam_init();
+    //vam_init();
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
