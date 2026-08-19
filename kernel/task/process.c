@@ -23,8 +23,7 @@ static struct list process_list =
 
 void process_add(struct process *process)
 {
-    if (process == NULL)
-        return;
+    ASSERT(process != NULL);
 
     list_push_back(&process_list,
                    &process->process_node);
@@ -32,8 +31,7 @@ void process_add(struct process *process)
 
 void process_remove(struct process *process)
 {
-    if (process == NULL)
-        return;
+    ASSERT(process != NULL);
 
     list_remove(&process->process_node);
 }
@@ -95,10 +93,8 @@ struct process *process_create(const char *name)
     memset(process, 0, sizeof(*process));
 
     list_node_init(&process->process_node);
-
     list_init(&process->threads);
-
-
+    list_init(&process->user_stacks);
 
     process->page_directory = paging_create_directory();
 
@@ -126,6 +122,12 @@ void process_destroy(struct process *process)
     ASSERT(process != NULL);
     ASSERT(!interrupt_enabled());
     ASSERT(list_empty(&process->threads));
+
+    /*
+     * Every user-mode thread must have released its user stack
+     * before the process can be destroyed.
+     */
+    ASSERT(list_empty(&process->user_stacks));
 
     process_remove(process);
 

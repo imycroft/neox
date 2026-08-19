@@ -68,6 +68,14 @@ struct thread
      */
     struct wait_queue *wait_queue;
 
+    /* * Base virtual address of this thread's Ring-3 stack.
+     *
+     * Zero for kernel-only threads.
+     *
+     * The stack belongs to the process address space, but the
+     * virtual address belongs to this particular thread. */
+    uintptr_t user_stack;
+
     /*
      * Non-NULL when this thread is a user-mode thread.
      * Points to a `struct usermode_desc` (defined in usermode.c)

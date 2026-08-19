@@ -1,4 +1,5 @@
-#pragma once
+#ifndef USERMODE_H
+#define USERMODE_H
 
 #include "types.h"
 
@@ -10,13 +11,26 @@
 #define USER_STACK_SIZE  (USER_STACK_PAGES * PAGE_SIZE)
 
 /*
+ *
+ * User stacks are allocated from the top of the user address space
+ * downward.
+ *
+ *
+ * Each Ring-3 thread receives its own virtual stack address.
+ *
+ * The address space below USER_STACK_REGION_START is left available * for normal user program mappings.
+ */
+#define USER_STACK_REGION_START 0x80000000u
+#define USER_STACK_REGION_END   0xC0000000u
+
+/*
  * Virtual base address for the user stack.
  * We place it just below 3 GiB, well away from the kernel.
  * A real OS would give each process its own address space; here
  * we keep the single shared page directory and just pick a
  * deterministic address that is not in use.
  */
-#define USER_STACK_VIRT  0xBFFFF000u   /* 3 GiB - 4 KiB */
+
 
 /*
  * jump_usermode() — switch the current thread to Ring 3.
@@ -55,3 +69,10 @@ struct thread *usermode_elf_thread_create(
     struct process *process,
     uintptr_t entry
 );
+
+void usermode_stack_release(
+    struct process *process,
+    uintptr_t virt
+);
+
+#endif

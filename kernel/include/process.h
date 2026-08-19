@@ -10,6 +10,15 @@ struct page_directory;
 
 struct thread;
 
+struct user_stack
+{
+    struct list_node node;
+    /*
+     * Base virtual address of the stack
+     */
+    uintptr_t virt;
+};
+
 struct process
 {
     pid_t pid;
@@ -21,6 +30,13 @@ struct process
 
     /* Linked list of all processes */
     struct list_node process_node;
+
+    /*
+     * Ring-3 stacks currently allocated in this process.
+     *
+     * Each entry represents one virtual stack address.
+     */
+    struct list user_stacks;
 
     /* Threads owned by this process */
     struct list threads;

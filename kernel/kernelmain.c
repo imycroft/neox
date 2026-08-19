@@ -11,7 +11,7 @@
 
 static void kernel_test_entry(void)
 {
-    //kernel_tests();
+    kernel_tests();
 }
 
 int kernel_main(uint32_t magic,
@@ -40,7 +40,7 @@ int kernel_main(uint32_t magic,
      */
     thread_add(thread);
 
-    init_process_start();
+   // init_process_start();
 
     /*
      * Transfer permanently from the bootstrap execution context

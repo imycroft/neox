@@ -1,4 +1,6 @@
 #include "usermode.h"
+
+#include "assert.h"
 #include "thread.h"
 #include "process.h"
 #include "tss.h"
@@ -8,7 +10,7 @@
 #include "pmm.h"
 #include "scheduler.h"
 #include "printf.h"
-#include "assert.h"
+#include "util.h"
 
 
 
@@ -45,14 +47,131 @@ static void usermode_trampoline(void)
      * cpu_context frame.  The top of the stack (where the CPU should
      * land after a ring transition) is the base + size.
      */
-    uintptr_t kstack_top =
-    (uintptr_t)thread->kernel_stack + KERNEL_STACK_SIZE;
+    uintptr_t kstack_top = (uintptr_t)thread->kernel_stack + KERNEL_STACK_SIZE;
 
     tss_set_kernel_stack(kstack_top);
 
     jump_usermode(desc->user_esp, desc->user_entry);
 
     /* jump_usermode() never returns */
+}
+
+static uintptr_t user_stack_alloc(struct process *process)
+{
+    uintptr_t virt;
+
+    ASSERT(process != NULL);
+
+    virt = USER_STACK_REGION_END - USER_STACK_SIZE;
+
+    while (virt >= USER_STACK_REGION_START)
+    {
+        struct list_node *node;
+        bool occupied;
+
+        occupied = false;
+
+        node = list_front(&process->user_stacks);
+
+        while (node != &process->user_stacks.head)
+        {
+            struct user_stack *stack;
+
+            stack = container_of(
+                node,
+                struct user_stack,
+                node
+            );
+
+            if (stack->virt == virt)
+                {
+                    occupied = true;
+                    break;
+                }
+
+            node = list_next(node);
+
+        }
+
+        /*
+         * Also verify that this virtual page is not already mapped *
+         * for another purpose in this process.
+         */
+        if (!occupied && paging_translate( process->page_directory, virt ) == 0)
+        {
+            return virt;
+        }
+
+        if (virt < USER_STACK_SIZE)
+            break;
+
+        virt -= USER_STACK_SIZE;
+    }
+
+    return 0;
+}
+
+static bool user_stack_reserve(
+    struct process *process,
+    uintptr_t virt)
+{
+    struct user_stack *stack;
+
+    ASSERT(process != NULL);
+    ASSERT(virt != 0);
+
+    stack = kmalloc(sizeof(*stack));
+
+    if (stack == NULL)
+        return false;
+
+    list_node_init(&stack->node);
+
+    stack->virt = virt;
+
+    list_push_back(
+        &process->user_stacks,
+        &stack->node
+    );
+
+    return true;
+}
+
+void usermode_stack_release(
+    struct process *process,
+    uintptr_t virt)
+{
+    struct list_node *node;
+
+    ASSERT(process != NULL);
+    ASSERT(virt != 0);
+
+    node = list_front(&process->user_stacks);
+
+    while (node != &process->user_stacks.head)
+    {
+        struct user_stack *stack;
+        struct list_node *next;
+
+        next = list_next(node);
+
+        stack = container_of(
+            node,
+            struct user_stack,
+            node
+        );
+
+        if (stack->virt == virt)
+        {
+            list_remove(&stack->node);
+            kfree(stack);
+            return;
+        }
+
+        node = next;
+    }
+
+    ASSERT(false);
 }
 
 /* ------------------------------------------------------------------ */
@@ -65,6 +184,7 @@ struct thread *usermode_thread_create(struct process *process,
     struct thread        *thread;
     struct usermode_desc *desc;
     void                 *phys;
+    uintptr_t stack_virt;
 
     ASSERT(process != NULL);
     ASSERT(user_fn != NULL);
@@ -81,6 +201,19 @@ struct thread *usermode_thread_create(struct process *process,
     if (desc == NULL)
         return NULL;
 
+    stack_virt = user_stack_alloc(process);
+
+    if (stack_virt == 0)
+    {
+        kfree(desc);
+        return NULL;
+    }
+
+    if (!user_stack_reserve(process, stack_virt))
+    {
+        kfree(desc); return NULL;
+
+    }
     /*
      * Allocate the physical page backing the user stack.
      *
@@ -109,12 +242,12 @@ struct thread *usermode_thread_create(struct process *process,
      *
      * PAGE_USER is required for Ring-3 access.
      */
-    paging_map(
+   paging_map(
         process->page_directory,
-        USER_STACK_VIRT,
+        stack_virt,
         (uintptr_t)phys,
-               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
-    );
+              PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+              );
 
     /*
      * Verify that the mapping was actually installed.
@@ -125,18 +258,16 @@ struct thread *usermode_thread_create(struct process *process,
     ASSERT(
         paging_validate_mapping(
             process->page_directory,
-            USER_STACK_VIRT
+            stack_virt
         )
     );
 
     /*
      * The user stack grows downward.
      *
-     * USER_STACK_VIRT is the bottom of the stack page, so ESP starts
-     * immediately after the mapped page.
      */
     desc->user_entry = (uintptr_t)user_fn;
-    desc->user_esp   = USER_STACK_VIRT + USER_STACK_SIZE;
+    desc->user_esp   = stack_virt + USER_STACK_SIZE;
 
     /*
      * Create the kernel-side thread.
@@ -156,10 +287,15 @@ struct thread *usermode_thread_create(struct process *process,
          */
         paging_unmap(
             process->page_directory,
-            USER_STACK_VIRT
+            stack_virt
         );
 
         pmm_free_page(phys);
+
+        usermode_stack_release(
+            process,
+            stack_virt
+        );
 
         kfree(desc);
 
@@ -171,9 +307,8 @@ struct thread *usermode_thread_create(struct process *process,
      */
     thread->usermode_desc = desc;
 
-    printf("[usermode] thread created: entry=%x user_esp=%x\n",
-           desc->user_entry,
-           desc->user_esp);
+    thread->user_stack = stack_virt;
+    thread->usermode_desc = desc;
 
     return thread;
 }
@@ -196,13 +331,13 @@ struct thread *usermode_thread_create(struct process *process,
  * untouched. It remains available for the original Ring-3 smoke
  * tests using kernel functions.
  */
-struct thread *
-usermode_elf_thread_create(struct process *process,
+struct thread * usermode_elf_thread_create(struct process *process,
                            uintptr_t entry)
 {
     struct thread        *thread;
     struct usermode_desc *desc;
     void                 *phys;
+    uintptr_t             stack_virt;
 
     ASSERT(process != NULL);
 
@@ -225,6 +360,24 @@ usermode_elf_thread_create(struct process *process,
         return NULL;
 
     /*
+     * Allocate the user stack.
+     */
+    stack_virt = user_stack_alloc(process);
+
+    if (stack_virt == 0)
+    {
+        kfree(desc);
+        return NULL;
+    }
+
+
+    if (!user_stack_reserve(process, stack_virt))
+    {
+        kfree(desc);
+        return NULL;
+    }
+
+    /*
      * Allocate one physical page for the user stack.
      *
      * This page will be mapped into the process at
@@ -234,6 +387,7 @@ usermode_elf_thread_create(struct process *process,
 
     if (phys == NULL)
     {
+        usermode_stack_release(process, stack_virt);
         kfree(desc);
         return NULL;
     }
@@ -249,18 +403,24 @@ usermode_elf_thread_create(struct process *process,
      */
     paging_map(
         process->page_directory,
-        USER_STACK_VIRT,
+        stack_virt,
         (uintptr_t)phys,
                PAGE_PRESENT |
                PAGE_WRITABLE |
                PAGE_USER
     );
 
+    ASSERT(
+        paging_validate_mapping(
+            process->page_directory, stack_virt
+        )
+    );
+
     /*
      * Store the ELF entry point and the initial user stack pointer.
      */
     desc->user_entry = entry;
-    desc->user_esp   = USER_STACK_VIRT + USER_STACK_SIZE;
+    desc->user_esp = stack_virt + USER_STACK_SIZE;
 
     /*
      * Create the kernel-side thread.
@@ -278,10 +438,13 @@ usermode_elf_thread_create(struct process *process,
     {
         paging_unmap(
             process->page_directory,
-            USER_STACK_VIRT
+            stack_virt
         );
 
         pmm_free_page(phys);
+
+        usermode_stack_release(process, stack_virt);
+
         kfree(desc);
 
         return NULL;
@@ -290,6 +453,7 @@ usermode_elf_thread_create(struct process *process,
     /*
      * Give the trampoline access to the descriptor.
      */
+    thread->user_stack = stack_virt;
     thread->usermode_desc = desc;
 
     return thread;

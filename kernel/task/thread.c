@@ -294,7 +294,7 @@ void thread_destroy(struct thread *thread)
     uintptr_t  virt;
     void      *phys;
 
-    printf("destroying thread %s\n", thread->process->name);
+    printf("destroying thread %s\n", thread->process->name); // __debug
     ASSERT(thread != NULL);
     ASSERT(!interrupt_enabled());
     ASSERT(thread->state == THREAD_TERMINATED);
@@ -360,21 +360,54 @@ void thread_destroy(struct thread *thread)
      */
     if (thread->usermode_desc != NULL)
     {
+        ASSERT(thread->user_stack != 0);
+
         phys = (void *)paging_translate(
             thread->process->page_directory,
-            USER_STACK_VIRT
+            thread->user_stack
         );
 
         paging_unmap(
             thread->process->page_directory,
-            USER_STACK_VIRT
+            thread->user_stack
         );
 
         if (phys != NULL)
             pmm_free_page(phys);
 
+        usermode_stack_release(
+            thread->process,
+            thread->user_stack
+        );
+
         kfree(thread->usermode_desc);
+
         thread->usermode_desc = NULL;
+        thread->user_stack = 0;
+    }
+
+    if (thread->user_stack != 0)
+    {
+
+        phys = (void *)paging_translate(
+            thread->process->page_directory,
+            thread->user_stack
+        );
+
+        paging_unmap(
+            thread->process->page_directory,
+            thread->user_stack
+        );
+
+        if (phys != NULL)
+            pmm_free_page(phys);
+
+        usermode_stack_release(
+            thread->process,
+            thread->user_stack
+        );
+
+        thread->user_stack = 0;
     }
 
     kfree(thread);
@@ -406,7 +439,10 @@ void thread_join(struct thread *thread)
     thread_destroy(thread);
 
     if (process != NULL && list_empty(&process->threads))
+    {
         process_destroy(process);
+    }
+
 
     interrupt_restore(state);
 }
@@ -458,7 +494,7 @@ void thread_kill_current(void)
     ASSERT(thread != NULL);
 
     scheduler_terminate(thread);
-    printf("destroying thread %s\n", thread->process->name); // __debug
+
     scheduler_yield();
 
     panic("terminated thread resumed");

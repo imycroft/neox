@@ -86,6 +86,7 @@ static void test_usermode_elf(void)
         )
     );
 
+
     TEST_ASSERT_NE(entry, 0);
 
     /*
@@ -119,7 +120,6 @@ static void test_usermode_elf(void)
         process,
         entry
     );
-
     TEST_ASSERT_NOT_NULL(thread);
 
     /*
@@ -127,7 +127,7 @@ static void test_usermode_elf(void)
      */
     stack_phys = paging_translate(
         process->page_directory,
-        USER_STACK_VIRT
+        thread->user_stack
     );
 
     TEST_ASSERT_NE(stack_phys, 0);
@@ -135,7 +135,7 @@ static void test_usermode_elf(void)
     TEST_ASSERT_TRUE(
         paging_validate_mapping(
             process->page_directory,
-            USER_STACK_VIRT
+            thread->user_stack
         )
     );
 
@@ -145,7 +145,7 @@ static void test_usermode_elf(void)
      */
     kernel_stack_phys = paging_translate(
         paging_get_kernel_directory(),
-                                         USER_STACK_VIRT
+        thread->user_stack
     );
 
     TEST_ASSERT_EQ(kernel_stack_phys, 0);
@@ -175,119 +175,167 @@ static void test_usermode_elf(void)
      */
 
     thread_join(thread);
+            printf("=============***=============\n"); //__debug
     test_pass();
 }
 
 static void test_usermode_stack_isolation(void)
 {
-    struct process *process_a;
-    struct process *process_b;
+    const struct multiboot_tag_module *module;
+    const void *image;
+    uint32_t size;
 
-    void *phys_a;
-    void *phys_b;
+    struct process *process;
+    struct thread  *thread_a;
+    struct thread  *thread_b;
 
-    uintptr_t translated_a;
-    uintptr_t translated_b;
+    uintptr_t entry;
+
+    uintptr_t phys_a;
+    uintptr_t phys_b;
 
     interrupt_state_t state;
 
-    process_a = process_create("usermode_a");
-    TEST_ASSERT_NOT_NULL(process_a);
-
-    process_b = process_create("usermode_b");
-    TEST_ASSERT_NOT_NULL(process_b);
-
     /*
-     * Give each process its own physical page.
+     * Get the ELF image supplied by Multiboot.
      */
-    phys_a = pmm_alloc_page();
-    TEST_ASSERT_NOT_NULL(phys_a);
+    module = multiboot2_module();
 
-    phys_b = pmm_alloc_page();
-    TEST_ASSERT_NOT_NULL(phys_b);
+    TEST_ASSERT_NOT_NULL(module);
 
-    /*
-     * Both processes intentionally use the same virtual address.
-     */
-    paging_map(
-        process_a->page_directory,
-        USER_STACK_VIRT,
-        (uintptr_t)phys_a,
-               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
-    );
+    image = (const void *)PHYS_TO_VIRT(module->mod_start);
+    size = module->mod_end - module->mod_start;
 
-    paging_map(
-        process_b->page_directory,
-        USER_STACK_VIRT,
-        (uintptr_t)phys_b,
-               PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER
+    TEST_ASSERT_TRUE(
+        elf_validate(image, size)
     );
 
     /*
-     * Each process must see its own physical page.
+     * Create ONE process.
+     *
+     * Both Ring-3 threads will belong to this same address space.
      */
-    translated_a = paging_translate(
-        process_a->page_directory,
-        USER_STACK_VIRT
-    );
+    process = process_create("usermode_stack_test");
 
-    translated_b = paging_translate(
-        process_b->page_directory,
-        USER_STACK_VIRT
-    );
-
-    TEST_ASSERT_EQ(translated_a, (uintptr_t)phys_a);
-    TEST_ASSERT_EQ(translated_b, (uintptr_t)phys_b);
+    TEST_ASSERT_NOT_NULL(process);
 
     /*
-     * Same virtual address, different physical memory.
+     * Load the ELF image into the process.
      */
-    TEST_ASSERT_NE(translated_a, translated_b);
-
-    /*
-     * Process A must remain unchanged after process B was mapped.
-     */
-    translated_a = paging_translate(
-        process_a->page_directory,
-        USER_STACK_VIRT
+    TEST_ASSERT_TRUE(
+        elf_load(
+            process,
+            image,
+            size,
+            &entry
+        )
     );
 
-    TEST_ASSERT_EQ(translated_a, (uintptr_t)phys_a);
+    TEST_ASSERT_NE(entry, 0);
 
     /*
-     * The shared kernel directory must not contain this user mapping.
+     * Create two Ring-3 threads in the SAME process.
+     *
+     * Each thread must receive its own user-stack virtual address
+     * and its own physical stack page.
+     */
+    thread_a = usermode_elf_thread_create(
+        process,
+        entry
+    );
+
+    TEST_ASSERT_NOT_NULL(thread_a);
+
+    thread_b = usermode_elf_thread_create(
+        process,
+        entry
+    );
+
+    TEST_ASSERT_NOT_NULL(thread_b);
+
+    /*
+     * The two threads must not share the same user-stack virtual
+     * address.
+     */
+    TEST_ASSERT_NE(
+        thread_a->user_stack,
+        thread_b->user_stack
+    );
+
+    /*
+     * Both stacks must be mapped in the SAME process address space.
+     */
+    phys_a = paging_translate(
+        process->page_directory,
+        (uintptr_t)thread_a->user_stack
+    );
+
+    phys_b = paging_translate(
+        process->page_directory,
+        (uintptr_t)thread_b->user_stack
+    );
+
+    TEST_ASSERT_NE(phys_a, 0);
+    TEST_ASSERT_NE(phys_b, 0);
+
+    /*
+     * The physical stack pages must also be different.
+     */
+    TEST_ASSERT_NE(phys_a, phys_b);
+
+    /*
+     * Verify that each thread's stack still resolves to the
+     * expected physical page.
+     */
+    TEST_ASSERT_EQ(
+        paging_translate(
+            process->page_directory,
+            (uintptr_t)thread_a->user_stack
+        ),
+        phys_a
+    );
+
+    TEST_ASSERT_EQ(
+        paging_translate(
+            process->page_directory,
+            (uintptr_t)thread_b->user_stack
+        ),
+        phys_b
+    );
+
+    /*
+     * The user stacks must not exist in the shared kernel address space.
      */
     TEST_ASSERT_EQ(
         paging_translate(
             paging_get_kernel_directory(),
-                         USER_STACK_VIRT
+                         (uintptr_t)thread_a->user_stack
+        ),
+        0
+    );
+
+    TEST_ASSERT_EQ(
+        paging_translate(
+            paging_get_kernel_directory(),
+                         (uintptr_t)thread_b->user_stack
         ),
         0
     );
 
     /*
-     * Clean up the mappings and their physical pages.
+     * Run both threads so that they terminate normally.
+     *
+     * They are joinable, therefore thread_join() owns their cleanup.
      */
-    paging_unmap(
-        process_a->page_directory,
-        USER_STACK_VIRT
-    );
-
-    paging_unmap(
-        process_b->page_directory,
-        USER_STACK_VIRT
-    );
-
-    pmm_free_page(phys_a);
-    pmm_free_page(phys_b);
-
-
     state = interrupt_save();
 
-    process_destroy(process_a);
-    process_destroy(process_b);
+    thread_add(thread_a);
+    thread_add(thread_b);
 
     interrupt_restore(state);
+
+    thread_join(thread_a);
+    thread_join(thread_b);
 
     test_pass();
 }
@@ -309,6 +357,8 @@ static void test_usermode_elf_stack_isolation(void)
 
     uintptr_t stack_phys_a;
     uintptr_t stack_phys_b;
+
+    interrupt_state_t state;
 
     module = multiboot2_module();
 
@@ -354,10 +404,7 @@ static void test_usermode_elf_stack_isolation(void)
     TEST_ASSERT_EQ(entry_a, entry_b);
 
     /*
-     * Create the user-mode threads.
-     *
-     * This is the important part: usermode_elf_thread_create()
-     * must allocate and map a separate user stack for each process.
+     * Create one Ring-3 thread in each process.
      */
     thread_a = usermode_elf_thread_create(
         process_a,
@@ -374,16 +421,30 @@ static void test_usermode_elf_stack_isolation(void)
     TEST_ASSERT_NOT_NULL(thread_b);
 
     /*
-     * Both processes use the same user virtual stack address.
+     * Each thread must have a valid user stack.
+     */
+    TEST_ASSERT_NE(
+        thread_a->user_stack,
+        0
+    );
+
+    TEST_ASSERT_NE(
+        thread_b->user_stack,
+        0
+    );
+
+    /*
+     * Translate each thread's stack through its own process
+     * address space.
      */
     stack_phys_a = paging_translate(
         process_a->page_directory,
-        USER_STACK_VIRT
+        (uintptr_t)thread_a->user_stack
     );
 
     stack_phys_b = paging_translate(
         process_b->page_directory,
-        USER_STACK_VIRT
+        (uintptr_t)thread_b->user_stack
     );
 
     TEST_ASSERT_NE(stack_phys_a, 0);
@@ -395,34 +456,48 @@ static void test_usermode_elf_stack_isolation(void)
     TEST_ASSERT_NE(stack_phys_a, stack_phys_b);
 
     /*
-     * Creating process B must not change process A's stack mapping.
+     * Each process must retain its own stack mapping.
      */
     TEST_ASSERT_EQ(
         paging_translate(
             process_a->page_directory,
-            USER_STACK_VIRT
+            (uintptr_t)thread_a->user_stack
         ),
         stack_phys_a
     );
 
+    TEST_ASSERT_EQ(
+        paging_translate(
+            process_b->page_directory,
+            (uintptr_t)thread_b->user_stack
+        ),
+        stack_phys_b
+    );
+
     /*
-     * The user stack must not exist in the shared kernel address space.
+     * The user stacks must not exist in the shared kernel
+     * address space.
      */
     TEST_ASSERT_EQ(
         paging_translate(
             paging_get_kernel_directory(),
-                         USER_STACK_VIRT
+                         (uintptr_t)thread_a->user_stack
+        ),
+        0
+    );
+
+    TEST_ASSERT_EQ(
+        paging_translate(
+            paging_get_kernel_directory(),
+                         (uintptr_t)thread_b->user_stack
         ),
         0
     );
 
     /*
-     * The threads were never added to the scheduler, so they must not
-     * be allowed to reach Ring 3 during this test.
-     *
-     * Cleanup is therefore performed directly.
+     * Add both threads and let thread_join() own their cleanup.
      */
-    interrupt_state_t state = interrupt_save();
+    state = interrupt_save();
 
     thread_add(thread_a);
     thread_add(thread_b);
