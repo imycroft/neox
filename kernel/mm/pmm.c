@@ -82,7 +82,7 @@ void pmm_init(void)
 
     mmap = multiboot2_memory_map();
     mb_info = multiboot2_info();
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     if (mmap == NULL)
     {

@@ -7,5 +7,7 @@ void boot_init(uint32_t magic,
 {
     multiboot2_init(magic, mb_info);
 
-    //multiboot2_dump_memory_map();
+    multiboot2_dump_module();
+
+   // multiboot2_dump_memory_map();
 }

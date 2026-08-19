@@ -112,6 +112,11 @@ struct process *process_create(const char *name)
 
     process->name[PROCESS_NAME_MAX - 1] = '\0';
 
+    for (uint32_t i = 0; i < PROCESS_MAX_FILES; i++)
+    {
+        process->files[i].used = false;
+    }
+
     process_add(process);
 
     return process;
@@ -135,4 +140,91 @@ void process_destroy(struct process *process)
         paging_destroy_directory(process->page_directory);
 
     kfree(process);
+}
+
+int process_open(
+    struct process *process,
+    const char *path,
+    uint32_t access
+)
+{
+    int fd;
+
+    if (process == NULL)
+        return -1;
+
+    if (path == NULL)
+        return -1;
+
+    for (fd = 0; fd < PROCESS_MAX_FILES; fd++)
+    {
+        if (!process->files[fd].used)
+        {
+            if (file_open(
+                path,
+                access,
+                &process->files[fd].file) != 0)
+            {
+                return -1;
+            }
+
+            process->files[fd].used = true;
+
+            return fd;
+        }
+    }
+    return -1;
+}
+
+struct file *process_get_file(
+    struct process *process,
+    int fd
+)
+{
+    if (process == NULL)
+        return NULL;
+
+    if (fd < 0 || fd >= PROCESS_MAX_FILES)
+        return NULL;
+
+    if (!process->files[fd].used)
+        return NULL;
+
+    return &process->files[fd].file;
+}
+
+ssize_t process_read(
+    struct process *process,
+    int fd,
+    void *buffer,
+    size_t count
+)
+{
+    struct file *file;
+
+    file = process_get_file(process, fd);
+
+    if (file == NULL)
+        return -1;
+
+    return file_read(file, buffer, count);
+}
+
+int process_close(
+    struct process *process,
+    int fd
+)
+{
+    struct file *file;
+
+    file = process_get_file(process, fd);
+
+    if (file == NULL)
+        return -1;
+
+    file_close(file);
+
+    process->files[fd].used = false;
+
+    return 0;
 }

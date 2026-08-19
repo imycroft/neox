@@ -43,6 +43,7 @@ CFLAGS = -m32 \
 	 -Wundef \
 	 -Werror \
          -std=c23 \
+         -Iinclude \
          -Ikernel/include \
          -c
 
@@ -63,13 +64,29 @@ USER_BUILD := $(BUILD)/user
 USER_OBJECT := $(USER_BUILD)/init.o
 USER_ELF := $(USER_BUILD)/init.elf
 
+
+# ------------------------------------------------------------
+# Filesystem tool
+# ------------------------------------------------------------
+
+MKFS_SOURCE := tools/mkfs.c
+MKFS_BUILD := $(BUILD)/tools
+MKFS := $(MKFS_BUILD)/mkfs
+
+MKFS_CFLAGS = -std=c23 \
+              -Wall \
+              -Wextra \
+              -Wpedantic \
+              -Werror \
+              -Iinclude
+
 # ------------------------------------------------------------
 # ISO
 # ------------------------------------------------------------
 
 ISO_BOOT := iso/boot
 ISO_KERNEL := $(ISO_BOOT)/kernel.elf
-ISO_INIT := $(ISO_BOOT)/init.elf
+ISO_ROOTFS := $(ISO_BOOT)/rootfs.img
 
 GRUB_CFG := iso/boot/grub/grub.cfg
 
@@ -119,23 +136,31 @@ $(USER_OBJECT): $(USER_SOURCE)
 		-mno-sse2 \
 		-std=c23 \
 		-Werror \
+		-Iinclude \
 		-c $< -o $@
 
 $(USER_ELF): $(USER_OBJECT) $(USER_LD)
 	@mkdir -p $(dir $@)
 	ld -m elf_i386 -T$(USER_LD) -o $@ $(USER_OBJECT)
 
-# Copy user ELF into ISO
 
-$(ISO_INIT): $(USER_ELF)
+$(MKFS): $(MKFS_SOURCE) include/fs_format.h include/fs_types.h
 	@mkdir -p $(dir $@)
-	cp $< $@
+	$(CC) $(MKFS_CFLAGS) $< -o $@
+
+
+
+
 
 # ------------------------------------------------------------
 # Create boot ISO
 # ------------------------------------------------------------
+$(ISO_ROOTFS): $(MKFS) $(USER_ELF)
+	@mkdir -p $(dir $@)
+	$(MKFS) $@ \
+		/sbin/init=$(USER_ELF)
 
-$(IMAGE): $(ISO_KERNEL) $(ISO_INIT) $(GRUB_CFG)
+$(IMAGE): $(ISO_KERNEL) $(ISO_ROOTFS) $(GRUB_CFG)
 	@mkdir -p $(dir $@)
 	$(GRUB) -o $@ iso -d /usr/lib/grub/i386-pc
 
@@ -157,4 +182,5 @@ run: $(IMAGE)
 clean:
 	rm -rf $(BUILD)
 	rm -f $(ISO_BOOT)/kernel.elf
-	rm -f $(ISO_BOOT)/init.elf
+	rm -f $(ISO_BOOT)/rootfs.img
+

@@ -80,6 +80,85 @@ static uint32_t sys_write(const char *buf, uint32_t len)
     return len;
 }
 
+static int32_t sys_open(
+    const char *path,
+    uint32_t access)
+{
+    struct thread *thread;
+    struct process *process;
+
+    thread = scheduler_current();
+
+    if (thread == NULL)
+        return -1;
+
+    process = thread->process;
+
+    if (process == NULL)
+        return -1;
+
+    if (!paging_user_string_valid(
+        process->page_directory,
+        path))
+    {
+        return -1;
+    }
+
+    return process_open(process, path, access);
+}
+
+static int32_t sys_read(
+    int fd,
+    void *buffer,
+    uint32_t count)
+{
+    struct thread *thread;
+    struct process *process;
+
+    thread = scheduler_current();
+
+    if (thread == NULL)
+        return -1;
+
+    process = thread->process;
+
+    if (process == NULL)
+        return -1;
+
+    if (!paging_user_range_valid(
+        process->page_directory,
+        (uintptr_t)buffer,
+                                 count))
+    {
+        return -1;
+    }
+
+    return (int32_t)process_read(
+        process,
+        fd,
+        buffer,
+        count
+    );
+}
+
+static int32_t sys_close(int fd)
+{
+    struct thread *thread;
+    struct process *process;
+
+    thread = scheduler_current();
+
+    if (thread == NULL)
+        return -1;
+
+    process = thread->process;
+
+    if (process == NULL)
+        return -1;
+
+    return process_close(process, fd);
+}
+
 void syscall_handler(struct registers *regs)
 {
     /*
@@ -92,6 +171,7 @@ void syscall_handler(struct registers *regs)
     uint32_t nr  = regs->eax;
     uint32_t arg1 = regs->ebx;
     uint32_t arg2 = regs->ecx;
+    uint32_t arg3 = regs->edx;
 
     switch (nr)
     {
@@ -103,6 +183,27 @@ void syscall_handler(struct registers *regs)
             regs->eax = sys_write(
                 (const char *)arg1,
                 arg2
+            );
+            break;
+
+        case SYS_OPEN:
+            regs->eax = (uint32_t)sys_open(
+                (const char *)arg1,
+                                           arg2
+            );
+            break;
+
+        case SYS_READ:
+            regs->eax = (uint32_t)sys_read(
+                (int)arg1,
+                                           (void *)arg2,
+                                           arg3
+            );
+            break;
+
+        case SYS_CLOSE:
+            regs->eax = (uint32_t)sys_close(
+                (int)arg1
             );
             break;
 

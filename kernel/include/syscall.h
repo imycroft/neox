@@ -3,9 +3,7 @@
 #include "types.h"
 #include "isr.h"
 
-/* Syscall numbers */
-#define SYS_EXIT    1
-#define SYS_WRITE   4
+#include "syscall_abi.h"
 
 /*
  * syscall_init() — register INT 0x80 in the IDT with DPL=3 so

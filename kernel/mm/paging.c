@@ -571,3 +571,56 @@ bool paging_validate_mapping(
 
     return true;
 }
+
+bool paging_user_string_valid(
+    struct page_directory *directory,
+    const char *string)
+{
+    uintptr_t address;
+
+    if (directory == NULL)
+        return false;
+
+    if (string == NULL)
+        return false;
+
+    address = (uintptr_t)string;
+
+    while (true)
+    {
+        uintptr_t page_end;
+
+        /*
+         * Validate the page containing the current character.
+         */
+        if (!paging_user_range_valid(
+            directory,
+            address,
+            1))
+        {
+            return false;
+        }
+
+        /*
+         * Scan the remainder of this page looking for '\0'.
+         *
+         * We already know this page is mapped and accessible
+         * from user mode.
+         */
+        page_end = (address & ~(PAGE_SIZE - 1)) + PAGE_SIZE;
+
+        while (address < page_end)
+        {
+            if (*(const char *)address == '\0')
+                return true;
+
+            address++;
+
+            /*
+             * Do not wrap around the user address space.
+             */
+            if (address > USER_VIRT_END)
+                return false;
+        }
+    }
+}

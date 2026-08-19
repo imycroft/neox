@@ -72,7 +72,7 @@ multiboot2_find_tag(uint32_t type);
 const struct multiboot_tag_mmap *multiboot2_memory_map(void);
 
 const struct multiboot_tag_module *
-multiboot2_module(void);
+multiboot2_find_module(const char *name);
 
 // temporary debug functions
 

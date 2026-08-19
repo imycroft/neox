@@ -1,5 +1,6 @@
 #include "multiboot2.h"
 #include "memory_layout.h"
+#include "string.h"
 #include "panic.h"
 #include "printf.h"
 #include "paging.h"
@@ -98,10 +99,28 @@ const struct multiboot_tag_mmap *multiboot2_memory_map(void)
 }
 
 const struct multiboot_tag_module *
-multiboot2_module(void)
+multiboot2_find_module(const char *name)
 {
-    return (const struct multiboot_tag_module *)
-    multiboot2_find_tag(MULTIBOOT_TAG_TYPE_MODULE);
+    const struct multiboot_tag *tag;
+
+    tag = multiboot2_first_tag();
+
+    while (tag->type != MULTIBOOT_TAG_TYPE_END)
+    {
+        if (tag->type == MULTIBOOT_TAG_TYPE_MODULE)
+        {
+            const struct multiboot_tag_module *module;
+
+            module = (const struct multiboot_tag_module *)tag;
+
+            if (strcmp(module->cmdline, name) == 0)
+                return module;
+        }
+
+        tag = multiboot2_next_tag(tag);
+    }
+
+    return NULL;
 }
 
 // for debug purposes
@@ -160,7 +179,7 @@ void multiboot2_dump_module(void)
 {
     const struct multiboot_tag_module *module;
 
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     if (module == NULL)
     {

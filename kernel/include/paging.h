@@ -79,3 +79,8 @@ bool paging_validate_mapping(
     struct page_directory *directory,
     uintptr_t              virt
 );
+
+bool paging_user_string_valid(
+    struct page_directory *directory,
+    const char *string
+);

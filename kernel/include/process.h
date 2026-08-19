@@ -3,13 +3,19 @@
 
 #include "types.h"
 #include "list.h"
-
+#include "file.h"
 #define PROCESS_NAME_MAX 32
+#define PROCESS_MAX_FILES 16
 
 struct page_directory;
 
-struct thread;
+struct process_file
+{
+    struct file file;
+    bool used;
+};
 
+struct thread;
 struct user_stack
 {
     struct list_node node;
@@ -40,6 +46,9 @@ struct process
 
     /* Threads owned by this process */
     struct list threads;
+
+    /* Open files owned by this process */
+    struct process_file files[PROCESS_MAX_FILES];
 };
 
 void process_add(struct process *process);
@@ -59,5 +68,28 @@ struct process *process_create(const char *name);
  * disabled by the caller.
  */
 void process_destroy(struct process *process);
+
+int process_open(
+    struct process *process,
+    const char *path,
+    uint32_t access
+);
+
+struct file *process_get_file(
+    struct process *process,
+    int fd
+);
+
+ssize_t process_read(
+    struct process *process,
+    int fd,
+    void *buffer,
+    size_t count
+);
+
+int process_close(
+    struct process *process,
+    int fd
+);
 
 #endif

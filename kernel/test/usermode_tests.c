@@ -43,7 +43,7 @@ static void test_usermode_elf(void)
 
     interrupt_state_t state;
 
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     TEST_ASSERT_NOT_NULL(module);
 
@@ -199,7 +199,7 @@ static void test_usermode_stack_isolation(void)
     /*
      * Get the ELF image supplied by Multiboot.
      */
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     TEST_ASSERT_NOT_NULL(module);
 
@@ -360,7 +360,7 @@ static void test_usermode_elf_stack_isolation(void)
 
     interrupt_state_t state;
 
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     TEST_ASSERT_NOT_NULL(module);
 
@@ -519,7 +519,7 @@ static void test_usermode_process_reclamation(void)
     uint32_t after;
     uint32_t i;
 
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     TEST_ASSERT_NOT_NULL(module);
 
@@ -585,7 +585,7 @@ static void test_usermode_detached_reclamation(void)
     uintptr_t       entry;
     interrupt_state_t state;
 
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     TEST_ASSERT_NOT_NULL(module);
 
@@ -657,7 +657,7 @@ static void test_elf_load_rollback(void)
     uint32_t before;
     uint32_t after;
 
-    module = multiboot2_module();
+    module = multiboot2_find_module("rootfs");
 
     TEST_ASSERT_NOT_NULL(module);
 
