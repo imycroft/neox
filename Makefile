@@ -8,8 +8,8 @@ QEMU := qemu-system-x86_64
 
 BUILD := build
 
-CC = gcc
-AS = nasm
+CC := gcc
+AS := nasm
 
 # ------------------------------------------------------------
 # Kernel sources
@@ -37,11 +37,11 @@ CFLAGS = -m32 \
          -Wextra \
          -Wpedantic \
          -Wshadow \
-	 -Wconversion \
-	 -Wsign-conversion \
-	 -Wcast-align \
-	 -Wundef \
-	 -Werror \
+         -Wconversion \
+         -Wsign-conversion \
+         -Wcast-align \
+         -Wundef \
+         -Werror \
          -std=c23 \
          -Iinclude \
          -Ikernel/include \
@@ -49,23 +49,67 @@ CFLAGS = -m32 \
 
 CFLAGS += -DKERNEL_DEBUG
 
-LDFLAGS = -T$(KERNEL_LD) -m elf_i386
+LDFLAGS := -T$(KERNEL_LD) -m elf_i386
 
-ASFLAGS = -f elf32
+ASFLAGS := -f elf32
 
 # ------------------------------------------------------------
 # User programs
+#
+# Layout:
+#
+#   user/
+#   ├── init/
+#   │   └── main.c
+#   ├── hello/
+#   │   └── main.c
+#   └── ls/
+#       └── main.c
+#
+# Produces:
+#
+#   build/user/init/main.o
+#   build/user/init.elf
+#
+#   build/user/hello/main.o
+#   build/user/hello.elf
+#
+#   build/user/ls/main.o
+#   build/user/ls.elf
 # ------------------------------------------------------------
 
-USER_SOURCES := $(shell find user -name '*.c')
+USER_SOURCES := $(shell find user -mindepth 2 -maxdepth 2 -name 'main.c')
+
+USER_PROGRAMS := \
+    $(patsubst user/%/main.c,%,$(USER_SOURCES))
 
 USER_OBJECTS := \
-    $(patsubst user/%.c,$(BUILD)/user/%.o,$(USER_SOURCES))
+    $(addprefix $(BUILD)/user/,$(addsuffix /main.o,$(USER_PROGRAMS)))
 
 USER_ELFS := \
-    $(patsubst user/%.c,$(BUILD)/user/%.elf,$(USER_SOURCES))
+    $(addprefix $(BUILD)/user/,$(addsuffix .elf,$(USER_PROGRAMS)))
 
 USER_LD := user/user.ld
+
+# ------------------------------------------------------------
+# User compiler flags
+# ------------------------------------------------------------
+
+USER_CFLAGS = \
+    -m32 \
+    -ffreestanding \
+    -fno-stack-protector \
+    -fno-pie \
+    -fno-pic \
+    -nostdlib \
+    -nostdinc \
+    -Wall \
+    -Wextra \
+    -mno-sse \
+    -mno-sse2 \
+    -std=c23 \
+    -Werror \
+    -Iinclude
 
 # ------------------------------------------------------------
 # Filesystem tool
@@ -75,12 +119,13 @@ MKFS_SOURCE := tools/mkfs.c
 MKFS_BUILD := $(BUILD)/tools
 MKFS := $(MKFS_BUILD)/mkfs
 
-MKFS_CFLAGS = -std=c23 \
-              -Wall \
-              -Wextra \
-              -Wpedantic \
-              -Werror \
-              -Iinclude
+MKFS_CFLAGS = \
+    -std=c23 \
+    -Wall \
+    -Wextra \
+    -Wpedantic \
+    -Werror \
+    -Iinclude
 
 # ------------------------------------------------------------
 # ISO
@@ -119,53 +164,39 @@ $(BUILD)/%.o: kernel/%.asm
 	$(AS) $(ASFLAGS) $< -o $@
 
 # ------------------------------------------------------------
-# User program
-# ------------------------------------------------------------
-# ------------------------------------------------------------
-# Compile user programs
+# User programs
 # ------------------------------------------------------------
 
-$(BUILD)/user/%.o: user/%.c
+$(BUILD)/user/%/main.o: user/%/main.c
 	@mkdir -p $(dir $@)
-	$(CC) \
-		-m32 \
-		-ffreestanding \
-		-fno-stack-protector \
-		-fno-pie \
-		-fno-pic \
-		-nostdlib \
-		-nostdinc \
-		-Wall \
-		-Wextra \
-		-mno-sse \
-		-mno-sse2 \
-		-std=c23 \
-		-Werror \
-		-Iinclude \
-		-c $< -o $@
-
+	$(CC) $(USER_CFLAGS) -c $< -o $@
 
 # ------------------------------------------------------------
 # Link user programs
 # ------------------------------------------------------------
 
-$(BUILD)/user/%.elf: $(BUILD)/user/%.o $(USER_LD)
+$(BUILD)/user/%.elf: $(BUILD)/user/%/main.o $(USER_LD)
 	@mkdir -p $(dir $@)
 	ld -m elf_i386 -T$(USER_LD) -o $@ $<
+
+# ------------------------------------------------------------
+# Filesystem tool
+# ------------------------------------------------------------
 
 $(MKFS): $(MKFS_SOURCE) include/fs_format.h include/fs_types.h
 	@mkdir -p $(dir $@)
 	$(CC) $(MKFS_CFLAGS) $< -o $@
 
-
-
-
-
-# ------------------------------------------------------------
-# Create boot ISO
-# ------------------------------------------------------------
 # ------------------------------------------------------------
 # Filesystem
+#
+# Every:
+#
+#   build/user/hello.elf
+#
+# becomes:
+#
+#   /sbin/hello
 # ------------------------------------------------------------
 
 USER_FS_ENTRIES := \
@@ -175,6 +206,10 @@ USER_FS_ENTRIES := \
 $(ISO_ROOTFS): $(MKFS) $(USER_ELFS)
 	@mkdir -p $(dir $@)
 	$(MKFS) $@ $(USER_FS_ENTRIES)
+
+# ------------------------------------------------------------
+# Create boot ISO
+# ------------------------------------------------------------
 
 $(IMAGE): $(ISO_KERNEL) $(ISO_ROOTFS) $(GRUB_CFG)
 	@mkdir -p $(dir $@)
@@ -199,4 +234,3 @@ clean:
 	rm -rf $(BUILD)
 	rm -f $(ISO_BOOT)/kernel.elf
 	rm -f $(ISO_BOOT)/rootfs.img
-

@@ -161,24 +161,30 @@ static bool exec_build_user_stack(
     }
 
     /*
-     * Push argc immediately below argv.
+     * Reserve space for argc.
      */
     esp -= sizeof(uint32_t);
 
+    /*
+     * Align ESP downward.
+     *
+     * argc must remain immediately above ESP, so leave the
+     * alignment padding below argc.
+     */
+    esp &= ~0xFu;
+
+    if (esp < stack_low)
+        return false;
+
+    /*
+     * Store argc at the first word above ESP.
+     */
     *(uint32_t *)(stack + (esp - stack_low)) =
     (uint32_t)args->argc;
 
     /*
-     * Align the final stack pointer.
+     * The actual entry stack pointer points at argc.
      */
-    esp &= ~0xFu;
-
-    /*
-     * Move the stack down if alignment crossed the data we created.
-     */
-    if (esp < stack_low)
-        return false;
-
     *user_esp = esp;
 
     return true;
