@@ -75,4 +75,22 @@ void usermode_stack_release(
     uintptr_t virt
 );
 
+/*
+ * Create and map a user-mode stack for an already existing process.
+ *
+ * The stack is mapped into process->page_directory but the current
+ * CR3 does not need to be the process directory.
+ *
+ * On success:
+ *
+ *     *user_esp = initial top of the user stack.
+ *
+ * The caller is responsible for constructing the initial stack
+ * contents.
+ */
+bool usermode_stack_create(
+    struct process *process,
+    uintptr_t *user_esp
+);
+
 #endif

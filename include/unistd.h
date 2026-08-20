@@ -7,6 +7,11 @@ typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
 typedef int ssize_t;
 
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+
+
 static inline uintptr_t syscall2(
     uintptr_t number,
     uintptr_t arg1,
@@ -107,5 +112,17 @@ static inline int close(int fd)
         SYS_CLOSE,
         (uintptr_t)fd,
                          0
+    );
+}
+
+static inline int exec(
+    const char *path,
+    char *const argv[]
+)
+{
+    return (int)syscall2(
+        SYS_EXEC,
+        (uintptr_t)path,
+        (uintptr_t)argv
     );
 }

@@ -458,3 +458,67 @@ struct thread * usermode_elf_thread_create(struct process *process,
 
     return thread;
 }
+
+bool usermode_stack_create(
+    struct process *process,
+    uintptr_t *user_esp)
+{
+    uintptr_t stack_virt;
+    uintptr_t phys;
+
+    ASSERT(process != NULL);
+    ASSERT(user_esp != NULL);
+    ASSERT(process->page_directory != NULL);
+
+    stack_virt = user_stack_alloc(process);
+
+    if (stack_virt == 0)
+        return false;
+
+    if (!user_stack_reserve(process, stack_virt))
+        return false;
+
+    phys = (uintptr_t)pmm_alloc_page();
+
+    if (phys == 0)
+    {
+        usermode_stack_release(
+            process,
+            stack_virt
+        );
+
+        return false;
+    }
+
+    paging_map(
+        process->page_directory,
+        stack_virt,
+        phys,
+        PAGE_PRESENT |
+        PAGE_WRITABLE |
+        PAGE_USER
+    );
+
+    if (!paging_validate_mapping(
+        process->page_directory,
+        stack_virt))
+    {
+        paging_unmap(
+            process->page_directory,
+            stack_virt
+        );
+
+        pmm_free_page((void *)phys);
+
+        usermode_stack_release(
+            process,
+            stack_virt
+        );
+
+        return false;
+    }
+
+    *user_esp = stack_virt + USER_STACK_SIZE;
+
+    return true;
+}

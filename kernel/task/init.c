@@ -10,6 +10,8 @@
 #include "thread.h"
 #include "usermode.h"
 
+#include "printf.h"
+
 void init_process_start(void)
 {
     const struct multiboot_tag_module *module;
@@ -74,13 +76,14 @@ void init_process_start(void)
      */
     process = process_create("init");
 
+    printf("init -> pid %x\n", process->pid);
     ASSERT(process != NULL);
 
     /*
      * Load the ELF segments into the new process address space.
      */
     if (!elf_load(
-        process,
+        process->page_directory,
         file_image,
         file_size_value,
         &entry

@@ -83,16 +83,18 @@ int elf_validate(const void *image, uint32_t size)
     return 1;
 }
 
-int elf_load(struct process *process,
-             const void *image,
-             uint32_t size,
-             uintptr_t *entry)
+int elf_load(
+    struct page_directory *directory,
+    const void *image,
+    uint32_t size,
+    uintptr_t *entry
+)
 {
     const struct elf32_header *header;
     struct list loaded_pages;
     uint16_t i;
 
-    if (process == NULL ||
+    if (directory == NULL ||
         image == NULL ||
         entry == NULL)
         return 0;
@@ -214,7 +216,7 @@ int elf_load(struct process *process,
                   * address space.
                   */
                  paging_map(
-                     process->page_directory,
+                     directory,
                      page,
                      (uintptr_t)phys,
                      flags
@@ -225,7 +227,7 @@ int elf_load(struct process *process,
                   */
                  translated =
                  paging_translate(
-                     process->page_directory,
+                     directory,
                      page
                  );
 
@@ -237,7 +239,7 @@ int elf_load(struct process *process,
                      );
 
                      paging_unmap(
-                         process->page_directory,
+                         directory,
                          page
                      );
 
@@ -251,7 +253,7 @@ int elf_load(struct process *process,
                  if (loaded == NULL)
                  {
                      paging_unmap(
-                         process->page_directory,
+                         directory,
                          page
                      );
 
@@ -360,14 +362,14 @@ int elf_load(struct process *process,
         );
 
         phys = paging_translate(
-            process->page_directory,
+            directory,
             loaded->virt
         );
 
         list_remove(node);
 
         paging_unmap(
-            process->page_directory,
+            directory,
             loaded->virt
         );
 

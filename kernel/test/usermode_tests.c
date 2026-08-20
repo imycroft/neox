@@ -79,7 +79,7 @@ static void test_usermode_elf(void)
      */
     TEST_ASSERT_TRUE(
         elf_load(
-            process,
+            process->page_directory,
             image,
             size,
             &entry
@@ -224,7 +224,7 @@ static void test_usermode_stack_isolation(void)
      */
     TEST_ASSERT_TRUE(
         elf_load(
-            process,
+            process->page_directory,
             image,
             size,
             &entry
@@ -385,7 +385,7 @@ static void test_usermode_elf_stack_isolation(void)
      */
     TEST_ASSERT_TRUE(
         elf_load(
-            process_a,
+            process_a->page_directory,
             image,
             size,
             &entry_a
@@ -394,7 +394,7 @@ static void test_usermode_elf_stack_isolation(void)
 
     TEST_ASSERT_TRUE(
         elf_load(
-            process_b,
+            process_b->page_directory,
             image,
             size,
             &entry_b
@@ -545,7 +545,7 @@ static void test_usermode_process_reclamation(void)
 
         TEST_ASSERT_TRUE(
             elf_load(
-                process,
+                process->page_directory,
                 image,
                 size,
                 &entry
@@ -602,7 +602,7 @@ static void test_usermode_detached_reclamation(void)
 
     TEST_ASSERT_TRUE(
         elf_load(
-            process,
+            process->page_directory,
             image,
             size,
             &entry
@@ -682,7 +682,7 @@ static void test_elf_load_rollback(void)
 
     TEST_ASSERT_FALSE(
         elf_load(
-            process,
+            process->page_directory,
             image,
             size,
             &entry
