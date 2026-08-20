@@ -36,7 +36,7 @@ void _start(void)
     }
 
     result = exec(
-        "/sbin/init",
+        "/sbin/hello",
         argv
     );
 

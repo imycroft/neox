@@ -184,6 +184,42 @@ static bool exec_build_user_stack(
     return true;
 }
 
+static inline uintptr_t read_cr3(void)
+{
+    uintptr_t value;
+
+    __asm__ volatile (
+        "mov %%cr3, %0"
+        : "=r"(value)
+    );
+
+    return value;
+}
+
+struct syscall_frame
+{
+    struct registers regs;
+
+    /*
+     * These two values are pushed by the CPU when INT 0x80
+     * crosses from Ring 3 to Ring 0.
+     */
+    uint32_t user_esp;
+    uint32_t user_ss;
+};
+
+static uint32_t *syscall_user_esp_slot(
+    struct registers *regs)
+{
+    return ((uint32_t *)regs) + 17;
+}
+
+static uint32_t *syscall_user_ss_slot(
+    struct registers *regs)
+{
+    return ((uint32_t *)regs) + 18;
+}
+
 /*
  * syscall_init() — register INT 0x80 with DPL=3 so Ring-3 code can
  * invoke `int 0x80` without triggering a GPF.
@@ -545,12 +581,29 @@ static int32_t sys_exec(
      * We switch CR3 while the kernel code and kernel stack remain
      * accessible because the kernel mappings are shared.
      */
+
+    ASSERT(
+        paging_user_range_valid(
+            new_directory,
+            stack_virt,
+            USER_STACK_SIZE
+        )
+    );
+
+    uintptr_t new_directory_phys;
+
+    new_directory_phys =
+    VIRT_TO_PHYS((uintptr_t)new_directory);
+
+    ASSERT(new_directory_phys != 0);
+
     paging_load_directory(
         VIRT_TO_PHYS(
             (uintptr_t)new_directory
         )
     );
 
+    ASSERT(read_cr3() == new_directory_phys);
     /*
      * The process now permanently owns the new address space.
      */
@@ -564,6 +617,14 @@ static int32_t sys_exec(
      */
     paging_destroy_directory(old_directory);
 
+    ASSERT(
+        paging_user_range_valid(
+            new_directory,
+            stack_virt,
+            USER_STACK_SIZE
+        )
+    );
+
     /*
      * The current thread continues running.
      *
@@ -572,21 +633,32 @@ static int32_t sys_exec(
      * We simply change the user context that the syscall's IRET
      * will restore.
      */
-    regs->eip = entry;
-    regs->esp = user_esp;
+
+
+    ASSERT(regs != NULL);
+
+    ASSERT(
+        *syscall_user_ss_slot(regs) == GDT_USER_DATA_SELECTOR
+    );
+
+    *syscall_user_esp_slot(regs) = (uint32_t)user_esp;
 
     /*
      * The new program starts with exec()'s return value replaced by
      * the new program's entry point context, so there is no successful
      * return from exec().
      */
+
+    regs->eip = (uint32_t)entry;
+
+    *syscall_user_esp_slot(regs) = (uint32_t)user_esp;
+
     regs->eax = 0;
 
 
     file_close(&file);
     exec_args_destroy(&args);
 
-    printf("XXXXXX\n");
     return 0;
 }
 

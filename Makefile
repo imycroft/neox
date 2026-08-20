@@ -54,16 +54,18 @@ LDFLAGS = -T$(KERNEL_LD) -m elf_i386
 ASFLAGS = -f elf32
 
 # ------------------------------------------------------------
-# User program
+# User programs
 # ------------------------------------------------------------
 
-USER_SOURCE := user/init.c
+USER_SOURCES := $(shell find user -name '*.c')
+
+USER_OBJECTS := \
+    $(patsubst user/%.c,$(BUILD)/user/%.o,$(USER_SOURCES))
+
+USER_ELFS := \
+    $(patsubst user/%.c,$(BUILD)/user/%.elf,$(USER_SOURCES))
+
 USER_LD := user/user.ld
-
-USER_BUILD := $(BUILD)/user
-USER_OBJECT := $(USER_BUILD)/init.o
-USER_ELF := $(USER_BUILD)/init.elf
-
 
 # ------------------------------------------------------------
 # Filesystem tool
@@ -119,8 +121,11 @@ $(BUILD)/%.o: kernel/%.asm
 # ------------------------------------------------------------
 # User program
 # ------------------------------------------------------------
+# ------------------------------------------------------------
+# Compile user programs
+# ------------------------------------------------------------
 
-$(USER_OBJECT): $(USER_SOURCE)
+$(BUILD)/user/%.o: user/%.c
 	@mkdir -p $(dir $@)
 	$(CC) \
 		-m32 \
@@ -139,10 +144,14 @@ $(USER_OBJECT): $(USER_SOURCE)
 		-Iinclude \
 		-c $< -o $@
 
-$(USER_ELF): $(USER_OBJECT) $(USER_LD)
-	@mkdir -p $(dir $@)
-	ld -m elf_i386 -T$(USER_LD) -o $@ $(USER_OBJECT)
 
+# ------------------------------------------------------------
+# Link user programs
+# ------------------------------------------------------------
+
+$(BUILD)/user/%.elf: $(BUILD)/user/%.o $(USER_LD)
+	@mkdir -p $(dir $@)
+	ld -m elf_i386 -T$(USER_LD) -o $@ $<
 
 $(MKFS): $(MKFS_SOURCE) include/fs_format.h include/fs_types.h
 	@mkdir -p $(dir $@)
@@ -155,10 +164,17 @@ $(MKFS): $(MKFS_SOURCE) include/fs_format.h include/fs_types.h
 # ------------------------------------------------------------
 # Create boot ISO
 # ------------------------------------------------------------
-$(ISO_ROOTFS): $(MKFS) $(USER_ELF)
+# ------------------------------------------------------------
+# Filesystem
+# ------------------------------------------------------------
+
+USER_FS_ENTRIES := \
+    $(foreach elf,$(USER_ELFS),\
+        /sbin/$(basename $(notdir $(elf)))=$(elf))
+
+$(ISO_ROOTFS): $(MKFS) $(USER_ELFS)
 	@mkdir -p $(dir $@)
-	$(MKFS) $@ \
-		/sbin/init=$(USER_ELF)
+	$(MKFS) $@ $(USER_FS_ENTRIES)
 
 $(IMAGE): $(ISO_KERNEL) $(ISO_ROOTFS) $(GRUB_CFG)
 	@mkdir -p $(dir $@)
